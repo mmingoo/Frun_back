@@ -1,0 +1,13 @@
+package Termproject.Termproject2.global.oauth2.dto;
+
+import Termproject.Termproject2.domain.member.entity.Role;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class UserDTO {
+    private Role role;
+    private String username;
+    private String name;
+}

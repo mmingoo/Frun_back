@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find C:/Users/TANINE/Desktop/FRun/FRun-back/src -type f -name *.java)",
+      "Bash(./gradlew clean:*)"
+    ]
+  }
+}
