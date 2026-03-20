@@ -1,13 +1,11 @@
 package Termproject.Termproject2.domain.member.entity;
 
-import Termproject.Termproject2.domain.common.BaseTimeEntity;
+import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Member")

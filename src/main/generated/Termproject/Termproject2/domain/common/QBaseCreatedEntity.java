@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.common;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
+import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;

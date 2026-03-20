@@ -47,7 +47,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         response.addCookie(createCookie("Authorization", accessToken));
 
         // 5. 로그인 성공 후 프론트엔드로 리다이렉트
-        response.sendRedirect("http://localhost:3000/");
+        response.sendRedirect("http://localhost:5173/home");
     }
 
     // JWT 토큰을 담을 쿠키 생성
