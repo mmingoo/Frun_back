@@ -64,22 +64,26 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .build();
 
 
-            memberRepository.save(memberEntity);
+            Member savedMember = memberRepository.save(memberEntity);
 
             // 6-2. Security 인증에 사용할 DTO 생성 (신규 회원 = 기본 USER 권한)
             UserDTO userDTO = new UserDTO();
+            userDTO.setUserId(savedMember.getUserId());
             userDTO.setUsername(username);
             userDTO.setName(oAuth2Response.getName());
             userDTO.setRole(Role.USER);
+            userDTO.setNewUser(true);
 
             return new CustomOAuth2User(userDTO);
 
         } else {
             // 7-1. 기존 회원 → DB에 저장된 role 그대로 사용 (관리자 권한 유지)
             UserDTO userDTO = new UserDTO();
+            userDTO.setUserId(existMember.getUserId());
             userDTO.setUsername(existMember.getUserName());
             userDTO.setName(oAuth2Response.getName());
             userDTO.setRole(existMember.getRole());
+            userDTO.setNewUser(false);
 
             return new CustomOAuth2User(userDTO);
         }
