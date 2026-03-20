@@ -39,10 +39,10 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        // 3. username + role 기반으로 JWT 토큰 생성 (만료시간: 60초 * 5 =  5분)
+        // 3. username + role 기반으로 JWT 토큰 생성 (만료시간: 60 * 5 * 1000L =  5분)
         // 해킹 방어 용도를 위해 액세스 토큰은 5분, 리프레쉬 토큰은 7일
-        String accessToken = jwtUtil.createJwt(username, role, 60 * 5L);
-
+        String accessToken = jwtUtil.createJwt(username, role, 60 * 60 * 1000L);
+        System.out.println("토큰: " +accessToken);
         // 4. 생성된 JWT를 쿠키에 담아 응답에 추가
         response.addCookie(createCookie("Authorization", accessToken));
 

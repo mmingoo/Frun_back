@@ -25,23 +25,26 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        // 1. 쿠키 자체가 없는 경우 NPE 방지 → 다음 필터로 넘기고 종료
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            System.out.println("cookie null");
-            filterChain.doFilter(request, response);
-            return;
+        // 1. Authorization 헤더에서 Bearer 토큰 먼저 확인 (Swagger 지원)
+        String authorization = null;
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            authorization = bearerToken.substring(7);
         }
 
-        // 2. 쿠키에서 "Authorization" 키를 가진 JWT 토큰 꺼내기
-        String authorization = null;
-        for (Cookie cookie : cookies) {
-            if (cookie.getName().equals("Authorization")) {
-                authorization = cookie.getValue();
+        // 2. 헤더에 없으면 쿠키에서 확인
+        if (authorization == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("Authorization")) {
+                        authorization = cookie.getValue();
+                    }
+                }
             }
         }
 
-        // 3. Authorization 쿠키가 없으면 인증 없이 다음 필터로 넘기고 종료
+        // 3. 헤더, 쿠키 모두 없으면 인증 없이 다음 필터로 넘기고 종료
         if (authorization == null) {
             System.out.println("token null");
             filterChain.doFilter(request, response);

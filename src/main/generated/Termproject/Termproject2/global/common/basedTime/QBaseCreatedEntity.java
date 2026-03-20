@@ -1,8 +1,7 @@
-package Termproject.Termproject2.domain.common;
+package Termproject.Termproject2.global.common.basedTime;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
-import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
 import com.querydsl.core.types.dsl.*;
 
 import com.querydsl.core.types.PathMetadata;
@@ -16,7 +15,7 @@ import com.querydsl.core.types.Path;
 @Generated("com.querydsl.codegen.DefaultSupertypeSerializer")
 public class QBaseCreatedEntity extends EntityPathBase<BaseCreatedEntity> {
 
-    private static final long serialVersionUID = 532775993L;
+    private static final long serialVersionUID = 1121038572L;
 
     public static final QBaseCreatedEntity baseCreatedEntity = new QBaseCreatedEntity("baseCreatedEntity");
 

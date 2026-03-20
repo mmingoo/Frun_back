@@ -22,7 +22,7 @@ public class QMember extends EntityPathBase<Member> {
 
     public static final QMember member = new QMember("member1");
 
-    public final Termproject.Termproject2.domain.common.QBaseTimeEntity _super = new Termproject.Termproject2.domain.common.QBaseTimeEntity(this);
+    public final Termproject.Termproject2.global.common.basedTime.QBaseTimeEntity _super = new Termproject.Termproject2.global.common.basedTime.QBaseTimeEntity(this);
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
