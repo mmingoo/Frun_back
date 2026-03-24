@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.running;
+package Termproject.Termproject2.domain.running.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

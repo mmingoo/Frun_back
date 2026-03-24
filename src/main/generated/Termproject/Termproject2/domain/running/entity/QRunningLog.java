@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.running;
+package Termproject.Termproject2.domain.running.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -16,7 +16,7 @@ import com.querydsl.core.types.dsl.PathInits;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QRunningLog extends EntityPathBase<RunningLog> {
 
-    private static final long serialVersionUID = -176647626L;
+    private static final long serialVersionUID = 943198687L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 

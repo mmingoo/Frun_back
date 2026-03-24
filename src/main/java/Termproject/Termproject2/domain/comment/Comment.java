@@ -1,7 +1,7 @@
 package Termproject.Termproject2.domain.comment;
 
 import Termproject.Termproject2.domain.member.entity.Member;
-import Termproject.Termproject2.domain.running.RunningLog;
+import Termproject.Termproject2.domain.running.entity.RunningLog;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

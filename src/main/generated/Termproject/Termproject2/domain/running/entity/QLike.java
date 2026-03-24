@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.running;
+package Termproject.Termproject2.domain.running.entity;
 
 import static com.querydsl.core.types.PathMetadataFactory.*;
 
@@ -16,7 +16,7 @@ import com.querydsl.core.types.dsl.PathInits;
 @Generated("com.querydsl.codegen.DefaultEntitySerializer")
 public class QLike extends EntityPathBase<Like> {
 
-    private static final long serialVersionUID = 917336456L;
+    private static final long serialVersionUID = -531880975L;
 
     private static final PathInits INITS = PathInits.DIRECT2;
 

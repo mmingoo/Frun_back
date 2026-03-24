@@ -35,7 +35,7 @@ public class ApiResponse<T> {
         return new ApiResponse<>(false, message, null);
     }
 
-    public static <T> ApiResponse<T> fail(String message, T data) {
+    public static <T> ApiResponse<T> fail(T data,String message) {
         return new ApiResponse<>(false, message, data);
     }
 }

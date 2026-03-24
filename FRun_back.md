@@ -95,6 +95,11 @@ src/main/java/com/frun/
 | PATCH | `/api/v1/members/me/deactivate` | 계정 비활성화 |
 | GET | `/api/v1/members/nickname/check` | 닉네임 중복 확인 |
 
+#### 닉네임 설정 (`POST /api/v1/auth/nickname`)
+- 닉네임 설정 화면에서 프로필 사진도 설정 가능
+  - 이미지 파일 최대 3MB
+  - jpg, jpeg, png 형식만 가능
+
 ---
 
 ### 러닝일지 API
@@ -116,6 +121,7 @@ src/main/java/com/frun/
   "runTime": "07:30",
   "distanceKm": 5.2,
   "durationMin": 28,
+  "durationSec": 30,
   "pace": "5'23\"",
   "memo": "오늘도 완주!",
   "isPublic": true,

@@ -30,7 +30,7 @@ public class QComment extends EntityPathBase<Comment> {
 
     public final BooleanPath isDeleted = createBoolean("isDeleted");
 
-    public final Termproject.Termproject2.domain.running.QRunningLog runningLog;
+    public final Termproject.Termproject2.domain.running.entity.QRunningLog runningLog;
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
@@ -54,7 +54,7 @@ public class QComment extends EntityPathBase<Comment> {
 
     public QComment(Class<? extends Comment> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.runningLog = inits.isInitialized("runningLog") ? new Termproject.Termproject2.domain.running.QRunningLog(forProperty("runningLog"), inits.get("runningLog")) : null;
+        this.runningLog = inits.isInitialized("runningLog") ? new Termproject.Termproject2.domain.running.entity.QRunningLog(forProperty("runningLog"), inits.get("runningLog")) : null;
         this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.member.entity.QMember(forProperty("user"), inits.get("user")) : null;
     }
 
