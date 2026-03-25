@@ -1,10 +1,10 @@
 package Termproject.Termproject2.global.oauth2.service;
 
-import Termproject.Termproject2.domain.member.entity.Member;
-import Termproject.Termproject2.domain.member.entity.Role;
-import Termproject.Termproject2.domain.member.entity.SocialLoginType;
-import Termproject.Termproject2.domain.member.repository.MemberRepository;
-import Termproject.Termproject2.domain.member.repository.SocialLoginTypeRepository;
+import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.entity.Role;
+import Termproject.Termproject2.domain.user.entity.SocialLoginType;
+import Termproject.Termproject2.domain.user.repository.UserRepository;
+import Termproject.Termproject2.domain.user.repository.SocialLoginTypeRepository;
 import Termproject.Termproject2.global.oauth2.dto.CustomOAuth2User;
 import Termproject.Termproject2.global.oauth2.dto.NaverResponse;
 import Termproject.Termproject2.global.oauth2.dto.OAuth2Response;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final MemberRepository memberRepository;
+    private final UserRepository userRepository;
     private final SocialLoginTypeRepository socialLoginTypeRepository;
 
     @Override
@@ -47,13 +47,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String username = oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId();
 
         // 5. username으로 기존 회원 조회
-        Member existMember = memberRepository.findByUserName(username);
+        User existMember = userRepository.findByUserName(username);
 
         if (existMember == null) {
             // 6-1. 신규 회원 → DB에 회원 정보 저장
 
 
-            Member memberEntity = Member.builder()
+            User memberEntity = User.builder()
                     .userName(username)
                     .name(oAuth2Response.getName())
                     .userEmail(oAuth2Response.getEmail())
@@ -64,7 +64,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .build();
 
 
-            Member savedMember = memberRepository.save(memberEntity);
+            User savedMember = userRepository.save(memberEntity);
 
             // 6-2. Security 인증에 사용할 DTO 생성 (신규 회원 = 기본 USER 권한)
             UserDTO userDTO = new UserDTO();

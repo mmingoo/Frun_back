@@ -1,8 +1,8 @@
 package Termproject.Termproject2.domain.notification;
 
 import Termproject.Termproject2.domain.comment.Comment;
-import Termproject.Termproject2.domain.friend.FriendRequest;
-import Termproject.Termproject2.domain.member.entity.Member;
+import Termproject.Termproject2.domain.friend.entity.FriendRequest;
+import Termproject.Termproject2.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -38,7 +38,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private Member user;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
@@ -50,7 +50,7 @@ public class Notification {
     }
 
     @Builder
-    public Notification(Member user, NotificationType type, FriendRequest friendRequest, Comment comment) {
+    public Notification(User user, NotificationType type, FriendRequest friendRequest, Comment comment) {
         this.user = user;
         this.type = type;
         this.friendRequest = friendRequest;

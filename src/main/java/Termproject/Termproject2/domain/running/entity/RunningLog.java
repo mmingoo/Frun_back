@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.running.entity;
 
-import Termproject.Termproject2.domain.member.entity.Member;
+import Termproject.Termproject2.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -61,7 +61,7 @@ public class RunningLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private Member user;
+    private User user;
 
     @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RunningLogImage> images = new ArrayList<>();
@@ -77,7 +77,7 @@ public class RunningLog {
     }
 
     @Builder
-    public RunningLog(Member user, LocalTime duration, LocalDate runDate,
+    public RunningLog(User user, LocalTime duration, LocalDate runDate,
                       BigDecimal distance, String pace, boolean isPublic, String memo) {
         this.user = user;
         this.duration = duration;

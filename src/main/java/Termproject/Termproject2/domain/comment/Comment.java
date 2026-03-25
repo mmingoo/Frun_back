@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.comment;
 
-import Termproject.Termproject2.domain.member.entity.Member;
+import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -37,7 +37,7 @@ public class Comment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private Member user;
+    private User user;
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
@@ -53,7 +53,7 @@ public class Comment {
     }
 
     @Builder
-    public Comment(RunningLog runningLog, Member user, String content) {
+    public Comment(RunningLog runningLog, User user, String content) {
         this.runningLog = runningLog;
         this.user = user;
         this.content = content;

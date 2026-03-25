@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.running.repository;
 
-import Termproject.Termproject2.domain.friend.QFriendship;
+import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
 import Termproject.Termproject2.domain.running.dto.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
@@ -47,7 +47,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .where(
                         runningLog.isDeleted.isFalse(),
                         runningLog.isPublic.isTrue(),
-                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null,
+                        cursorId != null && cursorId > 0 ? runningLog.runningLogId.lt(cursorId) : null,
                         JPAExpressions.selectOne()
                                 .from(report)
                                 .where(report.status.eq("COMPLETED"),

@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.running.entity;
 
-import Termproject.Termproject2.domain.member.entity.Member;
+import Termproject.Termproject2.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,7 +23,7 @@ public class Like {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private Member user;
+    private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id", nullable = false)
@@ -38,7 +38,7 @@ public class Like {
     }
 
     @Builder
-    public Like(Member user, RunningLog runningLog) {
+    public Like(User user, RunningLog runningLog) {
         this.user = user;
         this.runningLog = runningLog;
     }

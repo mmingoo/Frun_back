@@ -48,7 +48,7 @@ public class QRunningLog extends EntityPathBase<RunningLog> {
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
-    public final Termproject.Termproject2.domain.member.entity.QMember user;
+    public final Termproject.Termproject2.domain.user.entity.QUser user;
 
     public QRunningLog(String variable) {
         this(RunningLog.class, forVariable(variable), INITS);
@@ -68,7 +68,7 @@ public class QRunningLog extends EntityPathBase<RunningLog> {
 
     public QRunningLog(Class<? extends RunningLog> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
-        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.member.entity.QMember(forProperty("user"), inits.get("user")) : null;
+        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }

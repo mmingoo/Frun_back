@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.comment;
 
-import Termproject.Termproject2.domain.member.entity.Member;
+import Termproject.Termproject2.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,7 +30,7 @@ public class Reply {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Member member;
+    private User member;
 
     @Column(nullable = false, length = 250)
     private String content;
@@ -44,7 +44,7 @@ public class Reply {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Reply(Comment comment, Member member, String content) {
+    public Reply(Comment comment, User member, String content) {
         this.comment = comment;
         this.member = member;
         this.content = content;

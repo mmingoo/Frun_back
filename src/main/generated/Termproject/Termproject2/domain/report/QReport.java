@@ -36,7 +36,7 @@ public class QReport extends EntityPathBase<Report> {
 
     public final StringPath status = createString("status");
 
-    public final Termproject.Termproject2.domain.member.entity.QMember user;
+    public final Termproject.Termproject2.domain.user.entity.QUser user;
 
     public QReport(String variable) {
         this(Report.class, forVariable(variable), INITS);
@@ -59,7 +59,7 @@ public class QReport extends EntityPathBase<Report> {
         this.comment = inits.isInitialized("comment") ? new Termproject.Termproject2.domain.comment.QComment(forProperty("comment"), inits.get("comment")) : null;
         this.reportType = inits.isInitialized("reportType") ? new QReportType(forProperty("reportType")) : null;
         this.runningLog = inits.isInitialized("runningLog") ? new Termproject.Termproject2.domain.running.entity.QRunningLog(forProperty("runningLog"), inits.get("runningLog")) : null;
-        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.member.entity.QMember(forProperty("user"), inits.get("user")) : null;
+        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }

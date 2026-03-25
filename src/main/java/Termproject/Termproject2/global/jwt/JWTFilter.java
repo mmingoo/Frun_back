@@ -1,6 +1,6 @@
 package Termproject.Termproject2.global.jwt;
 
-import Termproject.Termproject2.domain.member.entity.Role;
+import Termproject.Termproject2.domain.user.entity.Role;
 import Termproject.Termproject2.global.oauth2.dto.CustomOAuth2User;
 import Termproject.Termproject2.global.oauth2.dto.UserDTO;
 import jakarta.servlet.FilterChain;

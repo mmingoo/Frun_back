@@ -30,7 +30,7 @@ public class QReply extends EntityPathBase<Reply> {
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
-    public final Termproject.Termproject2.domain.member.entity.QMember member;
+    public final Termproject.Termproject2.domain.user.entity.QUser member;
 
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
@@ -53,7 +53,7 @@ public class QReply extends EntityPathBase<Reply> {
     public QReply(Class<? extends Reply> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.comment = inits.isInitialized("comment") ? new QComment(forProperty("comment"), inits.get("comment")) : null;
-        this.member = inits.isInitialized("member") ? new Termproject.Termproject2.domain.member.entity.QMember(forProperty("member"), inits.get("member")) : null;
+        this.member = inits.isInitialized("member") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("member"), inits.get("member")) : null;
     }
 
 }

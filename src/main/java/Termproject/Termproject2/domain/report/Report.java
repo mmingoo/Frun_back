@@ -1,7 +1,7 @@
 package Termproject.Termproject2.domain.report;
 
 import Termproject.Termproject2.domain.comment.Comment;
-import Termproject.Termproject2.domain.member.entity.Member;
+import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -24,7 +24,7 @@ public class Report {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private Member user;
+    private User user;
 
     @Lob
     @Column(name = "report_reason", nullable = false)
@@ -55,7 +55,7 @@ public class Report {
     }
 
     @Builder
-    public Report(Member user, String reportReason, Comment comment,
+    public Report(User user, String reportReason, Comment comment,
                   RunningLog runningLog, ReportType reportType) {
         this.user = user;
         this.reportReason = reportReason;

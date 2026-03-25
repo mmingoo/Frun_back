@@ -28,7 +28,7 @@ public class QLike extends EntityPathBase<Like> {
 
     public final QRunningLog runningLog;
 
-    public final Termproject.Termproject2.domain.member.entity.QMember user;
+    public final Termproject.Termproject2.domain.user.entity.QUser user;
 
     public QLike(String variable) {
         this(Like.class, forVariable(variable), INITS);
@@ -49,7 +49,7 @@ public class QLike extends EntityPathBase<Like> {
     public QLike(Class<? extends Like> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.runningLog = inits.isInitialized("runningLog") ? new QRunningLog(forProperty("runningLog"), inits.get("runningLog")) : null;
-        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.member.entity.QMember(forProperty("user"), inits.get("user")) : null;
+        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }

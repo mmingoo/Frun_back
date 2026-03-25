@@ -26,7 +26,7 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
-    public final Termproject.Termproject2.domain.friend.QFriendRequest friendRequest;
+    public final Termproject.Termproject2.domain.friend.entity.QFriendRequest friendRequest;
 
     public final BooleanPath isRead = createBoolean("isRead");
 
@@ -34,7 +34,7 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public final EnumPath<NotificationType> type = createEnum("type", NotificationType.class);
 
-    public final Termproject.Termproject2.domain.member.entity.QMember user;
+    public final Termproject.Termproject2.domain.user.entity.QUser user;
 
     public QNotification(String variable) {
         this(Notification.class, forVariable(variable), INITS);
@@ -55,8 +55,8 @@ public class QNotification extends EntityPathBase<Notification> {
     public QNotification(Class<? extends Notification> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
         this.comment = inits.isInitialized("comment") ? new Termproject.Termproject2.domain.comment.QComment(forProperty("comment"), inits.get("comment")) : null;
-        this.friendRequest = inits.isInitialized("friendRequest") ? new Termproject.Termproject2.domain.friend.QFriendRequest(forProperty("friendRequest"), inits.get("friendRequest")) : null;
-        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.member.entity.QMember(forProperty("user"), inits.get("user")) : null;
+        this.friendRequest = inits.isInitialized("friendRequest") ? new Termproject.Termproject2.domain.friend.entity.QFriendRequest(forProperty("friendRequest"), inits.get("friendRequest")) : null;
+        this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 
 }
