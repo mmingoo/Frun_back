@@ -21,4 +21,6 @@ public class FriendFeedResponseDto {
     private LocalTime duration;
     private String memo;
     private LocalDateTime createdAt;
+    private int commentCtn;
+    private int likeCtn;
 }

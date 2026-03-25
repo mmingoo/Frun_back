@@ -22,6 +22,8 @@ public class QRunningLog extends EntityPathBase<RunningLog> {
 
     public static final QRunningLog runningLog = new QRunningLog("runningLog");
 
+    public final NumberPath<Integer> commentCtn = createNumber("commentCtn", Integer.class);
+
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
     public final NumberPath<java.math.BigDecimal> distance = createNumber("distance", java.math.BigDecimal.class);
@@ -33,6 +35,8 @@ public class QRunningLog extends EntityPathBase<RunningLog> {
     public final BooleanPath isDeleted = createBoolean("isDeleted");
 
     public final BooleanPath isPublic = createBoolean("isPublic");
+
+    public final NumberPath<Integer> likeCtn = createNumber("likeCtn", Integer.class);
 
     public final StringPath memo = createString("memo");
 

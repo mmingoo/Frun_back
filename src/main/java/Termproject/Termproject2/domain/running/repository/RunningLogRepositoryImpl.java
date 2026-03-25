@@ -8,7 +8,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -17,12 +16,12 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<FriendFeedResponseDto> findFriendFeeds(Long userId, Pageable pageable) {
-
+    public List<FriendFeedResponseDto> findFriendFeeds(Long userId, Long cursorId, int size) {
 
         QRunningLog runningLog = QRunningLog.runningLog;
         QFriendship friendship = QFriendship.friendship;
         QReport report = QReport.report;
+
         return queryFactory
                 .select(Projections.constructor(FriendFeedResponseDto.class,
                         runningLog.runningLogId,
@@ -34,7 +33,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.pace,
                         runningLog.duration,
                         runningLog.memo,
-                        runningLog.createdAt))
+                        runningLog.createdAt,
+                        runningLog.commentCtn,
+                        runningLog.likeCtn))
                 .from(runningLog)
                 .join(friendship)
                 .on(
@@ -42,31 +43,19 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                                 .and(friendship.id.receiveUserId.eq(runningLog.user.userId)))
                                 .or(friendship.id.receiveUserId.eq(userId)
                                         .and(friendship.id.senderUserId.eq(runningLog.user.userId)))
-
                 )
                 .where(
-                        // 삭제되지 않은 러닝 일지일 것
                         runningLog.isDeleted.isFalse(),
-
-                        // 공개된 러닝일지 일 것
                         runningLog.isPublic.isTrue(),
-
-                        // 신고 접수되지 않은 러닝일지일 것
+                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null,
                         JPAExpressions.selectOne()
                                 .from(report)
                                 .where(report.status.eq("COMPLETED"),
-                                        report.runningLog.runningLogId.eq(runningLog.runningLogId)
-
-
-                                )
+                                        report.runningLog.runningLogId.eq(runningLog.runningLogId))
                                 .notExists()
-
                 )
                 .orderBy(runningLog.createdAt.desc())
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .limit(size + 1)
                 .fetch();
     }
-
-
 }

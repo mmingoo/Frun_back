@@ -40,6 +40,12 @@ public class RunningLog {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic;
 
+    @Column(name = "comment_ctn")
+    private int commentCtn;
+
+    @Column(name = "like_ctn")
+    private int likeCtn;
+
     @Lob
     @Column(name = "memo")
     private String memo;
