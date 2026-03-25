@@ -1,0 +1,26 @@
+package Termproject.Termproject2.domain.notice.controller;
+
+import Termproject.Termproject2.domain.notice.service.NoticeService;
+import Termproject.Termproject2.global.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/notices")
+public class NoticeController {
+
+    private final NoticeService noticeService;
+
+    @GetMapping
+    @Operation(summary = "공지사항 목록 조회", description = "공지사항 제목 목록을 5개씩 커서 기반으로 조회합니다.")
+    public ApiResponse<?> getNoticeList(
+            @Parameter(description = "이전 페이지 마지막 noticeId (첫 요청 시 생략)") @RequestParam(required = false) Long cursorId) {
+        return ApiResponse.ok(noticeService.getNoticeList(cursorId), "공지사항 목록을 성공적으로 조회하였습니다.");
+    }
+}

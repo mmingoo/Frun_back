@@ -1,0 +1,41 @@
+package Termproject.Termproject2.domain.notice.service;
+
+import Termproject.Termproject2.domain.notice.Notice;
+import Termproject.Termproject2.domain.notice.dto.NoticeListResponse;
+import Termproject.Termproject2.domain.notice.dto.NoticeResponseDto;
+import Termproject.Termproject2.domain.notice.repository.NoticeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class NoticeServiceImpl implements NoticeService {
+
+    private static final int PAGE_SIZE = 5;
+
+    private final NoticeRepository noticeRepository;
+
+    @Override
+    public NoticeListResponse getNoticeList(Long cursorId) {
+        List<Notice> results = cursorId == null
+                ? noticeRepository.findTop6ByOrderByNoticeIdDesc()
+                : noticeRepository.findTop6ByNoticeIdLessThanOrderByNoticeIdDesc(cursorId);
+
+        boolean hasNext = results.size() > PAGE_SIZE;
+        if (hasNext) {
+            results = results.subList(0, PAGE_SIZE);
+        }
+
+        List<NoticeResponseDto> notices = results.stream()
+                .map(NoticeResponseDto::new)
+                .collect(Collectors.toList());
+
+        Long nextCursorId = hasNext ? results.get(results.size() - 1).getNoticeId() : null;
+        return new NoticeListResponse(notices, hasNext, nextCursorId);
+    }
+}
