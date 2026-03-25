@@ -47,7 +47,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .where(
                         runningLog.isDeleted.isFalse(),
                         runningLog.isPublic.isTrue(),
-                        cursorId != null && cursorId > 0 ? runningLog.runningLogId.lt(cursorId) : null,
+                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null,
                         JPAExpressions.selectOne()
                                 .from(report)
                                 .where(report.status.eq("COMPLETED"),

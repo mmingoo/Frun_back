@@ -1,5 +1,7 @@
 package Termproject.Termproject2.global.jwt;
 
+import Termproject.Termproject2.global.common.response.ErrorCode;
+import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.oauth2.dto.CustomOAuth2User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,13 +21,13 @@ public class JwtTokenExtractor {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("인증 정보가 없습니다.");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         Object principal = authentication.getPrincipal();
 
         if (!(principal instanceof CustomOAuth2User)) {
-            throw new IllegalStateException("유효하지 않은 인증 정보입니다.");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
         return ((CustomOAuth2User) principal).getUserId();

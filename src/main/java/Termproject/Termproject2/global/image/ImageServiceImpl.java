@@ -1,5 +1,7 @@
 package Termproject.Termproject2.global.image;
 
+import Termproject.Termproject2.global.common.response.ErrorCode;
+import Termproject.Termproject2.global.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +37,7 @@ public class ImageServiceImpl implements ImageService {
             Files.createDirectories(dirPath);
             Files.write(dirPath.resolve(fileName), file.getBytes());
         } catch (IOException e) {
-            throw new IllegalStateException("이미지 저장에 실패했습니다.", e);
+            throw new BusinessException(ErrorCode.IMAGE_UPLOAD_FAILED, e);
         }
 
         return urlPrefix + "/" + fileName;
@@ -43,17 +45,17 @@ public class ImageServiceImpl implements ImageService {
 
     private void validateImage(MultipartFile file) {
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("이미지 파일 크기는 3MB를 초과할 수 없습니다.");
+            throw new BusinessException(ErrorCode.IMAGE_TOO_LARGE);
         }
         String ext = getExtension(file.getOriginalFilename());
         if (!ALLOWED_EXTENSIONS.contains(ext.toLowerCase())) {
-            throw new IllegalArgumentException("jpg, jpeg, png 형식의 이미지만 업로드할 수 있습니다.");
+            throw new BusinessException(ErrorCode.INVALID_FILE_TYPE);
         }
     }
 
     private String getExtension(String fileName) {
         if (fileName == null || !fileName.contains(".")) {
-            throw new IllegalArgumentException("올바른 파일명이 아닙니다.");
+            throw new BusinessException(ErrorCode.INVALID_FILE_NAME);
         }
         return fileName.substring(fileName.lastIndexOf('.') + 1);
     }
