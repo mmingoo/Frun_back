@@ -26,7 +26,7 @@ public class RefreshTokenService {
 
     // refreshToken 삭제
     public void delete(Long userId){
-        redisTemplate.delete("refresh: " + userId);
+        redisTemplate.delete("refresh:" + userId);
     }
 
     // refreshToken 유효성 검증
