@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -75,11 +77,14 @@ public class ReissueController {
         refreshTokenService.delete(userId);
         refreshTokenService.save(userId, newRefreshToken);
 
-        // 7. 새 토큰 쿠키에 담기
-        response.addCookie(createCookie("Authorization", newAccessToken, 60 * 15));
+        // 7. 새 토큰 반환
+        // refreshToken은 쿠키로, accessToken은 바디로 반환
         response.addCookie(createCookie("RefreshToken", newRefreshToken, 60 * 60 * 24 * 15));
 
-        return ResponseEntity.ok(ApiResponse.ok("토큰이 재발급되었습니다."));
+        return ResponseEntity.ok(ApiResponse.ok(
+                Map.of("accessToken", newAccessToken),
+                "토큰이 재발급되었습니다."
+        ));
     }
 
     private Cookie createCookie(String key, String value, int maxAge) {

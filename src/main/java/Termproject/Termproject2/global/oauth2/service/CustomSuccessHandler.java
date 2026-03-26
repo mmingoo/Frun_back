@@ -27,29 +27,24 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
-        // 유저 정보 조회
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
         String username = customUserDetails.getUsername();
         Long userId = customUserDetails.getUserId();
+        String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String role = authorities.iterator().next().getAuthority();
-
-        // accessToken 15분, refreshToken 15일 생성
+        // accessToken 15분, refreshToken 15일
         String accessToken = jwtUtil.createJwt("access", userId, username, role, 60 * 15 * 1000L);
         String refreshToken = jwtUtil.createJwt("refresh", userId, username, role, 60 * 60 * 24 * 15 * 1000L);
 
-        // Redis에 refreshToken 저장
+        // refreshToken만 쿠키 + Redis에 저장
         refreshTokenService.save(userId, refreshToken);
-
-        // 쿠키에 담기
-        response.addCookie(createCookie("Authorization", accessToken, 60 * 15));
         response.addCookie(createCookie("RefreshToken", refreshToken, 60 * 60 * 24 * 15));
 
+        // accessToken은 쿼리스트링으로 프론트에 전달
         if (customUserDetails.isNewUser()) {
-            response.sendRedirect("http://localhost:5173/signup/nickname");
+            response.sendRedirect("http://localhost:5173/signup/nickname?token=" + accessToken);
         } else {
-            response.sendRedirect("http://localhost:5173/feed");
+            response.sendRedirect("http://localhost:5173/feed?token=" + accessToken);
         }
     }
 
