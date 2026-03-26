@@ -40,9 +40,10 @@ public class JWTUtil {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
     }
 
-    public String createJwt(Long userId, String username, String role, Long expiredMs) {
+    public String createJwt(String category, Long userId, String username, String role, Long expiredMs) {
 
         return Jwts.builder()
+                .claim("category" , category) // access, refresh 구분용
                 .claim("userId", userId)
                 .claim("username", username)
                 .claim("role", role)
@@ -50,5 +51,11 @@ public class JWTUtil {
                 .expiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public String getCategory(String token){
+        return Jwts.parser().verifyWith(secretKey).build()
+                .parseSignedClaims(token).getPayload()
+                .get("category", String.class);
     }
 }
