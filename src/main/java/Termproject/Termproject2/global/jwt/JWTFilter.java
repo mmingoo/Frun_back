@@ -5,6 +5,7 @@ import Termproject.Termproject2.global.oauth2.dto.CustomOAuth2User;
 import Termproject.Termproject2.global.oauth2.dto.UserDTO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,20 +24,28 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        // ① Authorization 헤더에서 Bearer 토큰 추출
-        String authorization = null;
+        // ① Authorization 헤더 또는 AccessToken 쿠키에서 토큰 추출
+        String token = null;
+
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            authorization = bearerToken.substring(7); // "Bearer " 7글자 제거 후 순수 토큰만 저장
+            token = bearerToken.substring(7);
+        }
+
+        if (token == null && request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if ("AccessToken".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
+            }
         }
 
         // ② 토큰이 없으면 인증 처리 없이 다음 필터로 통과 (비로그인 사용자)
-        if (authorization == null) {
+        if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        String token = authorization;
 
         // 토큰이 만료됐으면 인증 처리 없이 다음 필터로 통과
         if (jwtUtil.isExpired(token)) {

@@ -8,12 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -77,21 +76,20 @@ public class ReissueController {
         refreshTokenService.delete(userId);
         refreshTokenService.save(userId, newRefreshToken);
 
-        // 7. 새 토큰 반환
-        // refreshToken은 쿠키로, accessToken은 바디로 반환
-        response.addCookie(createCookie("RefreshToken", newRefreshToken, 60 * 60 * 24 * 15));
+        // 7. 새 토큰 반환 - accessToken, refreshToken 모두 HttpOnly 쿠키로 발급
+        response.addHeader("Set-Cookie", createCookie("RefreshToken", newRefreshToken, 60 * 60 * 24 * 15).toString());
+        response.addHeader("Set-Cookie", createCookie("AccessToken", newAccessToken, 60 * 15).toString());
 
-        return ResponseEntity.ok(ApiResponse.ok(
-                Map.of("accessToken", newAccessToken),
-                "토큰이 재발급되었습니다."
-        ));
+        return ResponseEntity.ok(ApiResponse.ok("토큰이 재발급되었습니다."));
     }
 
-    private Cookie createCookie(String key, String value, int maxAge) {
-        Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(maxAge);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        return cookie;
+    private ResponseCookie createCookie(String name, String value, long maxAge) {
+        return ResponseCookie.from(name, value)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(maxAge)
+                .build();
     }
 }
