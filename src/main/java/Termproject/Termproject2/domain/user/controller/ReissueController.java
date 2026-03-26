@@ -3,16 +3,19 @@ package Termproject.Termproject2.domain.user.controller;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JWTUtil;
 import Termproject.Termproject2.global.jwt.RefreshTokenService;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,20 +26,11 @@ public class ReissueController {
     private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/reissue")
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> reissue(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response) {
 
-
-        // 1. 쿠키에서 refreshToken 꺼내기
-        String refreshToken = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("RefreshToken")) {
-                    refreshToken = cookie.getValue();
-                }
-            }
-        }
-
+        // 1. refreshToken 존재 여부 확인
         if (refreshToken == null) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -68,28 +62,28 @@ public class ReissueController {
                     .body(ApiResponse.fail("유효하지 않은 refresh token입니다."));
         }
 
-        // 5. RTR: accessToken 발급 시 refreshToken 도 재발급
+        // 5. RTR: accessToken 발급 + refreshToken 재발급
         String newAccessToken = jwtUtil.createJwt("access", userId, username, role, 60 * 15 * 1000L);
-        String newRefreshToken = jwtUtil.createJwt("refresh", userId, username, role, 60 * 60 * 24 * 15 * 1000L);
+        String newRefreshToken = jwtUtil.createJwt("refresh", userId, username, role, 60 * 60 * 24 * 14 * 1000L);
 
-        // 6. Redis 기존 refreshToken 삭제 후 새 refreshToken 저장
+        // 6. Redis 갱신
         refreshTokenService.delete(userId);
         refreshTokenService.save(userId, newRefreshToken);
 
-        // 7. 새 토큰 반환 - accessToken, refreshToken 모두 HttpOnly 쿠키로 발급
-        response.addHeader("Set-Cookie", createCookie("RefreshToken", newRefreshToken, 60 * 60 * 24 * 15).toString());
-        response.addHeader("Set-Cookie", createCookie("AccessToken", newAccessToken, 60 * 15).toString());
-
-        return ResponseEntity.ok(ApiResponse.ok("토큰이 재발급되었습니다."));
-    }
-
-    private ResponseCookie createCookie(String name, String value, long maxAge) {
-        return ResponseCookie.from(name, value)
+        // 7. refreshToken → HttpOnly 쿠키, accessToken → JSON body
+        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)        // 운영 시 true (HTTPS)
                 .sameSite("Lax")
                 .path("/")
-                .maxAge(maxAge)
+                .maxAge(Duration.ofDays(14))
                 .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+        return ResponseEntity.ok(ApiResponse.ok(
+                Map.of("accessToken", newAccessToken),
+                "토큰이 재발급되었습니다."
+        ));
     }
 }
