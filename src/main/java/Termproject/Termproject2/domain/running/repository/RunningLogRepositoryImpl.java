@@ -2,7 +2,7 @@ package Termproject.Termproject2.domain.running.repository;
 
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
-import Termproject.Termproject2.domain.running.dto.FriendFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;

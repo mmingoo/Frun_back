@@ -28,7 +28,8 @@ public enum ErrorCode {
     IMAGE_TOO_LARGE(HttpStatus.BAD_REQUEST, "이미지 파일 크기는 3MB를 초과할 수 없습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다. (jpg, jpeg, png만 허용)"),
     INVALID_FILE_NAME(HttpStatus.BAD_REQUEST, "올바른 파일명이 아닙니다."),
-    IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 저장에 실패했습니다.");
+    IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 저장에 실패했습니다."),
+    INVALID_DISTANCE(HttpStatus.BAD_REQUEST, "올바른 형식이 아닙니다." );
 
     private final HttpStatus status;
     private final String message;

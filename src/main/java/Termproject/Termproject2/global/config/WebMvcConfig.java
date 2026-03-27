@@ -10,17 +10,26 @@ import java.nio.file.Paths;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-    @Value("${file.upload.dir}")
-    private String uploadDir;
+    @Value("${file.upload.profile.dir}")
+    private String profileUploadDir;
 
-    @Value("${file.upload.url-prefix}")
-    private String urlPrefix;
+    @Value("${file.upload.profile.url-prefix}")
+    private String profileUrlPrefix;
+
+    @Value("${file.upload.running-log.dir}")
+    private String runningLogUploadDir;
+
+    @Value("${file.upload.running-log.url-prefix}")
+    private String runningLogUrlPrefix;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String absolutePath = Paths.get(uploadDir).toAbsolutePath().toString();
-        // urlPrefix = "/images/profile" → handler = "/images/profile/**"
-        registry.addResourceHandler(urlPrefix + "/**")
-                .addResourceLocations("file:" + absolutePath + "/");
+        String profilePath = Paths.get(profileUploadDir).toAbsolutePath().toString();
+        registry.addResourceHandler(profileUrlPrefix + "/**")
+                .addResourceLocations("file:" + profilePath + "/");
+
+        String runningLogPath = Paths.get(runningLogUploadDir).toAbsolutePath().toString();
+        registry.addResourceHandler(runningLogUrlPrefix + "/**")
+                .addResourceLocations("file:" + runningLogPath + "/");
     }
 }

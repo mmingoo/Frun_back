@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.running.dto;
+package Termproject.Termproject2.domain.running.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

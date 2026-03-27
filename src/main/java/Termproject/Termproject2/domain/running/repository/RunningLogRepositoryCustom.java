@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.running.repository;
 
-import Termproject.Termproject2.domain.running.dto.FriendFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 
 import java.util.List;
 

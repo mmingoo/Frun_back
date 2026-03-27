@@ -14,17 +14,25 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+    private final UserService userService;
 
+
+    // 닉네임 중복 체크
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
+        // 닉네임 존재 여부
         boolean isExists = userRepository.existsByNickName(checkNickname);
         return new NicknameCheckResponse(isExists);
     }
 
+    // 닉네임이 설정돼있는지 아닌지
     @Override
     public NicknameStatusResponse getNicknameStatus(Long userId) {
+        // 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 유저의 닉네임 체크 여부
         boolean hasNickname = user.getNickName() != null && !user.getNickName().isBlank();
         return new NicknameStatusResponse(hasNickname);
     }
@@ -36,4 +44,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         user.updateProfile(nickname, imageUrl);
     }
+
+    @Override
+    public User findById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));    }
+
 }
