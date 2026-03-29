@@ -4,12 +4,17 @@ import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
+import Termproject.Termproject2.domain.running.entity.QRunningLogImage;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
@@ -57,5 +62,26 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .orderBy(runningLog.createdAt.desc())
                 .limit(size + 1)
                 .fetch();
+    }
+
+    @Override
+    public Map<Long, List<String>> findImagesByRunningLogIds(List<Long> runningLogIds) {
+        if (runningLogIds == null || runningLogIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        QRunningLogImage image = QRunningLogImage.runningLogImage;
+
+        List<Tuple> tuples = queryFactory
+                .select(image.runningLog.runningLogId, image.imageUrl)
+                .from(image)
+                .where(image.runningLog.runningLogId.in(runningLogIds))
+                .fetch();
+
+        return tuples.stream()
+                .collect(Collectors.groupingBy(
+                        t -> t.get(image.runningLog.runningLogId),
+                        Collectors.mapping(t -> t.get(image.imageUrl), Collectors.toList())
+                ));
     }
 }

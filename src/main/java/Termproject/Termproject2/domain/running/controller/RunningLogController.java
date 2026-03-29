@@ -8,6 +8,7 @@ import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,7 +36,7 @@ public class RunningLogController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "러닝 일지 등록", description = "이미지와 러닝 일지 저장")
     public ApiResponse<?> createRunningLog(
-            @ModelAttribute RunningLogCreateRequest request,
+            @Valid @ModelAttribute RunningLogCreateRequest request,
             @RequestPart(value = "images" , required = false) List<MultipartFile> images
             ){
         Long userId = jwtTokenExtractor.getUserId();

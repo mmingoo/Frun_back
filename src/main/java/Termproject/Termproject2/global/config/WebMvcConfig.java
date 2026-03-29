@@ -11,25 +11,25 @@ import java.nio.file.Paths;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     @Value("${file.upload.profile.dir}")
-    private String profileUploadDir;
+    private String profileDir;
 
     @Value("${file.upload.profile.url-prefix}")
     private String profileUrlPrefix;
 
     @Value("${file.upload.running-log.dir}")
-    private String runningLogUploadDir;
+    private String runningLogDir;
 
     @Value("${file.upload.running-log.url-prefix}")
     private String runningLogUrlPrefix;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        String profilePath = Paths.get(profileUploadDir).toAbsolutePath().toString();
+        // 프로필 이미지: /images/profile/** → uploads/profile/
         registry.addResourceHandler(profileUrlPrefix + "/**")
-                .addResourceLocations("file:" + profilePath + "/");
+                .addResourceLocations("file:" + Paths.get(profileDir).toAbsolutePath() + "/");
 
-        String runningLogPath = Paths.get(runningLogUploadDir).toAbsolutePath().toString();
+        // 러닝 로그 이미지: /images/running-log/** → uploads/running-log/
         registry.addResourceHandler(runningLogUrlPrefix + "/**")
-                .addResourceLocations("file:" + runningLogPath + "/");
+                .addResourceLocations("file:" + Paths.get(runningLogDir).toAbsolutePath() + "/");
     }
 }

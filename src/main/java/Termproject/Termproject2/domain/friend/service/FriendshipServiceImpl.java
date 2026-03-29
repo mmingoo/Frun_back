@@ -30,7 +30,7 @@ public class FriendshipServiceImpl implements FriendShipService {
                 .map(dto -> new FriendResponseDto(
                         dto.getFriendId(),
                         dto.getFriendName(),
-                        imageService.getImageUrl(dto.getFriendProfileImage())
+                        imageService.getProfileImageUrl(dto.getFriendProfileImage())
                 ))
                 .collect(Collectors.toList());
 

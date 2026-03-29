@@ -78,7 +78,7 @@ public class UserController {
         // 이미지 업로드
         String imageUrl = null;
         if (profileImage != null && !profileImage.isEmpty()) {
-            imageUrl = imageService.uploadProfileImage(userId, profileImage);
+            imageUrl = imageService.saveProfileImage(userId, profileImage);
         }
 
         // 프로필 설정 (닉네임, 이미지)
