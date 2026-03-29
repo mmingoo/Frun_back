@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.friend.repository;
 
 import Termproject.Termproject2.domain.friend.dto.FriendResponseDto;
+import Termproject.Termproject2.domain.friend.entity.Friendship;
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.user.entity.QUser;
 import Termproject.Termproject2.domain.user.entity.UserStatus;
@@ -9,6 +10,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
@@ -47,6 +49,19 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
                 .orderBy(friend.nickName.asc(), friend.userId.asc())
                 .limit(size + 1)
                 .fetch();
+    }
+
+    @Override
+    public Optional<Friendship> findByUserIdAndAuthorId(Long userId, Long authorId) {
+        QFriendship friendship = QFriendship.friendship;
+        return Optional.ofNullable(queryFactory
+                .select(friendship)
+                .from(friendship)
+                .where(friendship.receiveUser.userId.eq(userId)
+                        .and(friendship.senderUser.userId.eq(authorId))
+                        .or(friendship.senderUser.userId.eq(userId)
+                                .and(friendship.receiveUser.userId.eq(authorId)))
+                ).fetchOne());
     }
 }
 

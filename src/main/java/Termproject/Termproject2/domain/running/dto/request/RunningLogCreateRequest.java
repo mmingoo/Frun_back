@@ -29,6 +29,7 @@ public class RunningLogCreateRequest {
     @Max(value = 59, message = "초는 0~59 사이여야 합니다.")
     private Integer durationSec;
 
+    @Size(max = 500, message = "메모는 최대 500자까지 입력할 수 있습니다.")
     private String memo;
 
     private boolean isPublic;

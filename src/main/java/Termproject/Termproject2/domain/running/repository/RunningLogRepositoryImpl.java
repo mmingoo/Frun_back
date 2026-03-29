@@ -84,4 +84,6 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         Collectors.mapping(t -> t.get(image.imageUrl), Collectors.toList())
                 ));
     }
+
+
 }

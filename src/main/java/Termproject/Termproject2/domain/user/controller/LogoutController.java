@@ -28,7 +28,7 @@ public class LogoutController {
         // 2. Redis에서 refreshToken 삭제
         refreshTokenService.delete(userId);
 
-        // 3. HttpOnly 쿠키 만료 처리 (maxAge=0으로 즉시 삭제)
+        // 3. HttpOnly 쿠키 만료 처리 , maxAge=0으로 즉시 삭제
         ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(false)

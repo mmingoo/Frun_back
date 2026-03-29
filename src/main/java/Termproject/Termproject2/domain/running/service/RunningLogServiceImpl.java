@@ -1,6 +1,8 @@
 package Termproject.Termproject2.domain.running.service;
 
+import Termproject.Termproject2.domain.running.converter.RunningLogConverter;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
+import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.RunningLogCreateResponse;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.entity.RunningLogImage;
@@ -56,6 +58,9 @@ public class RunningLogServiceImpl implements RunningLogService {
 
         // 이미지가 있으면 각각 저장
         if (images != null && !images.isEmpty()) {
+            if (images.size() > 5) {
+                throw new BusinessException(ErrorCode.TOO_MANY_IMAGES);
+            }
             for (MultipartFile image : images) {
                 String fileName = imageService.saveRunningLogImage(userId, image);
                 runningLogImageRepository.save(
@@ -69,6 +74,28 @@ public class RunningLogServiceImpl implements RunningLogService {
 
         return new RunningLogCreateResponse(runningLog.getRunningLogId());
     }
+
+    @Override
+    public FriendFeedResponseDto getFriendFeed(Long runningLogId, Long authorId) {
+        // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
+        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+
+        // authorId가 실제로 해당 runningLogId의 작성자인지 검증
+        if (!runningLog.getUser().getUserId().equals(authorId)) {
+            throw new BusinessException(ErrorCode.RUNNING_LOG_AUTHOR_MISMATCH);
+        }
+
+        // 러닝일지가 공개 여부인지 검증
+        if (!runningLog.isPublic()) {
+            throw new BusinessException(ErrorCode.PRIVATE_RUNNING_LOG);
+        }
+
+        return RunningLogConverter.RunningLogToFriendFeedResponseDto(
+                runningLog, runningLog.getUser()
+        );
+    }
+
 
     private String calculatePace(int durationMin, int durationSec, BigDecimal distance) {
         if (distance.compareTo(BigDecimal.ZERO) <= 0) {

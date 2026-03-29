@@ -23,12 +23,16 @@ public enum ErrorCode {
     // 친구
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 친구 요청입니다."),
     ALREADY_FRIEND(HttpStatus.CONFLICT, "이미 친구 관계입니다."),
+    USER_NOT_FRIEND_WITH_LOG_AUTHOR(HttpStatus.NOT_FOUND, "유저와 러닝일지 작성자는 친구가 아닙니다."),
+    RUNNING_LOG_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN, "해당 러닝 일지의 작성자가 아닙니다."),
+    PRIVATE_RUNNING_LOG(HttpStatus.FORBIDDEN, "비공개 러닝 일지입니다."),
 
     // 이미지
     IMAGE_TOO_LARGE(HttpStatus.BAD_REQUEST, "이미지 파일 크기는 3MB를 초과할 수 없습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다. (jpg, jpeg, png만 허용)"),
     INVALID_FILE_NAME(HttpStatus.BAD_REQUEST, "올바른 파일명이 아닙니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 저장에 실패했습니다."),
+    TOO_MANY_IMAGES(HttpStatus.BAD_REQUEST, "이미지는 최대 5장까지 업로드할 수 있습니다."),
     INVALID_DISTANCE(HttpStatus.BAD_REQUEST, "거리를 0km 이상으로 설정해주세요" ),
     INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." );
 

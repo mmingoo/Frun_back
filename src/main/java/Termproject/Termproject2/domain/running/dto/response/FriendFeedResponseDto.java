@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.dto.response;
 
+import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Getter
+@Builder
 public class FriendFeedResponseDto {
     private Long runningLogId;
     private Long userId;
