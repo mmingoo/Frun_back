@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -19,4 +20,5 @@ public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, R
                    "FROM RUNNING_LOG WHERE user_id = :userId AND is_deleted = false",
            nativeQuery = true)
     List<Object[]> aggregateStatsByUserId(@Param("userId") Long userId);
+
 }

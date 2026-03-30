@@ -1,9 +1,6 @@
 package Termproject.Termproject2.domain.running.service;
 
-import Termproject.Termproject2.domain.running.dto.response.FeedScrollResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.*;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
@@ -11,30 +8,31 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FeedServiceImpl implements FeedService {
+
     private final RunningLogRepository runningLogRepository;
     private final ImageService imageService;
 
+    // ===================== 친구 피드 =====================
+
     // 친구 피드 커서 기반 조회
+    @Override
     public FeedScrollResponseDto getFriendFeeds(Long userId, Long cursorId, int size) {
 
         // 커서 기반으로 친구 피드 조회
         List<FriendFeedResponseDto> result = runningLogRepository.findFriendFeeds(userId, cursorId, size);
 
         // size + 1 조회 결과를 기반으로 다음 페이지 존재 여부(hasNext) 판단
-        boolean hasNext = result.size() > size;
-        if (hasNext) {
-            result = result.subList(0, size);
-        }
+        boolean hasNext = hasNext(result, size);
+        result = trimToSize(result, size);
 
         // 조회된 피드에서 러닝로그 ID 목록 추출
-        List<Long> logIds = result.stream()
-                .map(FriendFeedResponseDto::getRunningLogId)
-                .collect(Collectors.toList());
+        List<Long> logIds = extractLogIds(result);
 
         // 러닝로그 ID 기준으로 이미지 목록을 한 번에 조회 (N+1 방지)
         /**
@@ -49,12 +47,101 @@ public class FeedServiceImpl implements FeedService {
         // 각 피드 DTO에 이미지 URL 및 프로필 이미지 URL을 세팅
         // - 러닝로그 이미지는 URL 변환 후 리스트로 매핑
         // - 이미지가 없으면 빈 리스트 반환
-        result = result.stream()
+        result = attachFriendImages(result, imagesMap);
+
+        // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
+        Long nextCursorId = getNextCursorId(result, hasNext, FriendFeedResponseDto::getRunningLogId);
+
+        return new FeedScrollResponseDto(result, hasNext, nextCursorId);
+    }
+
+    // ===================== 마이페이지 피드 =====================
+
+    // 마이페이지 피드 조회
+    @Override
+    public MyPageFeedScrollResponseDto getMyPageFeeds(Long userId, Long cursorId, int size) {
+
+        // 마이페이지에 있는 피드 조회
+        List<MyPageFeedResponseDto> feeds = runningLogRepository.findMyFeeds(userId, cursorId, size);
+
+        // 다음 페이지 존재 여부 판단
+        boolean hasNext = hasNext(feeds, size);
+        feeds = trimToSize(feeds, size);
+
+        // 러닝로그 Id 기준으로 이미지 목록 조회
+        Map<Long, List<String>> imagesMap = getImagesMap(feeds);
+
+        // 러닝로그별 이미지 URL 변환 후 DTO에 세팅 (이미지 없으면 빈 리스트)
+        List<MyPageFeedResponseDto> result = attachMyPageImages(feeds, imagesMap);
+
+        // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
+        Long nextCursorId = getNextCursorId(result, hasNext, MyPageFeedResponseDto::getRunningLogId);
+
+        return new MyPageFeedScrollResponseDto(result, hasNext, nextCursorId);
+    }
+
+    // ===================== 친구 페이지 피드 =====================
+    @Override
+    public MyPageFeedScrollResponseDto getFriendPageFeeds(Long userId, Long cursorId, int size) {
+        // 친구 페이지에 있는 피드 목록 조회
+//        List<MyPageFeedResponseDto> feeds = runningLogRepository.findMyFeeds(userId, cursorId, size);
+//
+//        // 다음 페이지 존재 여부 판단
+//        boolean hasNext = hasNext(feeds, size);
+//        feeds = trimToSize(feeds, size);
+//
+//        Map<Long, String> imagesMap = getImageMap(feeds);
+//        List<FriendPageFeedResponseDto>
+
+        return null; // 필요 시 구현
+    }
+
+
+
+
+
+    // ===================== 공통 로직 =====================
+
+    // 다음 페이지 존재 여부 판단
+    private boolean hasNext(List<?> list, int size) {
+        return list.size() > size;
+    }
+
+    // size 기준으로 리스트 자르기
+    private <T> List<T> trimToSize(List<T> list, int size) {
+        return list.size() > size ? list.subList(0, size) : list;
+    }
+
+    // next cursor 계산 (제네릭)
+    private <T> Long getNextCursorId(List<T> result, boolean hasNext, Function<T, Long> idExtractor) {
+        if (!hasNext || result.isEmpty()) {
+            return null;
+        }
+        return idExtractor.apply(result.get(result.size() - 1));
+    }
+
+    // ===================== Friend 전용 =====================
+
+    // 조회된 피드에서 러닝로그 ID 목록 추출
+    private List<Long> extractLogIds(List<FriendFeedResponseDto> feeds) {
+        return feeds.stream()
+                .map(FriendFeedResponseDto::getRunningLogId)
+                .collect(Collectors.toList());
+    }
+
+    // 각 피드 DTO에 이미지 URL 및 프로필 이미지 URL을 세팅
+    // - 러닝로그 이미지는 URL 변환 후 리스트로 매핑
+    // - 이미지가 없으면 빈 리스트 반환
+    private List<FriendFeedResponseDto> attachFriendImages(
+            List<FriendFeedResponseDto> feeds,
+            Map<Long, List<String>> imagesMap
+    ) {
+        return feeds.stream()
                 .map(dto -> {
                     List<String> images = imagesMap.getOrDefault(dto.getRunningLogId(), List.of())
                             .stream()
                             .map(imageService::getRunningLogImageUrl)
-                            .collect(Collectors.toList());
+                            .toList();
 
                     return new FriendFeedResponseDto(
                             dto.getRunningLogId(),
@@ -72,53 +159,50 @@ public class FeedServiceImpl implements FeedService {
                             images
                     );
                 })
-                .collect(Collectors.toList());
-
-        // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
-        Long nextCursorId = hasNext ? result.get(result.size() - 1).getRunningLogId() : null;
-
-        return new FeedScrollResponseDto(result, hasNext, nextCursorId);
+                .toList();
     }
 
-    // 마이페이지 피드 조회
-    @Override
-    public MyPageFeedScrollResponseDto getMyPageFeeds(Long userId, Long cursorId, int size) {
-
-        // 마이페이지에 있는 피드 조회
-        List<MyPageFeedResponseDto> result = runningLogRepository.findMyFeeds(userId, cursorId, size);
-
-        // 다음 페이지 존재 여부 판단
-        boolean hasNext = result.size() > size;
-        if (hasNext) {
-            result = result.subList(0, size);
-        }
-
-        // 조회된 피드에서 러닝로그 id 추출
-        List<Long> logIds = result.stream()
+    private Map<Long, String> getImageMap(List<MyPageFeedResponseDto> feeds) {
+        List<Long> logIds = feeds.stream()
                 .map(MyPageFeedResponseDto::getRunningLogId)
-                .collect(Collectors.toList());
+                .toList();
 
-        // 러닝로그 Id 기준으로 이미지 목록 조회
-        Map<Long, List<String>> imagesMap = runningLogRepository.findImagesByRunningLogIds(logIds);
+        return runningLogRepository.findImageByRunningLogIds(logIds);
+    }
 
-        // 러닝로그별 이미지 URL 변환 후 DTO에 세팅 (이미지 없으면 빈 리스트)
-        result = result.stream()
+    // ===================== MyPage 전용 =====================
+
+    private Map<Long, List<String>> getImagesMap(List<MyPageFeedResponseDto> feeds) {
+        List<Long> logIds = feeds.stream()
+                .map(MyPageFeedResponseDto::getRunningLogId)
+                .toList();
+
+        return runningLogRepository.findImagesByRunningLogIds(logIds);
+    }
+
+
+    private List<MyPageFeedResponseDto> attachMyPageImages(
+            List<MyPageFeedResponseDto> feeds,
+            Map<Long, List<String>> imagesMap
+    ) {
+        return feeds.stream()
                 .map(dto -> {
                     List<String> images = imagesMap.getOrDefault(dto.getRunningLogId(), List.of())
                             .stream()
                             .map(imageService::getRunningLogImageUrl)
-                            .collect(Collectors.toList());
+                            .toList();
 
                     return new MyPageFeedResponseDto(
-                            dto.getAuthorId(),dto.getRunningLogId(), dto.getRunDate(), dto.getDistance(),
-                            dto.getPace(), dto.getDuration(), dto.getLikeCtn(), images
+                            dto.getAuthorId(),
+                            dto.getRunningLogId(),
+                            dto.getRunDate(),
+                            dto.getDistance(),
+                            dto.getPace(),
+                            dto.getDuration(),
+                            dto.getLikeCtn(),
+                            images
                     );
                 })
-                .collect(Collectors.toList());
-
-        // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
-        Long nextCursorId = hasNext ? result.get(result.size() - 1).getRunningLogId() : null;
-
-        return new MyPageFeedScrollResponseDto(result, hasNext, nextCursorId);
+                .toList();
     }
 }

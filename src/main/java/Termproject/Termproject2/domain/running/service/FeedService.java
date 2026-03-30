@@ -6,4 +6,5 @@ import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResp
 public interface FeedService {
     FeedScrollResponseDto getFriendFeeds(Long userId, Long cursorId, int size);
     MyPageFeedScrollResponseDto getMyPageFeeds(Long userId, Long cursorId, int size);
+    MyPageFeedScrollResponseDto getFriendPageFeeds(Long userId, Long cursorId, int size);
 }

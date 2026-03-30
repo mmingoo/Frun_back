@@ -93,12 +93,21 @@ public class RunningLog {
         this.duration = duration;
         this.runDate = runDate;
         this.distance = distance;
-        this.pace = pace;
-        this.isPublic = isPublic;
         this.memo = memo;
+        this.isPublic = isPublic;
+        this.pace = pace;
+
     }
 
     public void delete() {
         this.isDeleted = true;
+    }
+
+    public void addImage(RunningLogImage image){
+        this.images.add(image);
+
+        if(image.getRunningLog() != this){
+            image.setRunningLog(this);
+        }
     }
 }

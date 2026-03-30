@@ -1,7 +1,7 @@
 package Termproject.Termproject2.domain.running.service;
 
-import Termproject.Termproject2.domain.running.converter.RunningLogConverter;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
+import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.RunningLogCreateResponse;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
@@ -38,9 +38,11 @@ public class RunningLogServiceImpl implements RunningLogService {
     @Transactional
     public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
 
+        // 분, 초 구하기
         int durationMin = request.getDurationMin() != null ? request.getDurationMin() : 0;
         int durationSec = request.getDurationSec() != null ? request.getDurationSec() : 0;
 
+        // 분, 초 유효성 검사
         if (durationMin == 0 && durationSec == 0) {
             throw new BusinessException(ErrorCode.INVALID_DURATION);
         }
@@ -80,6 +82,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         return new RunningLogCreateResponse(runningLog.getRunningLogId());
     }
 
+    // 피드 상세 조회
     @Override
     public FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId) {
         // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
@@ -116,6 +119,79 @@ public class RunningLogServiceImpl implements RunningLogService {
                 imageUrls
         );
     }
+
+    @Override
+    public void updateRunningLog(Long runningLogId, Long userId, RunningLogUpdateRequest request, List<MultipartFile> images) {
+
+        // 러닝일지 조회
+        RunningLog runningLog = runningLogRepository.findById(runningLogId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+
+        // 유저가 해당 러닝일지의 작성자인지 검증
+        if(!runningLog.getUser().getUserId().equals(userId)){
+            new BusinessException(ErrorCode.USER_NOT_AUTHORIZATION);
+            return;
+        }
+
+        // 러닝로그 업데이트
+        setupRunningLog(runningLog, request, images);
+
+        // 러닝로그 이미지 업데이트
+        setupRunningLogImage(runningLog,images);
+
+    }
+
+    // 러닝 로그 이미지 업데이트
+    public void setupRunningLogImage(RunningLog runningLog, List<MultipartFile> images){
+        // 1. 새 이미지가 들어온 경우에만 기존 이미지를 교체
+        if (images != null && !images.isEmpty()) {
+
+            // 이미지 개수 제한 체크
+            if (images.size() > 5) {
+                throw new BusinessException(ErrorCode.TOO_MANY_IMAGES);
+            }
+            // 1. 기존 이미지 리스트 비우기 (orphanRemoval=true에 의해 DB 데이터도 자동 삭제됨)
+            runningLog.getImages().clear();
+
+            // 2. 새 이미지 저장
+            for(MultipartFile image : images){
+
+                //파일 저장
+                String fileName = imageService.saveRunningLogImage(runningLog.getUser().getUserId(), image);
+                RunningLogImage runningLogImage = RunningLogImage.builder()
+                        .runningLog(runningLog)
+                        .imageUrl(fileName)
+                        .build();
+
+                // 연관관계 편의 메서드 사용
+                runningLog.addImage(runningLogImage);
+            }
+
+        }
+
+
+        // 2. RunningLogImage 객체 생성
+    }
+    // 러닝 로그 설정
+    public void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request, List<MultipartFile> images ){
+        // 분, 초 구하기
+        int durationMin = request.getDurationMin() != null ? request.getDurationMin() : 0;
+        int durationSec = request.getDurationSec() != null ? request.getDurationSec() : 0;
+
+        // 분, 초 유효성 검사
+        if (durationMin == 0 && durationSec == 0) {
+            throw new BusinessException(ErrorCode.INVALID_DURATION);
+        }
+        runningLog.update(
+                toLocalTime(durationMin, durationSec),
+                request.getRunDate(),
+                request.getDistance(),
+                request.getMemo(),
+                request.isPublic(),
+                calculatePace(durationMin, durationSec, request.getDistance())
+
+        );
+    };
 
 
     private String calculatePace(int durationMin, int durationSec, BigDecimal distance) {

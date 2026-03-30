@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.running.controller;
 
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
+import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.service.FeedService;
@@ -34,10 +35,20 @@ public class RunningLogController {
             @RequestParam(required = false) Long cursorId,
             @RequestParam(defaultValue = "10") int size
     ) {
-        System.out.println("마이페이지 시작");
         Long userId = jwtTokenExtractor.getUserId();
         MyPageFeedScrollResponseDto myPageFeeds = feedService.getMyPageFeeds(userId, cursorId, size);
-        System.out.println("마이페이지 종료");
+        return ApiResponse.ok(myPageFeeds, "마이페이지 피드 조회 성공");
+    }
+
+    @GetMapping("/my/{friendId}")
+    @Operation(summary = "친구 페이지 피드 목록 조회", description = "친구 러닝 피드를 최신순으로 조회 (무한스크롤). 사진이 있으면 사진 포함, 없으면 거리/운동시간/페이스/좋아요 수 포함")
+    public ApiResponse<?> getFriendPageFeeds(
+            @PathVariable Long friendId,
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Long userId = jwtTokenExtractor.getUserId();
+        MyPageFeedScrollResponseDto myPageFeeds = feedService.getFriendPageFeeds(userId, cursorId, size);
         return ApiResponse.ok(myPageFeeds, "마이페이지 피드 조회 성공");
     }
 
@@ -77,16 +88,23 @@ public class RunningLogController {
     ){
         Long userId = jwtTokenExtractor.getUserId();
 
-        // 본인이 아닌 경우에만 친구 여부 확인
-        if (!userId.equals(authorId)) {
-            friendShipService.isFriendWithAuthor(userId, authorId);
-        }
-
         // 러닝 일지 조회
         FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, authorId, userId);
 
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }
 
+    @PutMapping(value = "/update/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "러닝 일지 수정", description = "이미지와 러닝 일지 수정")
+    public ApiResponse<?> updateRunningLog(
+            @Valid @ModelAttribute RunningLogUpdateRequest request,
+            @PathVariable Long runningLogId,
+            @RequestPart(value = "images" , required = false) List<MultipartFile> images
+    ){
+        Long userId = jwtTokenExtractor.getUserId();
+        runningLogService.updateRunningLog(runningLogId, userId, request,images );
+        return ApiResponse.ok( "러닝일지가 수정되었습니다.");
+
+    }
 
 }

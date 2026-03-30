@@ -39,4 +39,7 @@ public class RunningLogImage {
         this.runningLog = runningLog;
         this.imageUrl = imageUrl;
     }
-}
+
+    public void setRunningLog(RunningLog runningLog) {
+        this.runningLog = runningLog;
+    }}

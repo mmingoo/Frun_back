@@ -3,6 +3,7 @@ package Termproject.Termproject2.domain.running.repository;
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.FriendPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
 import Termproject.Termproject2.domain.running.entity.QRunningLogImage;
@@ -90,9 +91,35 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .fetch();
     }
 
+    //마이페이지 피드 조회, 페이징 조건 고려
+    @Override
+    public List<FriendPageFeedResponseDto> findFriendPageFeeds(Long userId, Long cursorId, int size) {
+        QRunningLog runningLog = QRunningLog.runningLog;
+
+        return queryFactory
+                .select(Projections.constructor(FriendPageFeedResponseDto.class,
+                        runningLog.user.userId,
+                        runningLog.runningLogId,
+                        runningLog.runDate,
+                        runningLog.distance,
+                        runningLog.pace,
+                        runningLog.duration,
+                        runningLog.likeCtn))
+                .from(runningLog)
+                .where(
+                        runningLog.user.userId.eq(userId),
+                        runningLog.isDeleted.isFalse(),
+                        runningLog.isPublic.isTrue(),
+                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null
+                )
+                .orderBy(runningLog.createdAt.desc())
+                .limit(size + 1)
+                .fetch();
+    }
+
     @Override
     public Map<Long, List<String>> findImagesByRunningLogIds(List<Long> runningLogIds) {
-        // runningLogIds 는 러닝로그의 id 들
+        // runningLogIds 존재 여부
         if (runningLogIds == null || runningLogIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -112,6 +139,34 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .collect(Collectors.groupingBy(
                         t -> t.get(image.runningLog.runningLogId), // logId 기준으로 매핑
                         Collectors.mapping(t -> t.get(image.imageUrl), Collectors.toList())
+                ));
+    }
+
+    @Override
+    public Map<Long, String> findImageByRunningLogIds(List<Long> runningLogIds) {
+
+        QRunningLogImage image = QRunningLogImage.runningLogImage;
+
+        // runningLogIds 존재 여부 확인
+        if (runningLogIds == null || runningLogIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        List<Tuple> tuples = queryFactory
+                .select(image.runningLog.runningLogId, image.imageUrl)
+                .from(image)
+                .where(image.runningLog.runningLogId.in(runningLogIds))
+                // 최신 이미지 1개
+                .orderBy(image.runningLog.runningLogId.asc(), image.createdAt.desc())
+                .fetch();
+
+        // runningLogId -> imageUrl (하나의 사진만 유지)
+        return tuples.stream()
+                .filter(t -> t.get(image.runningLog.runningLogId) != null)
+                .collect(Collectors.toMap(
+                        t -> t.get(image.runningLog.runningLogId),
+                        t -> t.get(image.imageUrl),
+                        (existing, replacement) -> existing // 첫 번째 값 유지
                 ));
     }
 
