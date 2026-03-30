@@ -1,6 +1,11 @@
 package Termproject.Termproject2.domain.running.service;
 
-import Termproject.Termproject2.domain.running.dto.response.*;
+import Termproject.Termproject2.domain.running.dto.response.FeedScrollResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.FriendPageFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.FriendPageFeedScrollResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
@@ -82,18 +87,37 @@ public class FeedServiceImpl implements FeedService {
 
     // ===================== 친구 페이지 피드 =====================
     @Override
-    public MyPageFeedScrollResponseDto getFriendPageFeeds(Long userId, Long cursorId, int size) {
-        // 친구 페이지에 있는 피드 목록 조회
-//        List<MyPageFeedResponseDto> feeds = runningLogRepository.findMyFeeds(userId, cursorId, size);
-//
-//        // 다음 페이지 존재 여부 판단
-//        boolean hasNext = hasNext(feeds, size);
-//        feeds = trimToSize(feeds, size);
-//
-//        Map<Long, String> imagesMap = getImageMap(feeds);
-//        List<FriendPageFeedResponseDto>
+    public FriendPageFeedScrollResponseDto getFriendPageFeeds(Long friendId, Long cursorId, int size) {
+        List<FriendPageFeedResponseDto> feeds = runningLogRepository.findFriendPageFeeds(friendId, cursorId, size);
 
-        return null; // 필요 시 구현
+        boolean hasNext = hasNext(feeds, size);
+        feeds = trimToSize(feeds, size);
+
+        List<Long> logIds = feeds.stream()
+                .map(FriendPageFeedResponseDto::getRunningLogId)
+                .toList();
+
+        Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds);
+
+        List<FriendPageFeedResponseDto> result = feeds.stream()
+                .map(dto -> {
+                    String thumbnail = imagesMap.get(dto.getRunningLogId());
+                    String thumbnailUrl = thumbnail != null ? imageService.getRunningLogImageUrl(thumbnail) : null;
+                    return new FriendPageFeedResponseDto(
+                            dto.getAuthorId(),
+                            dto.getRunningLogId(),
+                            dto.getRunDate(),
+                            dto.getDistance(),
+                            dto.getPace(),
+                            dto.getDuration(),
+                            dto.getLikeCtn(),
+                            thumbnailUrl
+                    );
+                })
+                .toList();
+
+        Long nextCursorId = getNextCursorId(result, hasNext, FriendPageFeedResponseDto::getRunningLogId);
+        return new FriendPageFeedScrollResponseDto(result, hasNext, nextCursorId);
     }
 
 
@@ -162,14 +186,6 @@ public class FeedServiceImpl implements FeedService {
                 .toList();
     }
 
-    private Map<Long, String> getImageMap(List<MyPageFeedResponseDto> feeds) {
-        List<Long> logIds = feeds.stream()
-                .map(MyPageFeedResponseDto::getRunningLogId)
-                .toList();
-
-        return runningLogRepository.findImageByRunningLogIds(logIds);
-    }
-
     // ===================== MyPage 전용 =====================
 
     private Map<Long, List<String>> getImagesMap(List<MyPageFeedResponseDto> feeds) {
@@ -187,10 +203,9 @@ public class FeedServiceImpl implements FeedService {
     ) {
         return feeds.stream()
                 .map(dto -> {
-                    List<String> images = imagesMap.getOrDefault(dto.getRunningLogId(), List.of())
-                            .stream()
-                            .map(imageService::getRunningLogImageUrl)
-                            .toList();
+                    List<String> images = imagesMap.getOrDefault(dto.getRunningLogId(), List.of());
+                    String thumbnail = images.isEmpty() ? null
+                            : imageService.getRunningLogImageUrl(images.get(0));
 
                     return new MyPageFeedResponseDto(
                             dto.getAuthorId(),
@@ -200,7 +215,7 @@ public class FeedServiceImpl implements FeedService {
                             dto.getPace(),
                             dto.getDuration(),
                             dto.getLikeCtn(),
-                            images
+                            thumbnail
                     );
                 })
                 .toList();

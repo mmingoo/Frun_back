@@ -123,43 +123,38 @@ public class RunningLogServiceImpl implements RunningLogService {
     @Override
     public void updateRunningLog(Long runningLogId, Long userId, RunningLogUpdateRequest request, List<MultipartFile> images) {
 
-        // 러닝일지 조회
-        RunningLog runningLog = runningLogRepository.findById(runningLogId)
+        // 러닝일지 조회 (삭제된 로그 제외)
+        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
         // 유저가 해당 러닝일지의 작성자인지 검증
-        if (isAuthor(userId, runningLog)) return;
+        validateAuthor(userId, runningLog);
 
         // 러닝로그 업데이트
-        setupRunningLog(runningLog, request, images);
+        setupRunningLog(runningLog, request);
 
         // 러닝로그 이미지 업데이트
-        setupRunningLogImage(runningLog,images);
+        setupRunningLogImage(runningLog, images);
 
     }
-
-
 
     @Override
     public void softDeleteRunningLog(Long runningLogId, Long userId) {
         // RunningLog 조회
-        RunningLog runningLog = runningLogRepository.findById(runningLogId)
+        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
-
-        // 유저가 작성자인지 검토
-        isAuthor(userId, runningLog);
+        // 유저가 작성자인지 검증
+        validateAuthor(userId, runningLog);
 
         // soft 삭제
         runningLog.delete();
     }
 
-    private static boolean isAuthor(Long userId, RunningLog runningLog) {
-        if(!runningLog.getUser().getUserId().equals(userId)){
-            new BusinessException(ErrorCode.USER_NOT_AUTHORIZATION);
-            return true;
+    private static void validateAuthor(Long userId, RunningLog runningLog) {
+        if (!runningLog.getUser().getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.USER_NOT_AUTHORIZATION);
         }
-        return false;
     }
 
     // 러닝 로그 이미지 업데이트
@@ -194,7 +189,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         // 2. RunningLogImage 객체 생성
     }
     // 러닝 로그 설정
-    public void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request, List<MultipartFile> images ){
+    public void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request) {
         // 분, 초 구하기
         int durationMin = request.getDurationMin() != null ? request.getDurationMin() : 0;
         int durationSec = request.getDurationSec() != null ? request.getDurationSec() : 0;
