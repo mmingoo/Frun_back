@@ -14,4 +14,6 @@ public interface RunningLogService {
     FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId);
 
     void updateRunningLog(Long runningLogId, Long userId, @Valid RunningLogUpdateRequest request, List<MultipartFile> images);
+
+    void softDeleteRunningLog(Long runningLogId, Long userId);
 }

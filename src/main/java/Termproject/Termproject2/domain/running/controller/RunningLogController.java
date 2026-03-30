@@ -94,7 +94,7 @@ public class RunningLogController {
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }
 
-    @PutMapping(value = "/update/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "러닝 일지 수정", description = "이미지와 러닝 일지 수정")
     public ApiResponse<?> updateRunningLog(
             @Valid @ModelAttribute RunningLogUpdateRequest request,
@@ -106,5 +106,19 @@ public class RunningLogController {
         return ApiResponse.ok( "러닝일지가 수정되었습니다.");
 
     }
+
+    @DeleteMapping(value = "/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "러닝 일지 수정", description = "이미지와 러닝 일지 수정")
+    public ApiResponse<?> softDeleteRunningLog(
+            @PathVariable Long runningLogId
+    ){
+        Long userId = jwtTokenExtractor.getUserId();
+        runningLogService.softDeleteRunningLog(runningLogId, userId);
+        return ApiResponse.ok( "러닝일지가 수정되었습니다.");
+
+    }
+
+
+
 
 }

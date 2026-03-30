@@ -128,10 +128,7 @@ public class RunningLogServiceImpl implements RunningLogService {
                 .orElseThrow(()-> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
         // 유저가 해당 러닝일지의 작성자인지 검증
-        if(!runningLog.getUser().getUserId().equals(userId)){
-            new BusinessException(ErrorCode.USER_NOT_AUTHORIZATION);
-            return;
-        }
+        if (isAuthor(userId, runningLog)) return;
 
         // 러닝로그 업데이트
         setupRunningLog(runningLog, request, images);
@@ -139,6 +136,30 @@ public class RunningLogServiceImpl implements RunningLogService {
         // 러닝로그 이미지 업데이트
         setupRunningLogImage(runningLog,images);
 
+    }
+
+
+
+    @Override
+    public void softDeleteRunningLog(Long runningLogId, Long userId) {
+        // RunningLog 조회
+        RunningLog runningLog = runningLogRepository.findById(runningLogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+
+
+        // 유저가 작성자인지 검토
+        isAuthor(userId, runningLog);
+
+        // soft 삭제
+        runningLog.delete();
+    }
+
+    private static boolean isAuthor(Long userId, RunningLog runningLog) {
+        if(!runningLog.getUser().getUserId().equals(userId)){
+            new BusinessException(ErrorCode.USER_NOT_AUTHORIZATION);
+            return true;
+        }
+        return false;
     }
 
     // 러닝 로그 이미지 업데이트
