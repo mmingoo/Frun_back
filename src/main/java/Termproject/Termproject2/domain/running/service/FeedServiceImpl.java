@@ -20,6 +20,7 @@ public class FeedServiceImpl implements FeedService {
     public FeedScrollResponseDto getFriendFeeds(Long userId, Long cursorId, int size) {
         List<FriendFeedResponseDto> result = runningLogRepository.findFriendFeeds(userId, cursorId, size);
 
+        // 페이징할 다음 내용이 존재하는지
         boolean hasNext = result.size() > size;
         if (hasNext) {
             result = result.subList(0, size);
@@ -29,6 +30,15 @@ public class FeedServiceImpl implements FeedService {
         List<Long> logIds = result.stream()
                 .map(FriendFeedResponseDto::getRunningLogId)
                 .collect(Collectors.toList());
+
+
+        // logId 별로 이미지 가져오기, 즉 러닝일지에 해당되는 imageUrl 불러오기
+        /**
+         * {
+         *   1: ["a.jpg", "b.jpg"],
+         *   2: ["c.jpg"]
+         * }
+         * */
         Map<Long, List<String>> imagesMap = runningLogRepository.findImagesByRunningLogIds(logIds);
 
         result = result.stream()

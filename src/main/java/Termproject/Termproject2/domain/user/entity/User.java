@@ -51,6 +51,9 @@ public class User extends BaseTimeEntity {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    @Column(name = "bio", length = 200)
+    private String bio;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "social_type_id")
     private SocialLoginType socialLoginType;

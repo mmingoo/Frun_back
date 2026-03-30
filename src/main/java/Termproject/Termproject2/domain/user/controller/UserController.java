@@ -86,5 +86,10 @@ public class UserController {
         return ApiResponse.ok("프로필 설정이 완료되었습니다.");
     }
 
-
+    @Operation(summary = "마이페이지의 내 정보 조회", description = "현재 로그인한 유저의 마이페이지 정보를 조회합니다.")
+    @GetMapping("/mypage")
+    public ApiResponse<?> getMyPage() {
+        Long userId = jwtTokenExtractor.getUserId();
+        return ApiResponse.ok(userService.getMyPageInfo(userId), "조회되었습니다.");
+    }
 }

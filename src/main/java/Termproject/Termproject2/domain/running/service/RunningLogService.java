@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface RunningLogService {
     RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images);
-    FriendFeedResponseDto getFriendFeed(Long runningLogId, Long authorId);
+    FriendFeedResponseDto getFeed(Long runningLogId, Long authorId);
 }

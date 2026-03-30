@@ -20,7 +20,7 @@ public class RunningLogConverter {
         return FriendFeedResponseDto.builder()
                 .runningLogId(runningLog.getRunningLogId())
                 .userId(author.getUserId())
-                .nickName(author.getUserName())
+                .nickName(author.getNickName())
                 .imageUrl(author.getImageUrl())
                 .runDate(runningLog.getRunDate())
                 .distance(runningLog.getDistance())
@@ -32,7 +32,7 @@ public class RunningLogConverter {
                 .likeCtn(runningLog.getLikeCtn())
                 .logImages(
                         runningLog.getImages().stream()
-                                .map(Object::toString)
+                                .map(RunningLogImage::getImageUrl)
                                 .collect(Collectors.toList())
                 )
                 .build();

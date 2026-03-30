@@ -66,21 +66,25 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
 
     @Override
     public Map<Long, List<String>> findImagesByRunningLogIds(List<Long> runningLogIds) {
+        // runningLogIds 는 러닝로그의 id 들
         if (runningLogIds == null || runningLogIds.isEmpty()) {
             return Collections.emptyMap();
         }
 
+
         QRunningLogImage image = QRunningLogImage.runningLogImage;
 
+        // (러닝로그 id, imageUrl) 튜플 형태
         List<Tuple> tuples = queryFactory
                 .select(image.runningLog.runningLogId, image.imageUrl)
                 .from(image)
                 .where(image.runningLog.runningLogId.in(runningLogIds))
                 .fetch();
 
+        // runningLogId 기준으로 그룹핑해서, 각 로그에 해당하는 imageUrl 리스트를 만듦
         return tuples.stream()
                 .collect(Collectors.groupingBy(
-                        t -> t.get(image.runningLog.runningLogId),
+                        t -> t.get(image.runningLog.runningLogId), // logId 기준으로 매핑
                         Collectors.mapping(t -> t.get(image.imageUrl), Collectors.toList())
                 ));
     }

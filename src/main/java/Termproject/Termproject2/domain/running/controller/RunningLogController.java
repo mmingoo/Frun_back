@@ -67,7 +67,7 @@ public class RunningLogController {
         friendShipService.isFriendWithAuthor(userId, authorId);
 
         // 러닝 일지 조회
-        FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFriendFeed(runningLogId, authorId);
+        FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, authorId);
 
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }
