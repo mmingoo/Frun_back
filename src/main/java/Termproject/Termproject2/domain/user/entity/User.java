@@ -51,6 +51,8 @@ public class User extends BaseTimeEntity {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+
+    // 프로필 소개글
     @Column(name = "bio", length = 200)
     private String bio;
 
@@ -80,6 +82,14 @@ public class User extends BaseTimeEntity {
     public void updateProfile(String nickName, String imageUrl) {
         if (nickName != null) this.nickName = nickName;
         if (imageUrl != null) this.imageUrl = imageUrl;
+    }
+
+    public void updateImageUrl(String imageUrl){
+        this.imageUrl = imageUrl;
+    }
+
+    public void updateBio(String bio){
+        this.bio =bio;
     }
 
 

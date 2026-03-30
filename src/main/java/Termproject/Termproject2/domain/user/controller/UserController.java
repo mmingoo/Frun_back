@@ -92,4 +92,11 @@ public class UserController {
         Long userId = jwtTokenExtractor.getUserId();
         return ApiResponse.ok(userService.getMyPageInfo(userId), "조회되었습니다.");
     }
+
+    @Operation(summary = "유저 마이페이지 조회", description = "특정 유저의 마이페이지 정보를 조회합니다. 본인이면 isFriend=false.")
+    @GetMapping("/{userId}/mypage")
+    public ApiResponse<?> getUserPage(@PathVariable Long userId) {
+        Long viewerId = jwtTokenExtractor.getUserId();
+        return ApiResponse.ok(userService.getUserPageInfo(viewerId, userId), "조회되었습니다.");
+    }
 }

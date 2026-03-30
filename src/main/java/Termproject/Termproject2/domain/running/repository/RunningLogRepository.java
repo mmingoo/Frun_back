@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+
 public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, RunningLogRepositoryCustom {
     List<RunningLog> findByUserUserIdAndIsDeletedFalseAndRunDateBetween(Long userId, LocalDate start, LocalDate end);
     Optional<RunningLog> findByRunningLogIdAndIsDeletedFalse(Long runningLogId);
@@ -17,5 +18,5 @@ public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, R
     @Query(value = "SELECT COUNT(*), COALESCE(SUM(distance), 0.0), COALESCE(SUM(TIME_TO_SEC(duration)), 0) " +
                    "FROM RUNNING_LOG WHERE user_id = :userId AND is_deleted = false",
            nativeQuery = true)
-    Object[] aggregateStatsByUserId(@Param("userId") Long userId);
+    List<Object[]> aggregateStatsByUserId(@Param("userId") Long userId);
 }

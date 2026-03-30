@@ -9,7 +9,8 @@
       "Read(//c/Program Files/**)",
       "Bash(find /c/Users/TANINE/Desktop/FRun/FRun-back/src -name \"*.java\" -type f -exec grep -l \"^@Entity\" {})",
       "Bash(find /c/Users/TANINE/Desktop/FRun/FRun-back/src/main/java/Termproject/Termproject2/domain/member -type f -name *.java)",
-      "Bash(find /c/Users/TANINE/Desktop/FRun/FRun-back/src/main/java/Termproject/Termproject2/domain/user -type f -name *.java)"
+      "Bash(find /c/Users/TANINE/Desktop/FRun/FRun-back/src/main/java/Termproject/Termproject2/domain/user -type f -name *.java)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

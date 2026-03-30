@@ -81,7 +81,7 @@ public class RunningLogServiceImpl implements RunningLogService {
     }
 
     @Override
-    public FriendFeedResponseDto getFeed(Long runningLogId, Long authorId) {
+    public FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId) {
         // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
         RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
@@ -91,9 +91,11 @@ public class RunningLogServiceImpl implements RunningLogService {
             throw new BusinessException(ErrorCode.RUNNING_LOG_AUTHOR_MISMATCH);
         }
 
-        // 러닝일지가 공개 여부인지 검증
-        if (!runningLog.isPublic()) {
-            throw new BusinessException(ErrorCode.PRIVATE_RUNNING_LOG);
+        // 작성자가 본인이 아닐 경우에 러닝일지 공개 여부 검증
+        if (!userId.equals(authorId)){
+            if (!runningLog.isPublic()) {
+                throw new BusinessException(ErrorCode.PRIVATE_RUNNING_LOG);
+            }
         }
 
         // 파일명을 바탕으로 imageUrl 반환

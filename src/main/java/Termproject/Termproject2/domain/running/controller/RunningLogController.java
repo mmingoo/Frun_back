@@ -3,6 +3,7 @@ package Termproject.Termproject2.domain.running.controller;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.service.FeedService;
 import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
@@ -26,6 +27,19 @@ public class RunningLogController {
     private final FeedService feedService;
     private final RunningLogService runningLogService;
     private final FriendShipService friendShipService;
+
+    @GetMapping("/my")
+    @Operation(summary = "마이페이지 피드 목록 조회", description = "내 러닝 피드를 최신순으로 조회 (무한스크롤). 사진이 있으면 사진 포함, 없으면 거리/운동시간/페이스/좋아요 수 포함")
+    public ApiResponse<?> getMyPageFeeds(
+            @RequestParam(required = false) Long cursorId,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        System.out.println("마이페이지 시작");
+        Long userId = jwtTokenExtractor.getUserId();
+        MyPageFeedScrollResponseDto myPageFeeds = feedService.getMyPageFeeds(userId, cursorId, size);
+        System.out.println("마이페이지 종료");
+        return ApiResponse.ok(myPageFeeds, "마이페이지 피드 조회 성공");
+    }
 
     @GetMapping("/feed")
     @Operation(summary = "친구 feed 목록 조회", description = "친구들의 feed를 최신순으로 조회 (무한스크롤)")
@@ -63,11 +77,13 @@ public class RunningLogController {
     ){
         Long userId = jwtTokenExtractor.getUserId();
 
-        // 조회하려는 사람과 러닝일지 작성자와 친구인지 여부
-        friendShipService.isFriendWithAuthor(userId, authorId);
+        // 본인이 아닌 경우에만 친구 여부 확인
+        if (!userId.equals(authorId)) {
+            friendShipService.isFriendWithAuthor(userId, authorId);
+        }
 
         // 러닝 일지 조회
-        FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, authorId);
+        FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, authorId, userId);
 
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }

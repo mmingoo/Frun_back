@@ -3,6 +3,7 @@ package Termproject.Termproject2.domain.running.repository;
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
+import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
 import Termproject.Termproject2.domain.running.entity.QRunningLogImage;
 import com.querydsl.core.Tuple;
@@ -58,6 +59,31 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                                 .where(report.status.eq("COMPLETED"),
                                         report.runningLog.runningLogId.eq(runningLog.runningLogId))
                                 .notExists()
+                )
+                .orderBy(runningLog.createdAt.desc())
+                .limit(size + 1)
+                .fetch();
+    }
+
+    //마이페이지 피드 조회, 페이징 조건 고려
+    @Override
+    public List<MyPageFeedResponseDto> findMyFeeds(Long userId, Long cursorId, int size) {
+        QRunningLog runningLog = QRunningLog.runningLog;
+
+        return queryFactory
+                .select(Projections.constructor(MyPageFeedResponseDto.class,
+                        runningLog.user.userId,
+                        runningLog.runningLogId,
+                        runningLog.runDate,
+                        runningLog.distance,
+                        runningLog.pace,
+                        runningLog.duration,
+                        runningLog.likeCtn))
+                .from(runningLog)
+                .where(
+                        runningLog.user.userId.eq(userId),
+                        runningLog.isDeleted.isFalse(),
+                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null
                 )
                 .orderBy(runningLog.createdAt.desc())
                 .limit(size + 1)

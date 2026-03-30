@@ -24,6 +24,8 @@ public class QUser extends EntityPathBase<User> {
 
     public final Termproject.Termproject2.global.common.basedTime.QBaseTimeEntity _super = new Termproject.Termproject2.global.common.basedTime.QBaseTimeEntity(this);
 
+    public final StringPath bio = createString("bio");
+
     //inherited
     public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 

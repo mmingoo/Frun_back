@@ -5,6 +5,7 @@ import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.dto.response.MyPageResponseDto;
 import Termproject.Termproject2.domain.user.dto.response.NicknameCheckResponse;
 import Termproject.Termproject2.domain.user.dto.response.NicknameStatusResponse;
+import Termproject.Termproject2.domain.user.dto.response.UserPageResponseDto;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
@@ -71,7 +72,7 @@ public class UserServiceImpl implements UserService {
         long friendCount = friendshipRepository.countByUserId(userId);
 
         // DB에서 러닝 횟수, 총 거리, 총 소요 시간(초) 한 번에 조회 > 그렇지 않으면 메모리 상에서 너무 많은 연사이 이뤄줘 러닝로그가 많아질 수록, 트래픽이 몰릴수록 부담
-        Object[] stats = runningLogRepository.aggregateStatsByUserId(userId);
+        Object[] stats = runningLogRepository.aggregateStatsByUserId(userId).get(0);
 
         //총 러닝일지 수, 운동 횟수
         long totalRunningLogCnt = ((Number) stats[0]).longValue();
@@ -98,6 +99,42 @@ public class UserServiceImpl implements UserService {
                 user.getBio(),
                 friendCount,
                 totalRunningLogCnt,
+                totalDistanceKm,
+                avgPace
+
+        );
+    }
+
+    @Override
+    public UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId) {
+        User user = userRepository.findById(targetUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        long friendCount = friendshipRepository.countByUserId(targetUserId);
+
+        boolean isFriend = !viewerId.equals(targetUserId) &&
+                friendshipRepository.findByUserIdAndAuthorId(viewerId, targetUserId).isPresent();
+
+        Object[] stats = runningLogRepository.aggregateStatsByUserId(targetUserId).get(0);
+
+        long totalRunCount = ((Number) stats[0]).longValue();
+        double totalDistanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0;
+        long totalDurationSec = ((Number) stats[2]).longValue();
+
+        String avgPace = null;
+        if (totalDistanceKm > 0) {
+            long avgPaceSeconds = Math.round(totalDurationSec / totalDistanceKm);
+            avgPace = String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
+        }
+
+        return new UserPageResponseDto(
+                user.getUserId(),
+                user.getNickName(),
+                imageService.getProfileImageUrl(user.getImageUrl()),
+                user.getBio(),
+                friendCount,
+                isFriend,
+                totalRunCount,
                 totalDistanceKm,
                 avgPace
         );
