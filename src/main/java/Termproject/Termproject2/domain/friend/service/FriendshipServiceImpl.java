@@ -26,13 +26,16 @@ public class FriendshipServiceImpl implements FriendShipService {
 
     @Override
     public FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size) {
+        // size+1 개 조회 - 실제 필요한 것보다 1개 더 가져와서 다음 페이지 존재 여부 확인
         List<FriendResponseDto> results = friendshipRepository.getFriendList(userId, cursorName, cursorId, size);
 
+        // 조회 결과가 size+1 개면 다음 페이지 존재, size 개만 남기고 마지막 1개 제거
         boolean hasNext = results.size() > size;
         if (hasNext) {
             results = results.subList(0, size);
         }
 
+        // 프로필 이미지 경로 → 완전한 URL로 변환 (BASE_URL + 저장 경로)
         results = results.stream()
                 .map(dto -> new FriendResponseDto(
                         dto.getFriendId(),
@@ -41,6 +44,8 @@ public class FriendshipServiceImpl implements FriendShipService {
                 ))
                 .collect(Collectors.toList());
 
+        // 다음 페이지 조회 시작점(커서)으로 현재 목록의 마지막 항목 사용
+        // hasNext가 false면 커서 불필요하므로 null 처리
         FriendResponseDto last = hasNext ? results.get(results.size() - 1) : null;
         return new FriendListResponse(results, hasNext,
                 last != null ? last.getFriendId() : null,

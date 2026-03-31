@@ -4,6 +4,7 @@ import Termproject.Termproject2.domain.running.dto.response.FeedScrollResponseDt
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
+import Termproject.Termproject2.domain.running.repository.LikeRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -20,9 +22,9 @@ public class FeedServiceImpl implements FeedService {
 
     private final RunningLogRepository runningLogRepository;
     private final ImageService imageService;
+    private final LikeRepository likeRepository;
 
     // ===================== 친구 피드 =====================
-
     // 친구 피드 커서 기반 조회
     @Override
     public FeedScrollResponseDto getFriendFeeds(Long userId, Long cursorId, int size) {
@@ -30,27 +32,18 @@ public class FeedServiceImpl implements FeedService {
         // 커서 기반으로 친구 피드 조회
         List<FriendFeedResponseDto> result = runningLogRepository.findFriendFeeds(userId, cursorId, size);
 
-        // size + 1 조회 결과를 기반으로 다음 페이지 존재 여부(hasNext) 판단
-        boolean hasNext = hasNext(result, size);
-        result = trimToSize(result, size);
+        boolean hasNext = hasNext(result, size); // size + 1 조회 결과를 기반으로 다음 페이지 존재 여부(hasNext) 판단
+        result = trimToSize(result, size); // 일부러 hasNext 판단하기 위해 size + 1 개수만큼 불러왔으므로 size 만큼 자름
 
-        // 조회된 피드에서 러닝로그 ID 목록 추출
-        List<Long> logIds = extractLogIds(result);
+        List<Long> logIds = extractLogIds(result); // 조회된 피드에서 러닝로그 ID 목록 추출
 
         // 러닝로그 ID 기준으로 이미지 목록을 한 번에 조회 (N+1 방지)
-        /**
-         * 예시:
-         * {
-         *   1L: ["a.jpg", "b.jpg"],
-         *   2L: ["c.jpg"]
-         * }
-         */
         Map<Long, List<String>> imagesMap = runningLogRepository.findImagesByRunningLogIds(logIds);
 
-        // 각 피드 DTO에 이미지 URL 및 프로필 이미지 URL을 세팅
-        // - 러닝로그 이미지는 URL 변환 후 리스트로 매핑
-        // - 이미지가 없으면 빈 리스트 반환
-        result = attachFriendImages(result, imagesMap);
+        result = attachFriendImages(result, imagesMap); // 각 피드 DTO에 이미지 URL 및 프로필 이미지 URL을 설정
+
+        applyLikedStatus(result, userId, logIds); // 내가 좋아요 한 피드에 좋아요 표시
+
 
         // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
         Long nextCursorId = getNextCursorId(result, hasNext, FriendFeedResponseDto::getRunningLogId);
@@ -58,8 +51,9 @@ public class FeedServiceImpl implements FeedService {
         return new FeedScrollResponseDto(result, hasNext, nextCursorId);
     }
 
-    // ===================== 유저 페이지 피드 =====================
 
+
+    // ===================== 유저 페이지 피드 =====================
     // 유저 페이지 피드 조회 (본인이면 비공개 포함, 타인이면 공개만)
     @Override
     public MyPageFeedScrollResponseDto getUserPageFeeds(Long viewerId, Long targetUserId, Long cursorId, int size) {
@@ -146,6 +140,7 @@ public class FeedServiceImpl implements FeedService {
                             dto.getCreatedAt(),
                             dto.getCommentCtn(),
                             dto.getLikeCtn(),
+                            dto.isLiked(),
                             images
                     );
                 })
@@ -177,4 +172,13 @@ public class FeedServiceImpl implements FeedService {
                 })
                 .toList();
     }
+
+    private void applyLikedStatus(List<FriendFeedResponseDto> result, Long userId, List<Long> logIds) {
+        // 내가 좋아요 한 러닝일지 목록, 메인 피드 목록 중에 내가 좋아요 한 로그ID 들의 List
+        Set<Long> likedLogIds = likeRepository.findLikedLogIds(userId, logIds);
+
+        // 각 dto 를 순회하면서, 내가 좋아요한 로그ID List 중 dto의 로그ID 가 있다면 true 처리
+        result.forEach(dto -> dto.setLiked(likedLogIds.contains(dto.getRunningLogId())));
+    }
 }
+
