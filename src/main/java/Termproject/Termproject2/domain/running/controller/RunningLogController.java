@@ -100,18 +100,10 @@ public class RunningLogController {
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ){
 
-        if (newImages != null) {
-            for(MultipartFile newImage : newImages){
-                System.out.println("새로운 파일 이름 : " + newImage.getName());
-            }
-
-        }
-
-        System.out.println("기존 이미지 이름 : " + request.getKeepImageUrls());
+        System.out.println("runTime 출력 : " + request.getRunTime());
         Long userId = jwtTokenExtractor.getUserId();
         runningLogService.updateRunningLog(runningLogId, userId, request, newImages);
         return ApiResponse.ok("러닝일지가 수정되었습니다.");
-
     }
 
     @DeleteMapping(value = "/{runningLogId}")

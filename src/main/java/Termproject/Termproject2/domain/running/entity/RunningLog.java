@@ -31,6 +31,9 @@ public class RunningLog {
     @Column(name = "run_date", nullable = false)
     private LocalDate runDate;
 
+    @Column(name = "run_time")
+    private LocalTime runTime;
+
 
     @Column(name = "distance", nullable = false, precision = 5, scale = 2) // 최대 100.00km
     private BigDecimal distance;
@@ -90,13 +93,14 @@ public class RunningLog {
     }
 
     public void update(LocalTime duration, LocalDate runDate, BigDecimal distance,
-                       String pace, boolean isPublic, String memo) {
+                       String pace, boolean isPublic, String memo , LocalTime runTime) {
         this.duration = duration;
         this.runDate = runDate;
         this.distance = distance;
         this.memo = memo;
         this.isPublic = isPublic;
         this.pace = pace;
+        this.runTime = runTime;
 
     }
 

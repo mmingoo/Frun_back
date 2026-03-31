@@ -206,7 +206,8 @@ public class RunningLogServiceImpl implements RunningLogService {
                 request.getDistance(),
                 calculatePace(durationMin, durationSec, request.getDistance()),
                 request.isPublic(),
-                request.getMemo()
+                request.getMemo(),
+                request.getRunTime()
         );
     };
 

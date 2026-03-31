@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Getter
@@ -14,6 +15,8 @@ public class RunningLogUpdateRequest {
 
     @NotNull
     private LocalDate runDate;
+
+    private LocalTime runTime;
 
     @NotNull
     @DecimalMin(value = "0.01", message = "거리는 0보다 커야 합니다.")

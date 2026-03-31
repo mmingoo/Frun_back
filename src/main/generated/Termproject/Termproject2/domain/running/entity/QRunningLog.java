@@ -46,6 +46,8 @@ public class QRunningLog extends EntityPathBase<RunningLog> {
 
     public final NumberPath<Long> runningLogId = createNumber("runningLogId", Long.class);
 
+    public final TimePath<java.time.LocalTime> runTime = createTime("runTime", java.time.LocalTime.class);
+
     public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
 
     public final Termproject.Termproject2.domain.user.entity.QUser user;
