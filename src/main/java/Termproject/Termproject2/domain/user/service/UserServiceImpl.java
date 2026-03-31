@@ -81,6 +81,7 @@ public class UserServiceImpl implements UserService {
             avgPace = String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
         }
 
+        System.out.println("마이페이지 프로필 이미지 : " + imageService.getProfileImageUrl(user.getImageUrl()));
         return new UserPageResponseDto(
                 user.getUserId(),
                 user.getNickName(),
@@ -97,7 +98,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserProfileInfoResponse getUserInfo(Long userId){
-        String imageUrl = userRepository.findImageUrlByUserId(userId);
+        String imageUrl = imageService.getProfileImageUrl(userRepository.findImageUrlByUserId(userId));
+        System.out.println("nav 프로필 이미지 : " + imageUrl);
         return new UserProfileInfoResponse(userId, imageUrl);
     }
 

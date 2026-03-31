@@ -35,7 +35,9 @@ public enum ErrorCode {
     IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 저장에 실패했습니다."),
     TOO_MANY_IMAGES(HttpStatus.BAD_REQUEST, "이미지는 최대 5장까지 업로드할 수 있습니다."),
     INVALID_DISTANCE(HttpStatus.BAD_REQUEST, "거리를 0km 이상으로 설정해주세요" ),
-    INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." );
+    INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." ),
+    ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시물입니다."),
+    LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시물입니다.");
 
     private final HttpStatus status;
     private final String message;

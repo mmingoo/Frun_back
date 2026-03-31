@@ -4,6 +4,7 @@ import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateReque
 import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.service.FeedService;
+import Termproject.Termproject2.domain.running.service.LikeService;
 import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
@@ -24,6 +25,7 @@ public class RunningLogController {
     private final JwtTokenExtractor jwtTokenExtractor;
     private final FeedService feedService;
     private final RunningLogService runningLogService;
+    private final LikeService likeService;
 
     @GetMapping("/users/{userId}/feeds")
     @Operation(summary = "유저 페이지 피드 목록 조회", description = "유저의 러닝 피드를 최신순으로 조회 (무한스크롤). 본인이면 비공개 피드도 포함.")
@@ -107,9 +109,22 @@ public class RunningLogController {
     public ApiResponse<?> likeRunningLog(
             @PathVariable Long runningLogId
     ){
-        // TODO: 구현 예정
+        Long userId = jwtTokenExtractor.getUserId();
+        likeService.addLike(userId, runningLogId);
         return ApiResponse.ok("좋아요가 처리되었습니다.");
     }
+
+    @DeleteMapping("/likes/{runningLogId}")
+    @Operation(summary = "러닝일지 좋아요 취소")
+    public ApiResponse<?> unlikeRunningLog(
+            @PathVariable Long runningLogId
+    ){
+        Long userId = jwtTokenExtractor.getUserId();
+        likeService.removeLike(userId, runningLogId);
+        return ApiResponse.ok("좋아요가 취소되었습니다.");
+    }
+
+
 
 
 

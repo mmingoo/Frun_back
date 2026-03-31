@@ -7,10 +7,10 @@ import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.image.ImageService;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
-import io.lettuce.core.dynamic.annotation.Param;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -106,7 +106,7 @@ public class UserController {
     @Operation(summary = "유저 프로필 업데이트 (프로필 사진, bio)")
     @PatchMapping("/profile")
     public ApiResponse<?> updateUserProfile(
-            @RequestParam(value = "bio")UserProfileUpdateRequestDto request,
+            @Valid @RequestParam(value = "bio")UserProfileUpdateRequestDto request,
             @RequestParam(value = "profileImage" , required = false) MultipartFile profileImage
             ) {
         Long userId = jwtTokenExtractor.getUserId();

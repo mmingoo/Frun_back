@@ -115,4 +115,13 @@ public class RunningLog {
             image.setRunningLog(this);
         }
     }
+
+    public void addLikeCnt(){
+        this.likeCtn += 1;
+    }
+
+    public void minusLikeCnt(){
+        this.likeCtn -= 1;
+    }
+
 }
