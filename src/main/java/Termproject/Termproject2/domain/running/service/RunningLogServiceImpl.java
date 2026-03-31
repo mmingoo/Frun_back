@@ -121,6 +121,7 @@ public class RunningLogServiceImpl implements RunningLogService {
     }
 
     @Override
+    @Transactional
     public void updateRunningLog(Long runningLogId, Long userId, RunningLogUpdateRequest request, List<MultipartFile> images) {
 
         // 러닝일지 조회 (삭제된 로그 제외)
@@ -134,7 +135,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         setupRunningLog(runningLog, request);
 
         // 러닝로그 이미지 업데이트
-        setupRunningLogImage(runningLog, images);
+        setupRunningLogImage(runningLog, request.getKeepImageUrls(), images);
 
     }
 
@@ -158,31 +159,32 @@ public class RunningLogServiceImpl implements RunningLogService {
     }
 
     // 러닝 로그 이미지 업데이트
-    public void setupRunningLogImage(RunningLog runningLog, List<MultipartFile> images){
-        // 1. 새 이미지가 들어온 경우에만 기존 이미지를 교체
-        if (images != null && !images.isEmpty()) {
+    // - keepImageUrls: 유지할 기존 이미지 파일명 목록 (null이면 기존 이미지 전부 유지)
+    // - newImages: 새로 추가할 파일 목록 (null이면 추가 없음)
+    public void setupRunningLogImage(RunningLog runningLog, List<String> keepImageUrls, List<MultipartFile> newImages){
+        List<String> keeps = keepImageUrls != null
+                ? keepImageUrls.stream()
+                    .map(url -> url.contains("/") ? url.substring(url.lastIndexOf('/') + 1) : url)
+                    .collect(java.util.stream.Collectors.toList())
+                : List.of();
+        List<MultipartFile> additions = newImages != null ? newImages : List.of();
 
-            // 이미지 개수 제한 체크
-            if (images.size() > 5) {
-                throw new BusinessException(ErrorCode.TOO_MANY_IMAGES);
-            }
-            // 1. 기존 이미지 리스트 비우기 (orphanRemoval=true에 의해 DB 데이터도 자동 삭제됨)
-            runningLog.getImages().clear();
+        // 이미지 총 개수 제한 체크 (유지 + 새 이미지)
+        if (keeps.size() + additions.size() > 5) {
+            throw new BusinessException(ErrorCode.TOO_MANY_IMAGES);
+        }
 
-            // 2. 새 이미지 저장
-            for(MultipartFile image : images){
+        // keepImageUrls에 없는 기존 이미지 삭제
+        runningLog.getImages().removeIf(image -> !keeps.contains(image.getImageUrl()));
 
-                //파일 저장
-                String fileName = imageService.saveRunningLogImage(runningLog.getUser().getUserId(), image);
-                RunningLogImage runningLogImage = RunningLogImage.builder()
-                        .runningLog(runningLog)
-                        .imageUrl(fileName)
-                        .build();
-
-                // 연관관계 편의 메서드 사용
-                runningLog.addImage(runningLogImage);
-            }
-
+        // 새 이미지 업로드 후 추가
+        for (MultipartFile newImage : additions) {
+            String fileName = imageService.saveRunningLogImage(runningLog.getUser().getUserId(), newImage);
+            RunningLogImage runningLogImage = RunningLogImage.builder()
+                    .runningLog(runningLog)
+                    .imageUrl(fileName)
+                    .build();
+            runningLog.addImage(runningLogImage);
         }
 
 
@@ -202,10 +204,9 @@ public class RunningLogServiceImpl implements RunningLogService {
                 toLocalTime(durationMin, durationSec),
                 request.getRunDate(),
                 request.getDistance(),
-                request.getMemo(),
+                calculatePace(durationMin, durationSec, request.getDistance()),
                 request.isPublic(),
-                calculatePace(durationMin, durationSec, request.getDistance())
-
+                request.getMemo()
         );
     };
 

@@ -13,7 +13,7 @@ public interface RunningLogService {
     RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images);
     FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId);
 
-    void updateRunningLog(Long runningLogId, Long userId, @Valid RunningLogUpdateRequest request, List<MultipartFile> images);
+    void updateRunningLog(Long runningLogId, Long userId, @Valid RunningLogUpdateRequest request, List<MultipartFile> newImages);
 
     void softDeleteRunningLog(Long runningLogId, Long userId);
 }

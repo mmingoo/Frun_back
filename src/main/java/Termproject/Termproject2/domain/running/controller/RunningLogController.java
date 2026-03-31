@@ -92,16 +92,25 @@ public class RunningLogController {
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }
 
-    @PutMapping(value = "/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "러닝 일지 수정", description = "이미지와 러닝 일지 수정")
     public ApiResponse<?> updateRunningLog(
             @Valid @ModelAttribute RunningLogUpdateRequest request,
             @PathVariable Long runningLogId,
-            @RequestPart(value = "images" , required = false) List<MultipartFile> images
+            @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ){
+
+        if (newImages != null) {
+            for(MultipartFile newImage : newImages){
+                System.out.println("새로운 파일 이름 : " + newImage.getName());
+            }
+
+        }
+
+        System.out.println("기존 이미지 이름 : " + request.getKeepImageUrls());
         Long userId = jwtTokenExtractor.getUserId();
-        runningLogService.updateRunningLog(runningLogId, userId, request,images );
-        return ApiResponse.ok( "러닝일지가 수정되었습니다.");
+        runningLogService.updateRunningLog(runningLogId, userId, request, newImages);
+        return ApiResponse.ok("러닝일지가 수정되었습니다.");
 
     }
 

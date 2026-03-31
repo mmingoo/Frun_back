@@ -84,6 +84,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     private String getExtension(String originalFilename) {
+        System.out.println("파일명 : " + originalFilename);
         if (originalFilename == null || !originalFilename.contains(".")) {
             throw new BusinessException(ErrorCode.INVALID_FILE_NAME);
         }

@@ -31,6 +31,7 @@ public class RunningLog {
     @Column(name = "run_date", nullable = false)
     private LocalDate runDate;
 
+
     @Column(name = "distance", nullable = false, precision = 5, scale = 2) // 최대 100.00km
     private BigDecimal distance;
 

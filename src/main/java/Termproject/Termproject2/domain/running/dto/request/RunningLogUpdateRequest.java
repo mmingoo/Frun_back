@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -31,6 +32,9 @@ public class RunningLogUpdateRequest {
 
     @Size(max = 500, message = "메모는 최대 500자까지 입력할 수 있습니다.")
     private String memo;
+
+    // 유지할 기존 이미지 URL 목록 (포함되지 않은 기존 이미지는 삭제됨)
+    private List<String> keepImageUrls;
 
     private boolean isPublic;
 
