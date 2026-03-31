@@ -15,11 +15,13 @@ public class FriendPageFeedResponseDto {
     private String pace;
     private LocalTime duration;
     private int likeCtn;
-    private String logImages;
+    private int commentCtn;
+    private String memo;
+    private String thumbnailImage;
 
     // QueryDSL Projections 용 (이미지 제외)
     public FriendPageFeedResponseDto(Long authorId, Long runningLogId, LocalDate runDate, BigDecimal distance,
-                                 String pace, LocalTime duration, int likeCtn) {
+                                 String pace, LocalTime duration, int likeCtn, int commentCtn, String memo) {
         this.authorId = authorId;
         this.runningLogId = runningLogId;
         this.runDate = runDate;
@@ -27,12 +29,15 @@ public class FriendPageFeedResponseDto {
         this.pace = pace;
         this.duration = duration;
         this.likeCtn = likeCtn;
+        this.commentCtn = commentCtn;
+        this.memo = memo;
+        this.thumbnailImage = null;
     }
 
-    // 서비스에서 이미지 포함해 변환 시 사용
+    // 서비스에서 썸네일 이미지 포함해 변환 시 사용
     public FriendPageFeedResponseDto(Long authorId, Long runningLogId, LocalDate runDate, BigDecimal distance,
-                                 String pace, LocalTime duration, int likeCtn,
-                                 String logImages) {
+                                 String pace, LocalTime duration, int likeCtn, int commentCtn, String memo,
+                                 String thumbnailImage) {
         this.authorId = authorId;
         this.runningLogId = runningLogId;
         this.runDate = runDate;
@@ -40,6 +45,8 @@ public class FriendPageFeedResponseDto {
         this.pace = pace;
         this.duration = duration;
         this.likeCtn = likeCtn;
-        this.logImages = logImages;
+        this.commentCtn = commentCtn;
+        this.memo = memo;
+        this.thumbnailImage = thumbnailImage;
     }
 }

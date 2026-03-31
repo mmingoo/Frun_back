@@ -79,7 +79,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.distance,
                         runningLog.pace,
                         runningLog.duration,
-                        runningLog.likeCtn))
+                        runningLog.likeCtn,
+                        runningLog.commentCtn,
+                        runningLog.memo))
                 .from(runningLog)
                 .where(
                         runningLog.user.userId.eq(userId),
@@ -104,7 +106,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.distance,
                         runningLog.pace,
                         runningLog.duration,
-                        runningLog.likeCtn))
+                        runningLog.likeCtn,
+                        runningLog.commentCtn,
+                        runningLog.memo))
                 .from(runningLog)
                 .where(
                         runningLog.user.userId.eq(userId),

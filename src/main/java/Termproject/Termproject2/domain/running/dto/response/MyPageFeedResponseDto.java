@@ -15,11 +15,13 @@ public class MyPageFeedResponseDto {
     private String pace;
     private LocalTime duration;
     private int likeCtn;
+    private int commentCtn;
+    private String memo;
     private String thumbnailImage;
 
     // QueryDSL Projections 용 (이미지 제외)
     public MyPageFeedResponseDto(Long authorId, Long runningLogId, LocalDate runDate, BigDecimal distance,
-                                  String pace, LocalTime duration, int likeCtn) {
+                                  String pace, LocalTime duration, int likeCtn, int commentCtn, String memo) {
         this.authorId = authorId;
         this.runningLogId = runningLogId;
         this.runDate = runDate;
@@ -27,12 +29,14 @@ public class MyPageFeedResponseDto {
         this.pace = pace;
         this.duration = duration;
         this.likeCtn = likeCtn;
+        this.commentCtn = commentCtn;
+        this.memo = memo;
         this.thumbnailImage = null;
     }
 
     // 서비스에서 썸네일 이미지 포함해 변환 시 사용
     public MyPageFeedResponseDto(Long authorId, Long runningLogId, LocalDate runDate, BigDecimal distance,
-                                  String pace, LocalTime duration, int likeCtn,
+                                  String pace, LocalTime duration, int likeCtn, int commentCtn, String memo,
                                   String thumbnailImage) {
         this.authorId = authorId;
         this.runningLogId = runningLogId;
@@ -41,6 +45,8 @@ public class MyPageFeedResponseDto {
         this.pace = pace;
         this.duration = duration;
         this.likeCtn = likeCtn;
+        this.commentCtn = commentCtn;
+        this.memo = memo;
         this.thumbnailImage = thumbnailImage;
     }
 }

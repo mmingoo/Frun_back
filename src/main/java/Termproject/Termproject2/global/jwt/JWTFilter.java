@@ -30,6 +30,8 @@ public class JWTFilter extends OncePerRequestFilter {
             token = bearerToken.substring(7);
         }
 
+        System.out.println("▶ [JWT] accessToken: " + token);
+
         // ② 토큰이 없으면 인증 처리 없이 다음 필터로 통과 (비로그인 사용자)
         if (token == null) {
             filterChain.doFilter(request, response);

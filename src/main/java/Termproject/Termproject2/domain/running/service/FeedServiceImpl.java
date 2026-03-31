@@ -73,10 +73,16 @@ public class FeedServiceImpl implements FeedService {
         boolean hasNext = hasNext(feeds, size);
         feeds = trimToSize(feeds, size);
 
-        // 러닝로그 Id 기준으로 이미지 목록 조회
-        Map<Long, List<String>> imagesMap = getImagesMap(feeds);
+        // 러닝로그 Id 기준으로 썸네일 이미지 1장씩 조회
+        List<Long> logIds = feeds.stream().map(MyPageFeedResponseDto::getRunningLogId).toList();
 
-        // 러닝로그별 이미지 URL 변환 후 DTO에 세팅 (이미지 없으면 빈 리스트)
+        Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds)
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> imageService.getRunningLogImageUrl(e.getValue())
+                ));
+
         List<MyPageFeedResponseDto> result = attachMyPageImages(feeds, imagesMap);
 
         // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
@@ -97,12 +103,16 @@ public class FeedServiceImpl implements FeedService {
                 .map(FriendPageFeedResponseDto::getRunningLogId)
                 .toList();
 
-        Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds);
+        Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds)
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> imageService.getRunningLogImageUrl(e.getValue())
+                ));
 
         List<FriendPageFeedResponseDto> result = feeds.stream()
                 .map(dto -> {
-                    String thumbnail = imagesMap.get(dto.getRunningLogId());
-                    String thumbnailUrl = thumbnail != null ? imageService.getRunningLogImageUrl(thumbnail) : null;
+                    String thumbnailUrl = imagesMap.get(dto.getRunningLogId());
                     return new FriendPageFeedResponseDto(
                             dto.getAuthorId(),
                             dto.getRunningLogId(),
@@ -111,6 +121,8 @@ public class FeedServiceImpl implements FeedService {
                             dto.getPace(),
                             dto.getDuration(),
                             dto.getLikeCtn(),
+                            dto.getCommentCtn(),
+                            dto.getMemo(),
                             thumbnailUrl
                     );
                 })
@@ -188,24 +200,13 @@ public class FeedServiceImpl implements FeedService {
 
     // ===================== MyPage 전용 =====================
 
-    private Map<Long, List<String>> getImagesMap(List<MyPageFeedResponseDto> feeds) {
-        List<Long> logIds = feeds.stream()
-                .map(MyPageFeedResponseDto::getRunningLogId)
-                .toList();
-
-        return runningLogRepository.findImagesByRunningLogIds(logIds);
-    }
-
-
     private List<MyPageFeedResponseDto> attachMyPageImages(
             List<MyPageFeedResponseDto> feeds,
-            Map<Long, List<String>> imagesMap
+            Map<Long, String> imagesMap
     ) {
         return feeds.stream()
                 .map(dto -> {
-                    List<String> images = imagesMap.getOrDefault(dto.getRunningLogId(), List.of());
-                    String thumbnail = images.isEmpty() ? null
-                            : imageService.getRunningLogImageUrl(images.get(0));
+                    String thumbnail = imagesMap.get(dto.getRunningLogId());
 
                     return new MyPageFeedResponseDto(
                             dto.getAuthorId(),
@@ -215,6 +216,8 @@ public class FeedServiceImpl implements FeedService {
                             dto.getPace(),
                             dto.getDuration(),
                             dto.getLikeCtn(),
+                            dto.getCommentCtn(),
+                            dto.getMemo(),
                             thumbnail
                     );
                 })
