@@ -26,7 +26,6 @@ public class FriendFeedResponseDto {
     private LocalDateTime createdAt;
     private int commentCtn;
     private int likeCtn;
-    private boolean liked;
     private List<String> logImages;
 
     // QueryDSL Projections 용 (이미지 제외, liked는 서비스 레이어에서 설정)
@@ -45,7 +44,6 @@ public class FriendFeedResponseDto {
         this.memo = memo;
         this.createdAt = createdAt;
         this.commentCtn = commentCtn;
-        this.liked = false;
         this.likeCtn = likeCtn;
         this.logImages = Collections.emptyList();
     }
@@ -67,7 +65,6 @@ public class FriendFeedResponseDto {
         this.memo = memo;
         this.createdAt = createdAt;
         this.commentCtn = commentCtn;
-        this.liked = false;
         this.likeCtn = likeCtn;
         this.logImages = logImages;
     }
