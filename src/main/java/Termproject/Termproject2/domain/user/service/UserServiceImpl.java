@@ -2,10 +2,7 @@ package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
-import Termproject.Termproject2.domain.user.dto.response.MyPageResponseDto;
-import Termproject.Termproject2.domain.user.dto.response.NicknameCheckResponse;
-import Termproject.Termproject2.domain.user.dto.response.NicknameStatusResponse;
-import Termproject.Termproject2.domain.user.dto.response.UserPageResponseDto;
+import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
@@ -14,6 +11,7 @@ import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -60,51 +58,6 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
-    // 마이페이지의 내 정보(게시물, 친구 수, 총 거리, 평균 페이스 조회)
-    @Override
-    public MyPageResponseDto getMyPageInfo(Long userId) {
-
-        // 유저 찾기
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // 친구 수
-        long friendCount = friendshipRepository.countByUserId(userId);
-
-        // DB에서 러닝 횟수, 총 거리, 총 소요 시간(초) 한 번에 조회 > 그렇지 않으면 메모리 상에서 너무 많은 연사이 이뤄줘 러닝로그가 많아질 수록, 트래픽이 몰릴수록 부담
-        Object[] stats = runningLogRepository.aggregateStatsByUserId(userId).get(0);
-
-        //총 러닝일지 수, 운동 횟수
-        long totalRunningLogCnt = ((Number) stats[0]).longValue();
-
-        // 총합 거리
-        double totalDistanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0;
-
-        // 총 운동한 거리
-        long totalDurationSec = ((Number) stats[2]).longValue();
-
-        String avgPace = null;
-        if (totalDistanceKm > 0) {
-            // 평균 페이스 계산
-            long avgPaceSeconds = Math.round(totalDurationSec / totalDistanceKm);
-
-            // 페이스 포맷팅
-            avgPace = String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
-        }
-
-        return new MyPageResponseDto(
-                user.getUserId(),
-                user.getNickName(),
-                imageService.getProfileImageUrl(user.getImageUrl()),
-                user.getBio(),
-                friendCount,
-                totalRunningLogCnt,
-                totalDistanceKm,
-                avgPace
-
-        );
-    }
-
     @Override
     public UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId) {
         User user = userRepository.findById(targetUserId)
@@ -112,7 +65,8 @@ public class UserServiceImpl implements UserService {
 
         long friendCount = friendshipRepository.countByUserId(targetUserId);
 
-        boolean isFriend = !viewerId.equals(targetUserId) &&
+        boolean isOwner = viewerId.equals(targetUserId);
+        boolean isFriend = !isOwner &&
                 friendshipRepository.findByUserIdAndAuthorId(viewerId, targetUserId).isPresent();
 
         Object[] stats = runningLogRepository.aggregateStatsByUserId(targetUserId).get(0);
@@ -133,10 +87,44 @@ public class UserServiceImpl implements UserService {
                 imageService.getProfileImageUrl(user.getImageUrl()),
                 user.getBio(),
                 friendCount,
+                isOwner,
                 isFriend,
                 totalRunCount,
                 totalDistanceKm,
                 avgPace
         );
     }
+
+    @Override
+    public UserProfileInfoResponse getUserInfo(Long userId){
+        String imageUrl = userRepository.findImageUrlByUserId(userId);
+        return new UserProfileInfoResponse(userId, imageUrl);
+    }
+
+
+    @Override
+    @Transactional
+    public void updateUserProfile(Long userId, UserProfileUpdateRequestDto request, MultipartFile profileImage) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        String bio = request.getBio();
+        boolean hasBio = bio != null;
+        boolean hasImage = profileImage != null && !profileImage.isEmpty();
+
+        // 둘 다 null이면 업데이트 x
+        if (!hasBio && !hasImage) return;
+
+        String newBio = hasBio ? bio : user.getBio();  // bio 없으면 기존 값 유지
+        String newImageUrl = user.getImageUrl(); // 이미지 없으면 기존 값 유지
+
+        // 이미지가 있으면 저장
+        if (hasImage) {
+            newImageUrl = imageService.saveProfileImage(userId, profileImage);
+        }
+
+
+        user.updateProfile(newBio, newImageUrl);
+    }
 }
+

@@ -90,9 +90,9 @@ public class RunningLogServiceImpl implements RunningLogService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
         // authorId가 실제로 해당 runningLogId의 작성자인지 검증
-        if (!runningLog.getUser().getUserId().equals(authorId)) {
-            throw new BusinessException(ErrorCode.RUNNING_LOG_AUTHOR_MISMATCH);
-        }
+//        if (!runningLog.getUser().getUserId().equals(authorId)) {
+//            throw new BusinessException(ErrorCode.RUNNING_LOG_AUTHOR_MISMATCH);
+//        }
 
         // 작성자가 본인이 아닐 경우에 러닝일지 공개 여부 검증
         if (!userId.equals(authorId)){
@@ -113,7 +113,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         return new FriendFeedResponseDto(
                 runningLog.getRunningLogId(), author.getUserId(), author.getNickName(),
                 imageService.getProfileImageUrl(author.getImageUrl()),
-                runningLog.getRunDate(), runningLog.getDistance(), runningLog.getPace(),
+                runningLog.getRunDate(), runningLog.getRunTime(),runningLog.getDistance(), runningLog.getPace(),
                 runningLog.getDuration(), runningLog.getMemo(), runningLog.getCreatedAt(),
                 runningLog.getCommentCtn(), runningLog.getLikeCtn(),
                 imageUrls

@@ -2,8 +2,6 @@ package Termproject.Termproject2.domain.running.service;
 
 import Termproject.Termproject2.domain.running.dto.response.FeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.FriendPageFeedResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.FriendPageFeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
@@ -60,20 +58,18 @@ public class FeedServiceImpl implements FeedService {
         return new FeedScrollResponseDto(result, hasNext, nextCursorId);
     }
 
-    // ===================== 마이페이지 피드 =====================
+    // ===================== 유저 페이지 피드 =====================
 
-    // 마이페이지 피드 조회
+    // 유저 페이지 피드 조회 (본인이면 비공개 포함, 타인이면 공개만)
     @Override
-    public MyPageFeedScrollResponseDto getMyPageFeeds(Long userId, Long cursorId, int size) {
+    public MyPageFeedScrollResponseDto getUserPageFeeds(Long viewerId, Long targetUserId, Long cursorId, int size) {
+        boolean isOwner = viewerId.equals(targetUserId);
 
-        // 마이페이지에 있는 피드 조회
-        List<MyPageFeedResponseDto> feeds = runningLogRepository.findMyFeeds(userId, cursorId, size);
+        List<MyPageFeedResponseDto> feeds = runningLogRepository.findUserPageFeeds(targetUserId, cursorId, size, isOwner);
 
-        // 다음 페이지 존재 여부 판단
         boolean hasNext = hasNext(feeds, size);
         feeds = trimToSize(feeds, size);
 
-        // 러닝로그 Id 기준으로 썸네일 이미지 1장씩 조회
         List<Long> logIds = feeds.stream().map(MyPageFeedResponseDto::getRunningLogId).toList();
 
         Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds)
@@ -85,51 +81,8 @@ public class FeedServiceImpl implements FeedService {
 
         List<MyPageFeedResponseDto> result = attachMyPageImages(feeds, imagesMap);
 
-        // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
         Long nextCursorId = getNextCursorId(result, hasNext, MyPageFeedResponseDto::getRunningLogId);
-
         return new MyPageFeedScrollResponseDto(result, hasNext, nextCursorId);
-    }
-
-    // ===================== 친구 페이지 피드 =====================
-    @Override
-    public FriendPageFeedScrollResponseDto getFriendPageFeeds(Long friendId, Long cursorId, int size) {
-        List<FriendPageFeedResponseDto> feeds = runningLogRepository.findFriendPageFeeds(friendId, cursorId, size);
-
-        boolean hasNext = hasNext(feeds, size);
-        feeds = trimToSize(feeds, size);
-
-        List<Long> logIds = feeds.stream()
-                .map(FriendPageFeedResponseDto::getRunningLogId)
-                .toList();
-
-        Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds)
-                .entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        e -> imageService.getRunningLogImageUrl(e.getValue())
-                ));
-
-        List<FriendPageFeedResponseDto> result = feeds.stream()
-                .map(dto -> {
-                    String thumbnailUrl = imagesMap.get(dto.getRunningLogId());
-                    return new FriendPageFeedResponseDto(
-                            dto.getAuthorId(),
-                            dto.getRunningLogId(),
-                            dto.getRunDate(),
-                            dto.getDistance(),
-                            dto.getPace(),
-                            dto.getDuration(),
-                            dto.getLikeCtn(),
-                            dto.getCommentCtn(),
-                            dto.getMemo(),
-                            thumbnailUrl
-                    );
-                })
-                .toList();
-
-        Long nextCursorId = getNextCursorId(result, hasNext, FriendPageFeedResponseDto::getRunningLogId);
-        return new FriendPageFeedScrollResponseDto(result, hasNext, nextCursorId);
     }
 
 
@@ -185,6 +138,7 @@ public class FeedServiceImpl implements FeedService {
                             dto.getNickName(),
                             imageService.getProfileImageUrl(dto.getImageUrl()), // 프로필 이미지 URL 변환
                             dto.getRunDate(),
+                            dto.getRunTime(),
                             dto.getDistance(),
                             dto.getPace(),
                             dto.getDuration(),

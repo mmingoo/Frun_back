@@ -11,6 +11,7 @@ public class UserPageResponseDto {
     private String profileImageUrl;
     private String bio;
     private long friendCount;
+    private boolean isOwner;
     private boolean isFriend;
     private long totalRunCount;
     private double totalDistanceKm;

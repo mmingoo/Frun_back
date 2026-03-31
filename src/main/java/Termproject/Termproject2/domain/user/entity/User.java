@@ -53,7 +53,7 @@ public class User extends BaseTimeEntity {
 
 
     // 프로필 소개글
-    @Column(name = "bio", length = 200)
+    @Column(name = "bio", length = 50)
     private String bio;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,18 +79,11 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
-    public void updateProfile(String nickName, String imageUrl) {
-        if (nickName != null) this.nickName = nickName;
+    public void updateProfile(String bio, String imageUrl) {
+        if (bio != null) this.bio = bio;
         if (imageUrl != null) this.imageUrl = imageUrl;
     }
 
-    public void updateImageUrl(String imageUrl){
-        this.imageUrl = imageUrl;
-    }
-
-    public void updateBio(String bio){
-        this.bio =bio;
-    }
 
 
 }

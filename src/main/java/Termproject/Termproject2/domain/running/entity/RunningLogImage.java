@@ -29,6 +29,7 @@ public class RunningLogImage {
     @JoinColumn(name = "running_log_id", nullable = false)
     private RunningLog runningLog;
 
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

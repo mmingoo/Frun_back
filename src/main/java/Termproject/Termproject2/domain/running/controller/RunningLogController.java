@@ -1,16 +1,13 @@
 package Termproject.Termproject2.domain.running.controller;
 
-import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.MyPageFeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.service.FeedService;
 import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import jakarta.validation.Valid;
@@ -27,31 +24,20 @@ public class RunningLogController {
     private final JwtTokenExtractor jwtTokenExtractor;
     private final FeedService feedService;
     private final RunningLogService runningLogService;
-    private final FriendShipService friendShipService;
 
-    @GetMapping("/my")
-    @Operation(summary = "마이페이지 피드 목록 조회", description = "내 러닝 피드를 최신순으로 조회 (무한스크롤). 사진이 있으면 사진 포함, 없으면 거리/운동시간/페이스/좋아요 수 포함")
-    public ApiResponse<?> getMyPageFeeds(
+    @GetMapping("/users/{userId}/feeds")
+    @Operation(summary = "유저 페이지 피드 목록 조회", description = "유저의 러닝 피드를 최신순으로 조회 (무한스크롤). 본인이면 비공개 피드도 포함.")
+    public ApiResponse<?> getUserPageFeeds(
+            @PathVariable Long userId,
             @RequestParam(required = false) Long cursorId,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
-        MyPageFeedScrollResponseDto myPageFeeds = feedService.getMyPageFeeds(userId, cursorId, size);
-        return ApiResponse.ok(myPageFeeds, "마이페이지 피드 조회 성공");
-    }
-
-    @GetMapping("/my/{friendId}")
-    @Operation(summary = "친구 페이지 피드 목록 조회", description = "친구 러닝 피드를 최신순으로 조회 (무한스크롤). 사진이 있으면 썸네일 포함, 없으면 거리/운동시간/페이스/좋아요 수 포함")
-    public ApiResponse<?> getFriendPageFeeds(
-            @PathVariable Long friendId,
-            @RequestParam(required = false) Long cursorId,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ApiResponse.ok(feedService.getFriendPageFeeds(friendId, cursorId, size), "친구 페이지 피드 조회 성공");
+        Long viewerId = jwtTokenExtractor.getUserId();
+        return ApiResponse.ok(feedService.getUserPageFeeds(viewerId, userId, cursorId, size), "유저 페이지 피드 조회 성공");
     }
 
     @GetMapping("/feed")
-    @Operation(summary = "친구 feed 목록 조회", description = "친구들의 feed를 최신순으로 조회 (무한스크롤)")
+    @Operation(summary = "메인 feed 목록(친구) 조회", description = "친구들의 feed를 최신순으로 조회 (무한스크롤)")
     public ApiResponse<?> getFriendsFeeds(
             @RequestParam(required = false) Long cursorId,
             @RequestParam(defaultValue = "10") int size
@@ -100,14 +86,13 @@ public class RunningLogController {
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ){
 
-        System.out.println("runTime 출력 : " + request.getRunTime());
         Long userId = jwtTokenExtractor.getUserId();
         runningLogService.updateRunningLog(runningLogId, userId, request, newImages);
         return ApiResponse.ok("러닝일지가 수정되었습니다.");
     }
 
     @DeleteMapping(value = "/{runningLogId}")
-    @Operation(summary = "러닝 일지 softe 삭제", description = "러닝일지를 soft 삭제합니다")
+    @Operation(summary = "러닝 일지 soft 삭제", description = "러닝일지를 soft 삭제합니다")
     public ApiResponse<?> softDeleteRunningLog(
             @PathVariable Long runningLogId
     ){

@@ -3,7 +3,6 @@ package Termproject.Termproject2.domain.running.repository;
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
-import Termproject.Termproject2.domain.running.dto.response.FriendPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
 import Termproject.Termproject2.domain.running.entity.QRunningLogImage;
@@ -36,6 +35,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.user.nickName,
                         runningLog.user.imageUrl,
                         runningLog.runDate,
+                        runningLog.runTime,
                         runningLog.distance,
                         runningLog.pace,
                         runningLog.duration,
@@ -66,9 +66,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .fetch();
     }
 
-    //마이페이지 피드 조회, 페이징 조건 고려
+    // 유저 페이지 피드 조회 (본인이면 비공개 포함, 타인이면 공개만)
     @Override
-    public List<MyPageFeedResponseDto> findMyFeeds(Long userId, Long cursorId, int size) {
+    public List<MyPageFeedResponseDto> findUserPageFeeds(Long userId, Long cursorId, int size, boolean isOwner) {
         QRunningLog runningLog = QRunningLog.runningLog;
 
         return queryFactory
@@ -86,34 +86,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .where(
                         runningLog.user.userId.eq(userId),
                         runningLog.isDeleted.isFalse(),
-                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null
-                )
-                .orderBy(runningLog.createdAt.desc())
-                .limit(size + 1)
-                .fetch();
-    }
-
-    //마이페이지 피드 조회, 페이징 조건 고려
-    @Override
-    public List<FriendPageFeedResponseDto> findFriendPageFeeds(Long userId, Long cursorId, int size) {
-        QRunningLog runningLog = QRunningLog.runningLog;
-
-        return queryFactory
-                .select(Projections.constructor(FriendPageFeedResponseDto.class,
-                        runningLog.user.userId,
-                        runningLog.runningLogId,
-                        runningLog.runDate,
-                        runningLog.distance,
-                        runningLog.pace,
-                        runningLog.duration,
-                        runningLog.likeCtn,
-                        runningLog.commentCtn,
-                        runningLog.memo))
-                .from(runningLog)
-                .where(
-                        runningLog.user.userId.eq(userId),
-                        runningLog.isDeleted.isFalse(),
-                        runningLog.isPublic.isTrue(),
+                        isOwner ? null : runningLog.isPublic.isTrue(),
                         cursorId != null ? runningLog.runningLogId.lt(cursorId) : null
                 )
                 .orderBy(runningLog.createdAt.desc())
@@ -160,8 +133,8 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .select(image.runningLog.runningLogId, image.imageUrl)
                 .from(image)
                 .where(image.runningLog.runningLogId.in(runningLogIds))
-                // 최신 이미지 1개
-                .orderBy(image.runningLog.runningLogId.asc(), image.createdAt.desc())
+                // 첫번째 이미지 1개
+                .orderBy(image.runningLog.runningLogId.asc(), image.createdAt.asc())
                 .fetch();
 
         // runningLogId -> imageUrl (하나의 사진만 유지)

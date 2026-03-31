@@ -2,10 +2,12 @@ package Termproject.Termproject2.domain.user.controller;
 
 import Termproject.Termproject2.domain.user.dto.response.NicknameCheckResponse;
 import Termproject.Termproject2.domain.user.dto.response.NicknameStatusResponse;
+import Termproject.Termproject2.domain.user.dto.response.UserProfileUpdateRequestDto;
 import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.image.ImageService;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
+import io.lettuce.core.dynamic.annotation.Param;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -86,17 +88,30 @@ public class UserController {
         return ApiResponse.ok("프로필 설정이 완료되었습니다.");
     }
 
-    @Operation(summary = "마이페이지의 내 정보 조회", description = "현재 로그인한 유저의 마이페이지 정보를 조회합니다.")
-    @GetMapping("/mypage")
-    public ApiResponse<?> getMyPage() {
-        Long userId = jwtTokenExtractor.getUserId();
-        return ApiResponse.ok(userService.getMyPageInfo(userId), "조회되었습니다.");
-    }
-
-    @Operation(summary = "유저 마이페이지 조회", description = "특정 유저의 마이페이지 정보를 조회합니다. 본인이면 isFriend=false.")
+    @Operation(summary = "유저 페이지 정보 조회", description = "유저의 페이지 정보를 조회합니다. 본인이면 isOwner=true, isFriend=false.")
     @GetMapping("/{userId}/mypage")
     public ApiResponse<?> getUserPage(@PathVariable Long userId) {
         Long viewerId = jwtTokenExtractor.getUserId();
         return ApiResponse.ok(userService.getUserPageInfo(viewerId, userId), "조회되었습니다.");
     }
+
+
+    @Operation(summary = "nav바 유저 정보 조회(프로필 사진, userId)", description = "유저의 정보를 조회합니다. 프로필 이미지와 userId 반환")
+    @GetMapping("/me")
+    public ApiResponse<?> getUserProfileInfo() {
+        Long userId = jwtTokenExtractor.getUserId();
+        return ApiResponse.ok(userService.getUserInfo(userId), "조회되었습니다.");
+    }
+
+    @Operation(summary = "유저 프로필 업데이트 (프로필 사진, bio)")
+    @PatchMapping("/profile")
+    public ApiResponse<?> updateUserProfile(
+            @RequestParam(value = "bio")UserProfileUpdateRequestDto request,
+            @RequestParam(value = "profileImage" , required = false) MultipartFile profileImage
+            ) {
+        Long userId = jwtTokenExtractor.getUserId();
+        userService.updateUserProfile(userId, request,profileImage);
+        return ApiResponse.ok( "성공적으로 유저의 프로필을 업데이트 했습니다.");
+    }
+
 }

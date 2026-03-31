@@ -18,6 +18,7 @@ public class FriendFeedResponseDto {
     private String nickName;
     private String imageUrl;
     private LocalDate runDate;
+    private LocalTime runTime;
     private BigDecimal distance;
     private String pace;
     private LocalTime duration;
@@ -29,13 +30,14 @@ public class FriendFeedResponseDto {
 
     // QueryDSL Projections 용 (이미지 제외)
     public FriendFeedResponseDto(Long runningLogId, Long userId, String nickName, String imageUrl,
-                                  LocalDate runDate, BigDecimal distance, String pace, LocalTime duration,
+                                  LocalDate runDate, LocalTime runTime, BigDecimal distance, String pace, LocalTime duration,
                                   String memo, LocalDateTime createdAt, int commentCtn, int likeCtn) {
         this.runningLogId = runningLogId;
         this.userId = userId;
         this.nickName = nickName;
         this.imageUrl = imageUrl;
         this.runDate = runDate;
+        this.runTime = runTime;
         this.distance = distance;
         this.pace = pace;
         this.duration = duration;
@@ -48,7 +50,7 @@ public class FriendFeedResponseDto {
 
     // 서비스에서 이미지 포함해 변환 시 사용
     public FriendFeedResponseDto(Long runningLogId, Long userId, String nickName, String imageUrl,
-                                  LocalDate runDate, BigDecimal distance, String pace, LocalTime duration,
+                                  LocalDate runDate,LocalTime runTime, BigDecimal distance, String pace, LocalTime duration,
                                   String memo, LocalDateTime createdAt, int commentCtn, int likeCtn,
                                   List<String> logImages) {
         this.runningLogId = runningLogId;
@@ -56,6 +58,7 @@ public class FriendFeedResponseDto {
         this.nickName = nickName;
         this.imageUrl = imageUrl;
         this.runDate = runDate;
+        this.runTime = runTime;
         this.distance = distance;
         this.pace = pace;
         this.duration = duration;
