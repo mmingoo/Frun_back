@@ -18,7 +18,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_id", length = 20, nullable = false)
     private Long userId;
 
-    @Column(name = "name", length = 200, nullable = false)
+    @Column(name = "name", length = 20, nullable = false)
     private String name;
 
     // 속성으로 둘까 고민하였지만, 추루 구글 소셜로그인 기능 추가했을 때 providerId가 겹칠 가능성이 있어 socialType + providerId 로 정의함
@@ -35,7 +35,7 @@ public class User extends BaseTimeEntity {
     @Column(name = "provider_id", length = 255)
     private String providerId;
 
-    @Column(name = "nick_name", length = 60)
+    @Column(name = "nick_name", length = 20)
     private String nickName;
 
     @Enumerated(EnumType.STRING)

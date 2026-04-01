@@ -9,6 +9,8 @@ import Termproject.Termproject2.domain.running.entity.RunningLogImage;
 import Termproject.Termproject2.domain.running.repository.LikeRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogImageRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
+import Termproject.Termproject2.domain.stats.entity.RunningStats;
+import Termproject.Termproject2.domain.stats.repository.RunningStatsRepository;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ErrorCode;
@@ -21,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.IsoFields;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +40,7 @@ public class RunningLogServiceImpl implements RunningLogService {
     private final RunningLogImageRepository runningLogImageRepository;
     private final ImageService imageService;
     private final LikeRepository likeRepository;
+    private final RunningStatsRepository runningStatsRepository;
 
     @Override
     @Transactional
@@ -57,6 +62,13 @@ public class RunningLogServiceImpl implements RunningLogService {
                 .build();
 
         runningLogRepository.save(runningLog);
+
+        // RunningStats 누적
+        int distM = (int) (request.getDistance().doubleValue() * 1000);
+        int durSec = runningLog.getDuration().toSecondOfDay();
+
+        // 통계 업데이트
+        accumulateStats(user, request.getRunDate(), distM, durSec);
 
         // 이미지가 있으면 각각 저장
         saveRunningLogImages(runningLog, userId, images);
@@ -95,8 +107,19 @@ public class RunningLogServiceImpl implements RunningLogService {
         // 유저가 해당 러닝일지의 작성자인지 검증
         validateAuthor(userId, runningLog);
 
+        // 업데이트 전 기존 stats 차감
+        LocalDate oldDate = runningLog.getRunDate();
+        int oldDistM = (int) (runningLog.getDistance().doubleValue() * 1000);
+        int oldDurSec = runningLog.getDuration().toSecondOfDay();
+        subtractStats(runningLog.getUser(), oldDate, oldDistM, oldDurSec);
+
         // 러닝로그 업데이트
         setupRunningLog(runningLog, request);
+
+        // 업데이트 후 새 stats 누적
+        int newDistM = (int) (runningLog.getDistance().doubleValue() * 1000);
+        int newDurSec = runningLog.getDuration().toSecondOfDay();
+        accumulateStats(runningLog.getUser(), runningLog.getRunDate(), newDistM, newDurSec);
 
         // 러닝로그 이미지 업데이트
         setupRunningLogImage(runningLog, request.getKeepImageUrls(), images);
@@ -111,6 +134,11 @@ public class RunningLogServiceImpl implements RunningLogService {
 
         // 유저가 작성자인지 검증
         validateAuthor(userId, runningLog);
+
+        // RunningStats 차감
+        int distM = (int) (runningLog.getDistance().doubleValue() * 1000);
+        int durSec = runningLog.getDuration().toSecondOfDay();
+        subtractStats(runningLog.getUser(), runningLog.getRunDate(), distM, durSec);
 
         // soft 삭제
         runningLog.delete();
@@ -243,5 +271,47 @@ public class RunningLogServiceImpl implements RunningLogService {
     private LocalTime toLocalTime(int durationMin, int durationSec) {
         int totalSeconds = durationMin * 60 + durationSec;
         return LocalTime.of(totalSeconds / 3600, (totalSeconds % 3600) / 60, totalSeconds % 60);
+    }
+
+    // ===================== RunningStats 유지 메서드 =====================
+
+    //TODO : 통계 업데이트(데이터 더하기)
+    private void accumulateStats(User user, LocalDate runDate, int distM, int durSec) {
+        // 기존 통계값이 있으면 값을 업데이트, 없다면 새로운 통계 데이터 생성
+        findOrCreateStats(user, RunningStats.StatType.WEEKLY, toWeekKey(runDate)).accumulate(distM, durSec);
+        findOrCreateStats(user, RunningStats.StatType.MONTHLY, toMonthKey(runDate)).accumulate(distM, durSec);
+    }
+
+    //TODO : 통계 업데이트(데이터 빼기)
+    private void subtractStats(User user, LocalDate runDate, int distM, int durSec) {
+        // 주별 통계 데이터 찾기
+        // 데이터 가져온 후 통계값 차감
+        runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.WEEKLY, toWeekKey(runDate))
+                .ifPresent(s -> s.subtract(distM, durSec));
+        runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.MONTHLY, toMonthKey(runDate))
+                .ifPresent(s -> s.subtract(distM, durSec));
+    }
+
+    //TODO : 통계 데이터 관리(찾기, 생성)
+    private RunningStats findOrCreateStats(User user, RunningStats.StatType type, String key) {
+        return runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), type, key) //StateKey : 26-w13 형태 , Type : WEEKLY, MONTHLY
+                .orElseGet(() -> runningStatsRepository.save(  // 데이터가 없다면 생성
+                        RunningStats.builder().user(user).statType(type).statKey(key).build()
+                ));
+    }
+
+    //TODO: stateKey 로 변환
+    private String toWeekKey(LocalDate date) {
+        int weekYear = date.get(IsoFields.WEEK_BASED_YEAR);
+        int weekNum  = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
+        return weekYear + "-W" + String.format("%02d", weekNum);
+    }
+
+    //TODO: monthKey 로 변환
+    private String toMonthKey(LocalDate date) {
+        return String.format("%d-%02d", date.getYear(), date.getMonthValue());
     }
 }

@@ -50,8 +50,7 @@ public class RunningLog {
     @Column(name = "like_ctn")
     private int likeCtn;
 
-    @Lob
-    @Column(name = "memo")
+    @Column(name = "memo", length = 500)
     private String memo;
 
     @Column(name = "created_at", nullable = false, updatable = false)
