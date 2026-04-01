@@ -3,6 +3,10 @@ package Termproject.Termproject2.domain.stats.service;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.stats.dto.*;
+import Termproject.Termproject2.domain.stats.dto.response.MonthlyStatsResponse;
+import Termproject.Termproject2.domain.stats.dto.response.PeriodStatsResponse;
+import Termproject.Termproject2.domain.stats.dto.response.StatsSummaryResponseDto;
+import Termproject.Termproject2.domain.stats.dto.response.WeeklyStatsResponse;
 import Termproject.Termproject2.domain.stats.entity.RunningStats;
 import Termproject.Termproject2.domain.stats.repository.RunningStatsRepository;
 import lombok.RequiredArgsConstructor;
@@ -149,6 +153,37 @@ public class StatsServiceImpl implements StatsService {
         return new PeriodStatsResponse(summary, chart, Collections.emptyList());
     }
 
+    @Override
+    public StatsSummaryResponseDto getStatSummary(Long userId, int year, int month, LocalDate date) {
+
+        // 주 통계 요약본
+        StatsSummaryDto weeklySummary = runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(userId, RunningStats.StatType.WEEKLY, toWeekKey(date))
+                .map(this::toSummaryDto)
+                .orElseGet(this::emptySummary);
+
+
+        // 월 통계 요약본
+        StatsSummaryDto monthlySummary = runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(userId, RunningStats.StatType.MONTHLY, toMonthKey(year, month))
+                .map(this::toSummaryDto)
+                .orElseGet(this::emptySummary);
+
+
+        StatsSummaryResponseDto statsSummaryDto = StatsSummaryResponseDto.builder()
+                .weeklyRunDistance(weeklySummary.getTotalDistanceKm())
+                .weeklyRunCnt(weeklySummary.getRunCount())
+                .weeklyPaceAvg(weeklySummary.getAvgPaceSec())
+                .weeklyTotalDurationSec(weeklySummary.getTotalDurationSec())
+                .monthlyRunDistance(monthlySummary.getTotalDistanceKm())
+                .monthlyRunCnt(monthlySummary.getRunCount())
+                .monthlyPaceAvg(monthlySummary.getAvgPaceSec())
+                .monthlyTotalDurationSec(monthlySummary.getTotalDurationSec())
+                .build();
+
+        return statsSummaryDto;
+    }
+
 
     // ── 공통 헬퍼 ────────────────────────────────────────────────
 
@@ -230,5 +265,11 @@ public class StatsServiceImpl implements StatsService {
             case SATURDAY  -> "SAT";
             case SUNDAY    -> "SUN";
         };
+    }
+
+    // TODO: 페이스 구하기
+    public double getAvgPaceSec(double totalDistKm, int totalDurSec) {
+        if (totalDistKm == 0) return 0;
+        return totalDurSec / totalDistKm;
     }
 }

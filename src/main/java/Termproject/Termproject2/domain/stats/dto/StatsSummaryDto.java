@@ -10,4 +10,8 @@ public class StatsSummaryDto {
     private int runCount;
     private int avgPaceSec;
     private int totalDurationSec;
+
+
+
+
 }

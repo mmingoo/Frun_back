@@ -14,6 +14,7 @@ public class RunningStats {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "running_stats_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

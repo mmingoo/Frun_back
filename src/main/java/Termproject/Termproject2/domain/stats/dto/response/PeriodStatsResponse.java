@@ -1,5 +1,7 @@
-package Termproject.Termproject2.domain.stats.dto;
+package Termproject.Termproject2.domain.stats.dto.response;
 
+import Termproject.Termproject2.domain.stats.dto.PeriodDayDto;
+import Termproject.Termproject2.domain.stats.dto.StatsSummaryDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
