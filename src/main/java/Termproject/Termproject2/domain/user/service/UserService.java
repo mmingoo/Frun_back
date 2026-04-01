@@ -2,6 +2,8 @@ package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface UserService {
@@ -13,4 +15,5 @@ public interface UserService {
     UserProfileInfoResponse getUserInfo(Long userId);
 
     void updateUserProfile(Long userId, UserProfileUpdateRequestDto request, MultipartFile profileImage);
+    Page<User> findByNicknameContaining(String keyword, Pageable pageable);
 }

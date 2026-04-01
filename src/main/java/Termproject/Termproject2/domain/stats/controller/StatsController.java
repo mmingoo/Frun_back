@@ -56,12 +56,15 @@ public class StatsController {
 
      //추후 친구 페이지에서도 친구의 통계 요약본 조회를 위해 userId 를 pathvariable 로 받음
     @GetMapping("/summary/{userId}")
+    @Operation(summary = "통계 요약 조회" , description = "메인 화면 사이드바에 있는 통계 요약 조회 api 입니다")
+
     public ResponseEntity<ApiResponse<StatsSummaryResponseDto>> getStatsSummary(
             @PathVariable Long userId
     ){
         int year = LocalDate.now().getYear();
         int month = LocalDate.now().getMonthValue();
         LocalDate date = LocalDate.now();
+
         return ResponseEntity.ok(ApiResponse.ok(statsService.getStatSummary(userId,year,month, date)));
     }
 }

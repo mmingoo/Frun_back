@@ -1,6 +1,6 @@
 package Termproject.Termproject2.domain.friend.repository;
 
-import Termproject.Termproject2.domain.friend.dto.FriendResponseDto;
+import Termproject.Termproject2.domain.friend.dto.response.FriendResponseDto;
 import Termproject.Termproject2.domain.friend.entity.Friendship;
 
 import java.util.List;

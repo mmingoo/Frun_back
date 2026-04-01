@@ -40,18 +40,6 @@ public class FriendRequest {
         createdAt = LocalDateTime.now();
     }
 
-    @Builder
-    public FriendRequest(User receiver, User sender) {
-        this.receiver = receiver;
-        this.sender = sender;
-        this.status = FriendRequestStatus.PENDING;
-    }
 
-    public void accept() {
-        this.status = FriendRequestStatus.ACCEPTED;
-    }
 
-    public void reject() {
-        this.status = FriendRequestStatus.REJECTED;
-    }
 }

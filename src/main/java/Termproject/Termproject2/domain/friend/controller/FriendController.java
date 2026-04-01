@@ -1,12 +1,18 @@
 package Termproject.Termproject2.domain.friend.controller;
 
+import Termproject.Termproject2.domain.friend.dto.response.UserSearchResponse;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -25,5 +31,18 @@ public class FriendController {
             @Parameter(description = "한 번에 조회할 수 (기본값 20)") @RequestParam(defaultValue = "20") int size) {
         Long userId = jwtTokenExtractor.getUserId();
         return ApiResponse.ok(friendShipService.getFriendList(userId, cursorName, cursorId, size), "성공적으로 친구 목록을 조회하였습니다.");
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "친구 검색", description = "친구목록창에서 친구를 겁색합니다.")
+
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> search(
+            @RequestParam String keyword,
+            @PageableDefault(size = 20) Pageable pageable) {
+
+        Long userId = jwtTokenExtractor.getUserId();
+        return ResponseEntity.ok(ApiResponse.ok(
+                friendShipService.searchUsersWithDetailStatus(userId, keyword, pageable)
+        ));
     }
 }

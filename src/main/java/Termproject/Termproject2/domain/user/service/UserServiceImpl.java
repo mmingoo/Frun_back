@@ -9,6 +9,8 @@ import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -127,6 +129,11 @@ public class UserServiceImpl implements UserService {
 
 
         user.updateProfile(newBio, newImageUrl);
+    }
+
+    @Override
+    public Page<User> findByNicknameContaining(String keyword, Pageable pageable) {
+        return userRepository.findByNickNameContaining(keyword, pageable);
     }
 }
 

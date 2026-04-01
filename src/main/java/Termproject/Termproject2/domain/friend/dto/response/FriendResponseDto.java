@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.friend.dto;
+package Termproject.Termproject2.domain.friend.dto.response;
 
 
 import lombok.AllArgsConstructor;

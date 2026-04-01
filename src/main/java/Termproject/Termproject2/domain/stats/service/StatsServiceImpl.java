@@ -153,6 +153,7 @@ public class StatsServiceImpl implements StatsService {
         return new PeriodStatsResponse(summary, chart, Collections.emptyList());
     }
 
+    //TODO: 통계 요약본 조회
     @Override
     public StatsSummaryResponseDto getStatSummary(Long userId, int year, int month, LocalDate date) {
 
