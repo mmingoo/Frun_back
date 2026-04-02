@@ -10,9 +10,12 @@ import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -134,6 +137,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public Page<User> findByNicknameContaining(String keyword, Pageable pageable) {
         return userRepository.findByNickNameContaining(keyword, pageable);
+    }
+
+    // 무한스크롤 방식으로 닉네임으로 친구 검색
+    @Override
+    public List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size) {
+
+        Pageable pageable = PageRequest.of(0, size);
+
+        // 처음 검색하는 경우
+        if (cursorName == null || cursorId == null) {
+            return userRepository.findByNickNameContainingNoCursor(keyword, pageable);
+        }
+
+        // 처음 이후 검색하는 경우
+        return userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
     }
 }
 

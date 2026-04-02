@@ -83,6 +83,7 @@ public class StatsServiceImpl implements StatsService {
                 .map(this::toSummaryDto)
                 .orElseGet(this::emptySummary);
 
+        System.out.println("monthStart :" );
         // 월에 해당하는 러닝로그 조회(chart용 일별 분해)
         List<RunningLog> logs = runningLogRepository
                 .findByUserUserIdAndIsDeletedFalseAndRunDateBetween(userId, monthStart, monthEnd);
@@ -233,8 +234,8 @@ public class StatsServiceImpl implements StatsService {
 
     //TODO: RunningStats → StatsSummaryDto 변환
     private StatsSummaryDto toSummaryDto(RunningStats stats) {
-        double totalDistanceKm = round1(stats.getTotalDistM() / 1000.0);
-        int avgPaceSec = (int) Math.round(stats.getAvgPaceSec());
+        double totalDistanceKm = round1(stats.getTotalDistM() / 1000.0); // M -> KM
+        int avgPaceSec = (int) Math.round(stats.getAvgPaceSec()); // 평균 페이스 계산
         return new StatsSummaryDto(totalDistanceKm, stats.getRunCount(), avgPaceSec, stats.getTotalDurSec());
     }
 
@@ -247,7 +248,7 @@ public class StatsServiceImpl implements StatsService {
     private String toWeekKey(LocalDate date) {
         int weekYear = date.get(IsoFields.WEEK_BASED_YEAR);
         int weekNum  = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-        return weekYear + "-W" + String.format("%02d", weekNum);
+        return weekYear + "-W" + String.format("%02d", weekNum); // 2026-W14 형태로 변환(2026년 14주를 뜻함)
     }
 
     //TODO: WeekKey 생성

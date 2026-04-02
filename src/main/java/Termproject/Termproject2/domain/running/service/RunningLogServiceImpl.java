@@ -18,6 +18,7 @@ import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -142,6 +143,17 @@ public class RunningLogServiceImpl implements RunningLogService {
 
         // soft 삭제
         runningLog.delete();
+    }
+
+    @Override
+    public RunningLog findById(Long runningLogId) {
+        return runningLogRepository.findById(runningLogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+    }
+
+    @Override
+    public boolean existsById(Long runningLogId) {
+        return runningLogRepository.existsById(runningLogId);
     }
 
     // 러닝 로그 설정

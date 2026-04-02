@@ -22,17 +22,23 @@ public class QComment extends EntityPathBase<Comment> {
 
     public static final QComment comment = new QComment("comment");
 
+    public final Termproject.Termproject2.global.common.basedTime.QBaseTimeEntity _super = new Termproject.Termproject2.global.common.basedTime.QBaseTimeEntity(this);
+
+    public final ListPath<Comment, QComment> children = this.<Comment, QComment>createList("children", Comment.class, QComment.class, PathInits.DIRECT2);
+
     public final NumberPath<Long> commentId = createNumber("commentId", Long.class);
 
     public final StringPath content = createString("content");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
-    public final BooleanPath isDeleted = createBoolean("isDeleted");
+    public final QComment parent;
 
     public final Termproject.Termproject2.domain.running.entity.QRunningLog runningLog;
 
-    public final DateTimePath<java.time.LocalDateTime> updatedAt = createDateTime("updatedAt", java.time.LocalDateTime.class);
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> updatedAt = _super.updatedAt;
 
     public final Termproject.Termproject2.domain.user.entity.QUser user;
 
@@ -54,6 +60,7 @@ public class QComment extends EntityPathBase<Comment> {
 
     public QComment(Class<? extends Comment> type, PathMetadata metadata, PathInits inits) {
         super(type, metadata, inits);
+        this.parent = inits.isInitialized("parent") ? new QComment(forProperty("parent"), inits.get("parent")) : null;
         this.runningLog = inits.isInitialized("runningLog") ? new Termproject.Termproject2.domain.running.entity.QRunningLog(forProperty("runningLog"), inits.get("runningLog")) : null;
         this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }

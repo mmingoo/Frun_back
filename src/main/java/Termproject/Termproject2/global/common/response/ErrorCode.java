@@ -20,6 +20,10 @@ public enum ErrorCode {
 
     // 러닝로그
     RUNNING_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 러닝 로그입니다."),
+    ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시물입니다."),
+    LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시물입니다."),
+    INVALID_DISTANCE(HttpStatus.BAD_REQUEST, "거리를 0km 이상으로 설정해주세요" ),
+    INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." ),
 
     // 친구
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 친구 요청입니다."),
@@ -34,10 +38,14 @@ public enum ErrorCode {
     INVALID_FILE_NAME(HttpStatus.BAD_REQUEST, "올바른 파일명이 아닙니다."),
     IMAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 저장에 실패했습니다."),
     TOO_MANY_IMAGES(HttpStatus.BAD_REQUEST, "이미지는 최대 5장까지 업로드할 수 있습니다."),
-    INVALID_DISTANCE(HttpStatus.BAD_REQUEST, "거리를 0km 이상으로 설정해주세요" ),
-    INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." ),
-    ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시물입니다."),
-    LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시물입니다.");
+
+
+    //댓글
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다." ),
+    EXCEEDED_COMMENT_DEPTH(HttpStatus.BAD_REQUEST, "답글에 답글을 달 수 없습니다." ),
+    INVALID_COMMENT_PARENT(HttpStatus.BAD_REQUEST, "해당 러닝일지에 해당 댓글이 소속돼있지 않습니다." ),
+    NOT_COMMENT_OWNER(HttpStatus.UNAUTHORIZED,"본인의 댓글만 수정/삭제할 수 있습니다.");
+
 
     private final HttpStatus status;
     private final String message;
