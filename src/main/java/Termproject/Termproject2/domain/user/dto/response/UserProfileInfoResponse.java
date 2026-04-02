@@ -8,4 +8,5 @@ import lombok.Getter;
 public class UserProfileInfoResponse {
     private Long userId;
     private String profileImageUrl;
+    private String nickName;
 }

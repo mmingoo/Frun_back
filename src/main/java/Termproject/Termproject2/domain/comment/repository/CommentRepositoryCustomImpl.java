@@ -44,6 +44,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 .select(comment.parent.commentId, comment.count())
                 .from(comment)
                 .where(comment.parent.commentId.in(parentIds))
+                .groupBy(comment.parent.commentId)
                 .fetch()
                 .stream()
                 .collect(Collectors.toMap(
@@ -66,6 +67,29 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 .fetch();
     }
 
+
+    @Override
+    public long countTopLevelComments(Long runningLogId) {
+        Long count = jpaQueryFactory
+                .select(comment.count())
+                .from(comment)
+                .where(
+                        comment.runningLog.runningLogId.eq(runningLogId),
+                        comment.parent.isNull()
+                )
+                .fetchOne();
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public long countReplies(Long parentId) {
+        Long count = jpaQueryFactory
+                .select(comment.count())
+                .from(comment)
+                .where(comment.parent.commentId.eq(parentId))
+                .fetchOne();
+        return count != null ? count : 0L;
+    }
 
     // cursor 조건 (null이면 첫 페이지)
     private BooleanExpression cursorCondition(Long cursorId) {

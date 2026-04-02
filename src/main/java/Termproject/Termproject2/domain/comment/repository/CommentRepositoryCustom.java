@@ -12,4 +12,6 @@ public interface CommentRepositoryCustom {
     List<Comment> findTopLevelComments(Long runningLogId, Long cursorId, int size);
     Map<Long, Long> countRepliesByParentIds(List<Long> parentIds);
     List<Comment> findReplies(Long parentId, Long cursorId, int size);
+    long countTopLevelComments(Long runningLogId);
+    long countReplies(Long parentId);
 }

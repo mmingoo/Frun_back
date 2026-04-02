@@ -79,6 +79,10 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
+    public void setUpProfile(String nickName, String imageUrl) {
+        if (nickName != null) this.nickName= nickName;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+    }
     public void updateProfile(String bio, String imageUrl) {
         if (bio != null) this.bio = bio;
         if (imageUrl != null) this.imageUrl = imageUrl;

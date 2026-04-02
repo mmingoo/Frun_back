@@ -27,4 +27,9 @@ public class ReplyResponse {
                 .createdAt(comment.getCreatedAt())
                 .build();
     }
+
+    //프로필 이미지 경로 추가를 위핸 내부 메서드
+    public void updateProfileImageUrl(String profileImageUrl){
+        this.profileImageUrl = profileImageUrl;
+    }
 }

@@ -59,12 +59,20 @@ public class CommentServiceImpl implements CommentService{
                 .toList();
 
         // 프로필 이미지명을 full url 로 변환
-        toFullProfileUrl(contents);
+        contents.forEach(
+                comment -> {
+                    String fullUrl = imageService.getProfileImageUrl(comment.getProfileImageUrl());
+                    comment.updateProfileImageUrl(fullUrl);
+                }
+        );
 
         // size + 1 개 댓글을 불러왔고, 이 중 가장 마지막 댓글의 Id가 cursorId
         Long nextCursorId = getNextCursorId(comments, hasNext);
 
-        return new CursorSliceResponse<>(contents, hasNext, nextCursorId);
+        // 해당 러닝일지의 전체 최상위 댓글 수
+        long totalCount = commentRepository.countTopLevelComments(runningLogId);
+
+        return new CursorSliceResponse<>(contents, hasNext, nextCursorId, totalCount);
     }
 
 
@@ -88,7 +96,17 @@ public class CommentServiceImpl implements CommentService{
         // size + 1 개 댓글을 불러왔고, 이 중 가장 마지막 댓글의 Id가 cursorId
         Long nextCursorId = getNextCursorId(replies, hasNext);
 
-        return new CursorSliceResponse<>(contents, hasNext, nextCursorId);
+        contents.forEach(
+                comment -> {
+                    String fullUrl = imageService.getProfileImageUrl(comment.getProfileImageUrl());
+                    comment.updateProfileImageUrl(fullUrl);
+                }
+        );
+
+        // 해당 댓글의 전체 답글 수
+        long totalCount = commentRepository.countReplies(parentId);
+
+        return new CursorSliceResponse<>(contents, hasNext, nextCursorId, totalCount);
     }
 
     //TODO: 댓글 작성
@@ -159,6 +177,7 @@ public class CommentServiceImpl implements CommentService{
 
     //TODO: 댓글 찾기 내부 메서드
     public Comment findCommentById(Long commentId) {
+        System.out.println("부모 답글 찾기");
         return commentRepository.findById(commentId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
     }
@@ -170,6 +189,7 @@ public class CommentServiceImpl implements CommentService{
 
     //TODO: 댓글 찾기 내부 메서드
     private User findUserById(Long userId) {
+        System.out.println("유저찾기");
         return userService.findById(userId);
     }
 

@@ -12,4 +12,5 @@ public class CursorSliceResponse<T> {
     private List<T> contents;
     private boolean hasNext;
     private Long nextCursor; // null이면 마지막 페이지
+    private long totalCount; // 전체 댓글(또는 답글) 수
 }

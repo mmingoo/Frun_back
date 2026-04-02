@@ -8,57 +8,63 @@ import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final FriendshipRepository friendshipRepository;
     private final RunningLogRepository runningLogRepository;
     private final ImageService imageService;
 
 
-    // 닉네임 중복 체크
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
-        // 닉네임 존재 여부
         boolean isExists = userRepository.existsByNickName(checkNickname);
         return new NicknameCheckResponse(isExists);
     }
 
-    // 닉네임이 설정돼있는지 아닌지
     @Override
     public NicknameStatusResponse getNicknameStatus(Long userId) {
-        // 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
-        // 유저의 닉네임 체크 여부
         boolean hasNickname = user.getNickName() != null && !user.getNickName().isBlank();
         return new NicknameStatusResponse(hasNickname);
     }
 
-    // 유저 프로필 업데이트
+    /**
+     * 최초 프로필 설정 (닉네임 + 이미지)
+     * - 닉네임 중복 여부는 비즈니스 규칙이므로 서비스에서 검증
+     */
     @Override
     @Transactional
     public void setupProfile(Long userId, String nickname, String imageUrl) {
+        // 닉네임 중복 검증 → 어떤 경로로 호출되든 보장됨
+        if (userRepository.existsByNickName(nickname)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-        user.updateProfile(nickname, imageUrl);
+
+        user.setUpProfile(nickname, imageUrl);
     }
 
     @Override
     public User findById(Long userId) {
+        System.out.println("userId : " + userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
@@ -86,7 +92,6 @@ public class UserServiceImpl implements UserService {
             avgPace = String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
         }
 
-        System.out.println("마이페이지 프로필 이미지 : " + imageService.getProfileImageUrl(user.getImageUrl()));
         return new UserPageResponseDto(
                 user.getUserId(),
                 user.getNickName(),
@@ -102,12 +107,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserProfileInfoResponse getUserInfo(Long userId){
-        String imageUrl = imageService.getProfileImageUrl(userRepository.findImageUrlByUserId(userId));
-        System.out.println("nav 프로필 이미지 : " + imageUrl);
-        return new UserProfileInfoResponse(userId, imageUrl);
+    public UserProfileInfoResponse getUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.NOT_FOUND));
+        String imageUrl = imageService.getProfileImageUrl(user.getImageUrl());
+        return new UserProfileInfoResponse(userId, imageUrl, user.getNickName());
     }
-
 
     @Override
     @Transactional
@@ -119,17 +124,14 @@ public class UserServiceImpl implements UserService {
         boolean hasBio = bio != null;
         boolean hasImage = profileImage != null && !profileImage.isEmpty();
 
-        // 둘 다 null이면 업데이트 x
         if (!hasBio && !hasImage) return;
 
-        String newBio = hasBio ? bio : user.getBio();  // bio 없으면 기존 값 유지
-        String newImageUrl = user.getImageUrl(); // 이미지 없으면 기존 값 유지
+        String newBio = hasBio ? bio : user.getBio();
+        String newImageUrl = user.getImageUrl();
 
-        // 이미지가 있으면 저장
         if (hasImage) {
             newImageUrl = imageService.saveProfileImage(userId, profileImage);
         }
-
 
         user.updateProfile(newBio, newImageUrl);
     }
@@ -139,19 +141,14 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByNickNameContaining(keyword, pageable);
     }
 
-    // 무한스크롤 방식으로 닉네임으로 친구 검색
     @Override
     public List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size) {
-
         Pageable pageable = PageRequest.of(0, size);
 
-        // 처음 검색하는 경우
         if (cursorName == null || cursorId == null) {
             return userRepository.findByNickNameContainingNoCursor(keyword, pageable);
         }
 
-        // 처음 이후 검색하는 경우
         return userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
     }
 }
-
