@@ -6,6 +6,7 @@ import Termproject.Termproject2.domain.friend.dto.response.UserSearchListRespons
 import Termproject.Termproject2.domain.friend.dto.response.UserSearchResponse;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.entity.Friendship;
+import Termproject.Termproject2.domain.friend.repository.FriendRequestRepository;
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
 import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -15,12 +16,14 @@ import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FriendshipServiceImpl implements FriendShipService {
 
     private final FriendshipRepository friendshipRepository;
@@ -28,6 +31,7 @@ public class FriendshipServiceImpl implements FriendShipService {
     private final RunningLogService runningLogService;
     private final UserService userService;
     private final FriendRequestService friendRequestService;
+    private final FriendRequestRepository friendRequestRepository;
 
     @Override
     public FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size) {
@@ -49,6 +53,7 @@ public class FriendshipServiceImpl implements FriendShipService {
                 ))
                 .collect(Collectors.toList());
 
+        System.out.println("친구 프로필 이미지 : " + results.get(0).getFriendProfileImage());
         // 다음 페이지 조회 시작점(커서)으로 현재 목록의 마지막 항목 사용
         // hasNext가 false면 커서 불필요하므로 null 처리
         FriendResponseDto last = hasNext ? results.get(results.size() - 1) : null;
@@ -66,6 +71,8 @@ public class FriendshipServiceImpl implements FriendShipService {
 
     }
 
+
+    //TODO: 친구 검색 시 나와의 관계 파악
     @Override
     public UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size) {
         // size+1 개 친구 조회하
@@ -104,6 +111,25 @@ public class FriendshipServiceImpl implements FriendShipService {
                 last != null ? last.getNickName() : null);
     }
 
+    //TODO: 친구 삭제
+    @Override
+    @Transactional
+    public void unfriend(Long myId, Long friendId) {
+        // Friendship 테이블에서 관계 삭제
+        long deletedCount = friendshipRepository.deleteFriendship(myId, friendId);
+
+        // deletedCount > 0 : 친구 관계가 끊어진 상태
+        // deletedCount == 0 : 애초에 친구관계가 아니거나 삭제된 상태
+        if (deletedCount == 0) {
+            throw new BusinessException(ErrorCode.NOT_FRIEND); // 친구 상태가 아님
+        }
+        User sender = findUser(myId);
+        User receiver = findUser(friendId);
+
+        // 연관된 친구 신청 기록(ACCEPTED 상태 등)도 삭제하여 초기화
+        friendRequestRepository.deleteBySenderAndReceiver(sender, receiver);
+        friendRequestRepository.deleteBySenderAndReceiver(receiver, sender);
+    }
 
 
     //TODO: 친구 관계 상태 확인
@@ -121,10 +147,14 @@ public class FriendshipServiceImpl implements FriendShipService {
 
         // 내가 받은 요청이 있는지 확인 (상대가 sender, 내가 receiver)
         if (friendRequestService.findByReceiverIdAndSenderId(me, other).isPresent()) {
-            return FriendRequestStatus.RECEIVED;
+            return FriendRequestStatus.SENDED;
         }
 
         return FriendRequestStatus.NONE;
+    }
+
+    private User findUser(Long userId){
+        return userService.findById(userId);
     }
 
 }

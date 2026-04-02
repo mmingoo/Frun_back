@@ -8,20 +8,25 @@ import Termproject.Termproject2.domain.user.entity.UserStatus;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
+@Repository
 public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
+    QFriendship friendship = QFriendship.friendship;
+    QUser friend = QUser.user;
+
+    //TODO: 친구 목록 반환
     @Override
     public List<FriendResponseDto> getFriendList(Long userId, String cursorName, Long cursorId, int size) {
 
-        QFriendship friendship = QFriendship.friendship;
-        QUser friend = QUser.user;
+
 
         return queryFactory
                 .select(Projections.constructor(FriendResponseDto.class,
@@ -51,6 +56,7 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
                 .fetch();
     }
 
+    //TODO: 유저와 작성자로 친구 관계 찾기
     @Override
     public Optional<Friendship> findByUserIdAndAuthorId(Long userId, Long authorId) {
         QFriendship friendship = QFriendship.friendship;
@@ -63,5 +69,18 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
                                 .and(friendship.receiveUser.userId.eq(authorId)))
                 ).fetchOne());
     }
+
+    //TODO: 친구 관계 삭제
+    @Override
+    public long deleteFriendship(Long myId, Long friendId) {
+        return queryFactory
+                .delete(friendship)
+                .where(
+                        (friendship.id.receiveUserId.eq(myId).and(friendship.id.senderUserId.eq(friendId))) // 보낸 사람이 나고, 받은 사람이 상대방
+                                .or(friendship.id.receiveUserId.eq(friendId).and(friendship.id.senderUserId.eq(myId))) // 보낸 사람이 상대방이고 받은 사람이 나
+                )
+                .execute(); // 연산이 실행된 데이터 행의 수를 반환
+    }
+
 }
 

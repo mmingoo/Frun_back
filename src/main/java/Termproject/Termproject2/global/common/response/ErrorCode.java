@@ -31,6 +31,7 @@ public enum ErrorCode {
     USER_NOT_FRIEND_WITH_LOG_AUTHOR(HttpStatus.NOT_FOUND, "유저와 러닝일지 작성자는 친구가 아닙니다."),
     RUNNING_LOG_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN, "해당 러닝 일지의 작성자가 아닙니다."),
     PRIVATE_RUNNING_LOG(HttpStatus.FORBIDDEN, "비공개 러닝 일지입니다."),
+    NOT_FRIEND(HttpStatus.NOT_FOUND,"친구가 아닙니다."),
 
     // 이미지
     IMAGE_TOO_LARGE(HttpStatus.BAD_REQUEST, "이미지 파일 크기는 3MB를 초과할 수 없습니다."),

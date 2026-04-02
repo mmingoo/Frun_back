@@ -43,4 +43,16 @@ public class FriendController {
                 "성공적으로 유저를 검색하였습니다."
         ));
     }
+
+    @DeleteMapping("/{friendId}")
+    @Operation(summary = "친구를 삭제합니다.")
+    public ResponseEntity<ApiResponse<Void>> deleteFriend(
+            @PathVariable Long friendId) {
+
+        Long myId = jwtTokenExtractor.getUserId();
+
+        friendShipService.unfriend(myId, friendId);
+
+        return ResponseEntity.ok(ApiResponse.ok("친구 삭제가 완료되었습니다."));
+    }
 }

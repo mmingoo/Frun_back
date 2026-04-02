@@ -8,4 +8,6 @@ public interface FriendShipService {
 
     void isFriendWithAuthor(Long userId, Long authorId);
     UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size);
+
+    void unfriend(Long myId, Long friendId);
 }
