@@ -163,8 +163,7 @@ public class UserServiceImpl implements UserService {
     public Long userDeactivate(Long userId) {
 
         // 1. 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = findUserById(userId);
 
         // 2. 이미 비활성화 상태인지 확인 (throw 문법 수정)
         if (user.getUserStatus() == UserStatus.INACTIVE) {
@@ -176,5 +175,19 @@ public class UserServiceImpl implements UserService {
 
         // 4. 처리된 유저의 ID 반환
         return user.getUserId();
+    }
+
+    //TODO: 닉네임 변경
+    @Override
+    public void updateUserNickname(Long userId, UserUpdateNicknameDto request) {
+        User user = findUserById(userId);
+        user.updateUserNickname(request.getNickname()) ;
+    }
+
+
+    //TODO: USER 반환 메서드, 에러 처리
+    private User findUserById(Long userId){
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }

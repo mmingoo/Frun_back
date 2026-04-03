@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,4 +22,6 @@ public interface UserService {
     List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size);
 
     Long userDeactivate(Long userId);
+
+    void updateUserNickname(Long userId, @Valid UserUpdateNicknameDto request);
 }

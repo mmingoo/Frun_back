@@ -3,6 +3,7 @@ package Termproject.Termproject2.domain.user.controller;
 import Termproject.Termproject2.domain.user.dto.response.NicknameCheckResponse;
 import Termproject.Termproject2.domain.user.dto.response.NicknameStatusResponse;
 import Termproject.Termproject2.domain.user.dto.response.UserProfileUpdateRequestDto;
+import Termproject.Termproject2.domain.user.dto.response.UserUpdateNicknameDto;
 import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.image.ImageService;
@@ -116,5 +117,14 @@ public class UserController {
         Long userId = jwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(userService.userDeactivate(userId),"성공적으로 계정을 비활성화하였습니다."));
+    }
+
+    @PatchMapping("/nickname")
+    @Operation(summary = "유저 닉네임 변경 ")
+    public ApiResponse<?> updateUserNickname(
+            @Valid @RequestBody UserUpdateNicknameDto request) {
+        Long userId = jwtTokenExtractor.getUserId();
+        userService.updateUserNickname(userId, request);
+        return ApiResponse.ok("성공적으로 유저의 닉네임을 변경하였습니다.");
     }
 }
