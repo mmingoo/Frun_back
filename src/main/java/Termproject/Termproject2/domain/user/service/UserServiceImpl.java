@@ -6,6 +6,7 @@ import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.entity.UserStatus;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
@@ -154,5 +155,26 @@ public class UserServiceImpl implements UserService {
         }
 
         return userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
+    }
+
+    //Todo: 계정 비활성화
+    @Override
+    @Transactional // 데이터 변경이 일어나므로 트랜잭션 보장이 필수입니다.
+    public Long userDeactivate(Long userId) {
+
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 2. 이미 비활성화 상태인지 확인 (throw 문법 수정)
+        if (user.getUserStatus() == UserStatus.INACTIVE) {
+            throw new BusinessException(ErrorCode.USER_ALREADY_INACTIVE);
+        }
+
+        // 3. 상태 변경 (Dirty Checking 활용)
+        user.setInActive();
+
+        // 4. 처리된 유저의 ID 반환
+        return user.getUserId();
     }
 }

@@ -17,6 +17,8 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
     USER_NOT_AUTHORIZATION(HttpStatus.UNAUTHORIZED, "작성자가 아닙니다." ),
+    USER_ALREADY_INACTIVE(HttpStatus.BAD_REQUEST, "이미 비활성화된 계정입니다." ),
+
 
     // 러닝로그
     RUNNING_LOG_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 러닝 로그입니다."),

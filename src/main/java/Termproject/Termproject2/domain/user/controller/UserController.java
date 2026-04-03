@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -107,5 +108,13 @@ public class UserController {
         Long userId = jwtTokenExtractor.getUserId();
         userService.updateUserProfile(userId, request, profileImage);
         return ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다.");
+    }
+
+    @DeleteMapping("/deactivate")
+    @Operation(summary = "유저 비활성화")
+    public ResponseEntity<ApiResponse<?>> userDeactivate(){
+        Long userId = jwtTokenExtractor.getUserId();
+
+        return ResponseEntity.ok(ApiResponse.ok(userService.userDeactivate(userId),"성공적으로 계정을 비활성화하였습니다."));
     }
 }

@@ -19,4 +19,6 @@ public interface UserService {
     void updateUserProfile(Long userId, UserProfileUpdateRequestDto request, MultipartFile profileImage);
     Page<User> findByNicknameContaining(String keyword, Pageable pageable);
     List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size);
+
+    Long userDeactivate(Long userId);
 }

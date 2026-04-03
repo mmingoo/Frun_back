@@ -88,6 +88,13 @@ public class User extends BaseTimeEntity {
         if (imageUrl != null) this.imageUrl = imageUrl;
     }
 
+    public void setInActive(){
+        this.userStatus = UserStatus.INACTIVE;
+    }
+    public void setActive(){
+        this.userStatus = UserStatus.ACTIVE;
+    }
+
 
 
 }
