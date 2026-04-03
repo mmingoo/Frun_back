@@ -22,7 +22,10 @@ public class QFriendRequest extends EntityPathBase<FriendRequest> {
 
     public static final QFriendRequest friendRequest = new QFriendRequest("friendRequest");
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final Termproject.Termproject2.global.common.basedTime.QBaseCreatedEntity _super = new Termproject.Termproject2.global.common.basedTime.QBaseCreatedEntity(this);
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final NumberPath<Long> friendRequestId = createNumber("friendRequestId", Long.class);
 

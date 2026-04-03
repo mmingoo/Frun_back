@@ -1,20 +1,23 @@
 package Termproject.Termproject2.domain.friend.service;
 
+import Termproject.Termproject2.domain.friend.dto.request.FriendRequestDto;
 import Termproject.Termproject2.domain.friend.dto.response.FriendListResponse;
 import Termproject.Termproject2.domain.friend.dto.response.FriendResponseDto;
 import Termproject.Termproject2.domain.friend.dto.response.UserSearchListResponse;
 import Termproject.Termproject2.domain.friend.dto.response.UserSearchResponse;
+import Termproject.Termproject2.domain.friend.entity.FriendRequest;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.entity.Friendship;
 import Termproject.Termproject2.domain.friend.repository.FriendRequestRepository;
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
-import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.domain.user.entity.User;
-import Termproject.Termproject2.domain.user.service.UserService;
+import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,8 +31,7 @@ public class FriendshipServiceImpl implements FriendShipService {
 
     private final FriendshipRepository friendshipRepository;
     private final ImageService imageService;
-    private final RunningLogService runningLogService;
-    private final UserService userService;
+    private final UserRepository userRepository;
     private final FriendRequestService friendRequestService;
     private final FriendRequestRepository friendRequestRepository;
 
@@ -76,7 +78,10 @@ public class FriendshipServiceImpl implements FriendShipService {
     @Override
     public UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size) {
         // size+1 개 친구 조회하
-        List<User> searchedUsers = userService.findByNicknameContainingWithCursor(keyword, cursorName, cursorId, size + 1);
+        Pageable pageable = PageRequest.of(0, size + 1);
+        List<User> searchedUsers = (cursorName == null || cursorId == null)
+                ? userRepository.findByNickNameContainingNoCursor(keyword, pageable)
+                : userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
 
         // 자신 제외
         List<User> filtered = searchedUsers.stream()
@@ -86,13 +91,14 @@ public class FriendshipServiceImpl implements FriendShipService {
 
         // 검색 결과 size 로 다음 친구목록 존재하는지 여부 판단
         boolean hasNext = filtered.size() > size;
-        if (hasNext) {
-            filtered = filtered.subList(0, size);
-        }
+        if (hasNext) filtered = filtered.subList(0, size);
+
 
         // 친구 검색 결과를 바탕으로 현재 자신과의 친구 관계도 추가하여 표시(요청 보낸 상태, 현재 친구, 아무런 상태도 아닌 경우)
         List<UserSearchResponse> result = filtered.stream()
                 .map(targetUser -> {
+
+                    // 모든 유저에 대해determineStatus -> n+1
                     FriendRequestStatus status = determineStatus(currentUserId, targetUser.getUserId());
                     return UserSearchResponse.builder()
                             .userId(targetUser.getUserId())
@@ -132,29 +138,107 @@ public class FriendshipServiceImpl implements FriendShipService {
     }
 
 
+
+    //TODO: 친구 요청
+    @Transactional
+    public void sendFriendRequest(Long userId, Long friendId ) {
+        User sender = findUser(userId);
+        User receiver = findUser(friendId);
+
+        // 이미 요청이 존재하는지 체크하는 로직 추가 권장
+        FriendRequest request = FriendRequest.builder()
+                .sender(sender)
+                .receiver(receiver)
+                .status(FriendRequestStatus.SENDED)
+                .build();
+
+        // 친구 요청 전송
+        friendRequestRepository.save(request);
+    }
+
+    //TODO : 친구 요청 수락
+    @Transactional
+    public void acceptFriendRequest(Long senderId, Long userId) {
+        FriendRequest request = friendRequestService.findByReceiverIdAndSenderId(userId, senderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
+
+
+        // SENDED 만 처리할 수 있도록
+        if (request.getStatus() != FriendRequestStatus.SENDED) {
+            throw new BusinessException(ErrorCode.REQUEST_COMPLETED);
+        }
+
+        // 친구 요청 상태 변경
+        request.setStatus(FriendRequestStatus.FRIEND);
+
+        // Friendship 테이블에 저장
+        Friendship friendship = Friendship.builder()
+                .senderUser(request.getSender())
+                .receiveUser(request.getReceiver())
+                .build();
+
+        friendshipRepository.save(friendship);
+
+    }
+
+
+    //TODO: 친구 요청 거절
+    @Transactional
+    public void rejectFriendRequest(Long senderId, Long userId) {
+        FriendRequest request = friendRequestService.findByReceiverIdAndSenderId(userId, senderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
+
+        // SENDED 상태만 거절 가능
+        if (request.getStatus() != FriendRequestStatus.SENDED) {
+            throw new BusinessException(ErrorCode.REQUEST_COMPLETED);
+        }
+
+        // 친구 요청 데이터 삭제
+        friendRequestRepository.delete(request);
+    }
+
     //TODO: 친구 관계 상태 확인
     private FriendRequestStatus determineStatus(Long me, Long other) {
-        // 이미 친구인지 확인 (양방향 중 하나라도 존재하면 친구)
-        if (friendshipRepository.findByIdReceiveUserIdAndIdSenderUserId(me, other).isPresent()
-                || friendshipRepository.findByIdReceiveUserIdAndIdSenderUserId(other, me).isPresent()) {
+
+        FriendRequestStatus status = getStatus(me,other);
+
+        return status;
+    }
+
+    @Override
+    public long getFriendCount(Long targetUserId){
+        return friendshipRepository.countByUserId(targetUserId);
+    }
+
+    @Override
+    public FriendRequestStatus getStatus(Long me, Long other) {
+        // 1. 예외를 던지지 않고 null을 허용하도록 변경
+        FriendRequest sentReq = friendRequestService.findByReceiverIdAndSenderId(other, me)
+                .orElse(null);
+        FriendRequest receivedReq = friendRequestService.findByReceiverIdAndSenderId(me, other)
+                .orElse(null);
+
+        // 2. 상태 추출, 객체가 없으면 NONE으로 간주
+        FriendRequestStatus sentStatus = (sentReq != null) ? sentReq.getStatus() : FriendRequestStatus.NONE;
+        FriendRequestStatus receivedStatus = (receivedReq != null) ? receivedReq.getStatus() : FriendRequestStatus.NONE;
+
+        // 3. 우선순위 판별
+        if (sentStatus == FriendRequestStatus.FRIEND || receivedStatus == FriendRequestStatus.FRIEND) {
             return FriendRequestStatus.FRIEND;
         }
 
-        // 내가 보낸 요청이 있는지 확인 (내가 sender, 상대가 receiver)
-        if (friendRequestService.findByReceiverIdAndSenderId(other, me).isPresent()) {
-            return FriendRequestStatus.SENDED;
-        }
+        // 친구요청이 존재하는데 내가 보낸 경우에 SENDED 이면 SENDED
+        if (sentStatus == FriendRequestStatus.SENDED) return FriendRequestStatus.SENDED;
 
-        // 내가 받은 요청이 있는지 확인 (상대가 sender, 내가 receiver)
-        if (friendRequestService.findByReceiverIdAndSenderId(me, other).isPresent()) {
-            return FriendRequestStatus.SENDED;
-        }
+        // 친구요청이 존재하는데 내가 받은 경우에 SENDED 이면 PENDING
+        if (receivedStatus == FriendRequestStatus.SENDED) return FriendRequestStatus.PENDING;
 
         return FriendRequestStatus.NONE;
     }
 
     private User findUser(Long userId){
-        return userService.findById(userId);
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
 }

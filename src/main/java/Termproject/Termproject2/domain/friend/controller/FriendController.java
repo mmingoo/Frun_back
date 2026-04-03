@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.friend.controller;
 
 import Termproject.Termproject2.domain.friend.dto.response.UserSearchListResponse;
+import Termproject.Termproject2.domain.friend.dto.request.FriendRequestDto;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
@@ -44,8 +45,37 @@ public class FriendController {
         ));
     }
 
+
+
+    @PostMapping("/request/{friendId}")
+    @Operation(summary = "친구 요청")
+    public ResponseEntity<ApiResponse<?>> sendRequest(
+            @PathVariable Long friendId
+    ) {
+        Long userId = jwtTokenExtractor.getUserId();
+        friendShipService.sendFriendRequest(userId, friendId);
+        return ResponseEntity.ok(ApiResponse.ok("친구 요청을 보냈습니다."));
+    }
+
+
+    @PostMapping("/request/accept/{senderId}")
+    @Operation(summary = "친구 요청 수락")
+    public ResponseEntity<ApiResponse<?>> acceptRequest(@PathVariable Long senderId) {
+        Long userId = jwtTokenExtractor.getUserId();
+        friendShipService.acceptFriendRequest(senderId,userId);
+        return ResponseEntity.ok(ApiResponse.ok("친구 요청을 수락했습니다."));
+    }
+
+    @DeleteMapping("/request/reject/{senderId}")
+    @Operation(summary = "친구 요청 거절")
+    public ResponseEntity<ApiResponse<?>> rejectRequest(@PathVariable Long senderId) {
+        Long userId = jwtTokenExtractor.getUserId();
+        friendShipService.rejectFriendRequest(senderId, userId);
+        return ResponseEntity.ok(ApiResponse.ok("친구 요청을 거절했습니다."));
+    }
+
     @DeleteMapping("/{friendId}")
-    @Operation(summary = "친구를 삭제합니다.")
+    @Operation(summary = "친구를 삭제.")
     public ResponseEntity<ApiResponse<Void>> deleteFriend(
             @PathVariable Long friendId) {
 

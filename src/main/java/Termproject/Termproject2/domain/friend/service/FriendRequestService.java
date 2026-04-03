@@ -6,4 +6,5 @@ import java.util.Optional;
 
 public interface FriendRequestService {
     Optional<FriendRequest> findByReceiverIdAndSenderId(Long receiverId, Long senderId);
+
 }

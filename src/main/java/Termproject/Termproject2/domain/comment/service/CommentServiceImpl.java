@@ -130,7 +130,7 @@ public class CommentServiceImpl implements CommentService{
     //TODO: 답글 작성
     @Transactional
     @Override
-    public Long createReply(Long runningLogId, Long parentId, Long userId, CommentCreateRequest request) {
+    public Long createReply(Long runningLogId, Long userId, Long parentId, CommentCreateRequest request) {
         RunningLog runningLog = findRunningLogById(runningLogId); // 러닝일지 조회
         User user = findUserById(userId);  // 유저 조회
         Comment parent = findCommentById(parentId); // 부모 댓글 조회

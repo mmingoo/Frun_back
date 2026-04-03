@@ -1,6 +1,8 @@
 package Termproject.Termproject2.domain.user.service;
 
+import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
+import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -25,10 +27,9 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final FriendshipRepository friendshipRepository;
     private final RunningLogRepository runningLogRepository;
     private final ImageService imageService;
-
+    private final FriendShipService friendShipService;
 
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
@@ -71,14 +72,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId) {
+        FriendRequestStatus status = null;
         User user = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
-        long friendCount = friendshipRepository.countByUserId(targetUserId);
+        long friendCount = friendShipService.getFriendCount(targetUserId);
 
         boolean isOwner = viewerId.equals(targetUserId);
-        boolean isFriend = !isOwner &&
-                friendshipRepository.findByUserIdAndAuthorId(viewerId, targetUserId).isPresent();
+
+        if(!isOwner){
+            status =  friendShipService.getStatus(viewerId,targetUserId);
+        }
 
         Object[] stats = runningLogRepository.aggregateStatsByUserId(targetUserId).get(0);
 
@@ -99,7 +103,7 @@ public class UserServiceImpl implements UserService {
                 user.getBio(),
                 friendCount,
                 isOwner,
-                isFriend,
+                status,
                 totalRunCount,
                 totalDistanceKm,
                 avgPace

@@ -58,7 +58,6 @@ public class CommentController {
             @PathVariable(required = false) Long parentId,
             @RequestBody @Valid CommentCreateRequest request
     ){
-        System.out.println("답글 실행");
         Long userId = jwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(commentService.createReply(running_log_id, userId,parentId, request), "답글을 성공적으로 생성하였습니다."));

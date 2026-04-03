@@ -32,6 +32,7 @@ public enum ErrorCode {
     RUNNING_LOG_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN, "해당 러닝 일지의 작성자가 아닙니다."),
     PRIVATE_RUNNING_LOG(HttpStatus.FORBIDDEN, "비공개 러닝 일지입니다."),
     NOT_FRIEND(HttpStatus.NOT_FOUND,"친구가 아닙니다."),
+    REQUEST_COMPLETED(HttpStatus.ACCEPTED,"이미 처리된 요청입니다."),
 
     // 이미지
     IMAGE_TOO_LARGE(HttpStatus.BAD_REQUEST, "이미지 파일 크기는 3MB를 초과할 수 없습니다."),
@@ -45,7 +46,7 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다." ),
     EXCEEDED_COMMENT_DEPTH(HttpStatus.BAD_REQUEST, "답글에 답글을 달 수 없습니다." ),
     INVALID_COMMENT_PARENT(HttpStatus.BAD_REQUEST, "해당 러닝일지에 해당 댓글이 소속돼있지 않습니다." ),
-    NOT_COMMENT_OWNER(HttpStatus.UNAUTHORIZED,"본인의 댓글만 수정/삭제할 수 있습니다.");
+    NOT_COMMENT_OWNER(HttpStatus.UNAUTHORIZED,"본인의 댓글만 수정/삭제할 수 있습니다."), ;
 
 
     private final HttpStatus status;

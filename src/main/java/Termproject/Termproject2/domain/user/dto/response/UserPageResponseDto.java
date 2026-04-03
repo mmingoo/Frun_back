@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.user.dto.response;
 
+import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -12,7 +13,7 @@ public class UserPageResponseDto {
     private String bio;
     private long friendCount;
     private boolean isOwner;
-    private boolean isFriend;
+    private FriendRequestStatus friendRequestStatus;
     private long totalRunCount;
     private double totalDistanceKm;
     private String avgPace;

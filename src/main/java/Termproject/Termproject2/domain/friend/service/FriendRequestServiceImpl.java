@@ -19,4 +19,5 @@ public class FriendRequestServiceImpl implements FriendRequestService{
     public Optional<FriendRequest> findByReceiverIdAndSenderId(Long receiverId, Long senderId) {
         return friendRequestRepository.findByReceiver_UserIdAndSender_UserId(receiverId, senderId);
     }
+
 }
