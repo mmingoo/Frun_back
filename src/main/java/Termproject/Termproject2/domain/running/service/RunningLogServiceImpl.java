@@ -63,7 +63,6 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
 
     // 공개 일지일 때만 통계 누적
     if (request.isPublic()) {
-        System.out.println("공개 여부 : " + request.isPublic());
         int distM = (int) (request.getDistance().doubleValue() * 1000);
         int durSec = runningLog.getDuration().toSecondOfDay();
         accumulateStats(user, request.getRunDate(), distM, durSec);
@@ -136,24 +135,6 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
         setupRunningLogImage(runningLog, request.getKeepImageUrls(), images);
     }
 
-//    @Override
-//    @Transactional
-//    public void softDeleteRunningLog(Long runningLogId, Long userId) {
-//        // RunningLog 조회
-//        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-//                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
-//
-//        // 유저가 작성자인지 검증
-//        validateAuthor(userId, runningLog);
-//
-//        // RunningStats 차감
-//        int distM = (int) (runningLog.getDistance().doubleValue() * 1000);
-//        int durSec = runningLog.getDuration().toSecondOfDay();
-//        subtractStats(runningLog.getUser(), runningLog.getRunDate(), distM, durSec);
-//
-//        // soft 삭제
-//        runningLog.delete();
-//    }
 
     //공개 일지일 때만 통계 차감
     @Override

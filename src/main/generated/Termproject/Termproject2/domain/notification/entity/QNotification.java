@@ -22,13 +22,22 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public static final QNotification notification = new QNotification("notification");
 
+    public final Termproject.Termproject2.global.common.basedTime.QBaseCreatedEntity _super = new Termproject.Termproject2.global.common.basedTime.QBaseCreatedEntity(this);
+
     public final Termproject.Termproject2.domain.comment.QComment comment;
 
-    public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+    public final StringPath content = createString("content");
+
+    //inherited
+    public final DateTimePath<java.time.LocalDateTime> createdAt = _super.createdAt;
 
     public final Termproject.Termproject2.domain.friend.entity.QFriendRequest friendRequest;
 
+    public final EnumPath<Termproject.Termproject2.domain.friend.entity.FriendRequestStatus> friendRequestStatus = createEnum("friendRequestStatus", Termproject.Termproject2.domain.friend.entity.FriendRequestStatus.class);
+
     public final BooleanPath isRead = createBoolean("isRead");
+
+    public final StringPath message = createString("message");
 
     public final NumberPath<Long> notificationId = createNumber("notificationId", Long.class);
 

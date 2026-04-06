@@ -25,7 +25,6 @@ public class Comment extends BaseTimeEntity {
     @Column(name = "comment_id")
     private Long commentId;
 
-    @Lob
     @Column(name = "content", nullable = false, length = 200)
     private String content;
 

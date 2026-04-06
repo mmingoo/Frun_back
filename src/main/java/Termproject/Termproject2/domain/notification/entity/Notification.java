@@ -2,8 +2,10 @@ package Termproject.Termproject2.domain.notification.entity;
 
 import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.friend.entity.FriendRequest;
+import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -16,7 +18,7 @@ import java.time.LocalDateTime;
 @Table(name = "NOTIFICATION")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Notification {
+public class Notification extends BaseCreatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,9 +31,6 @@ public class Notification {
 
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "friend_request_id")
@@ -53,23 +52,36 @@ public class Notification {
     @JoinColumn(name = "running_log_id")
     private RunningLog runningLog;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "friend_request_status", length = 20)
+    private FriendRequestStatus friendRequestStatus;
+
+    private String message;
+    private String content;
+
 
     @Builder
-    public Notification(User user, NotificationType type, FriendRequest friendRequest, Comment comment, User sender, RunningLog runningLog) {
+    public Notification(User user, NotificationType type, FriendRequest friendRequest,
+                        Comment comment, User sender, RunningLog runningLog, String message, String content,
+                        FriendRequestStatus friendRequestStatus) {
         this.user = user;
         this.type = type;
         this.friendRequest = friendRequest;
         this.comment = comment;
         this.sender = sender;
         this.runningLog = runningLog;
+        this.message = message;
         this.isRead = false;
+        this.content = content;
+        this.friendRequestStatus = friendRequestStatus;
     }
 
     public void markAsRead() {
         this.isRead = true;
+    }
+
+    public void updateFriendRequestStatus(FriendRequestStatus status) {
+        this.friendRequestStatus = status;
+        this.friendRequest = null; // FK 참조 제거 (삭제 시 TransientObjectException 방지)
     }
 }

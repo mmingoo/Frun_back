@@ -158,8 +158,10 @@ public class FriendshipServiceImpl implements FriendShipService {
 
         // 친구 요청 전송
         FriendRequest saved = friendRequestRepository.save(request);
+        // receiver 입장에서의 상태 계산 (receiver가 me, sender가 other → PENDING)
+        FriendRequestStatus statusForReceiver = getStatus(receiver.getUserId(), sender.getUserId());
         // 요청을 받는 상대방에게 친구 요청 알림 전송
-        notificationService.notifyFriendRequest(receiver, saved, sender);
+        notificationService.notifyFriendRequest(receiver, saved, sender, statusForReceiver);
     }
 
     //TODO : 친구 요청 수락
@@ -185,6 +187,10 @@ public class FriendshipServiceImpl implements FriendShipService {
 
         friendshipRepository.save(friendship);
 
+        // 친구 요청 알림 상태 업데이트 (PENDING → FRIEND)
+        System.out.println("request : " + request.getFriendRequestId());
+        notificationService.updateFriendRequestNotificationStatus(request, FriendRequestStatus.FRIEND);
+
     }
 
 
@@ -198,6 +204,9 @@ public class FriendshipServiceImpl implements FriendShipService {
         if (request.getStatus() != FriendRequestStatus.SENDED) {
             throw new BusinessException(ErrorCode.REQUEST_COMPLETED);
         }
+
+        // 친구 요청 알림 상태 업데이트 (PENDING → REJECTED)
+        notificationService.updateFriendRequestNotificationStatus(request, FriendRequestStatus.REJECTED);
 
         // 친구 요청 데이터 삭제
         friendRequestRepository.delete(request);

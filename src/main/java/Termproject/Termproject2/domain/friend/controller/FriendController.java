@@ -78,7 +78,7 @@ public class FriendController {
     }
 
     @DeleteMapping("/{friendId}")
-    @Operation(summary = "친구를 삭제.")
+    @Operation(summary = "친구 삭제")
     public ResponseEntity<ApiResponse<Void>> deleteFriend(
             @PathVariable Long friendId) {
 
