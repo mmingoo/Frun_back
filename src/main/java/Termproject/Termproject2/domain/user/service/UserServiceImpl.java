@@ -4,6 +4,7 @@ import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
+import Termproject.Termproject2.global.jwt.RefreshTokenService;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final ImageService imageService;
     private final FriendShipService friendShipService;
     private final NotificationService notificationService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
@@ -181,12 +183,38 @@ public class UserServiceImpl implements UserService {
         // 3. 상태 변경 (Dirty Checking 활용)
         user.setInActive();
 
-        // 4. 처리된 유저의 ID 반환
+        // 4. Redis의 refreshToken 즉시 무효화
+        refreshTokenService.delete(userId);
+
+        // 5. 처리된 유저의 ID 반환
+        return user.getUserId();
+    }
+
+    @Override
+    public InactiveInfoResponse getInactiveInfo(Long userId) {
+        User user = findUserById(userId);
+        if (user.getUserStatus() != UserStatus.INACTIVE || user.getDeactivatedAt() == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt());
+    }
+
+    @Override
+    @Transactional
+    public Long userActivate(Long userId) {
+        User user = findUserById(userId);
+
+        if (user.getUserStatus() == UserStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.USER_ALREADY_ACTIVE);
+        }
+
+        user.setActive();
         return user.getUserId();
     }
 
     //TODO: 닉네임 변경
     @Override
+    @Transactional
     public void updateUserNickname(Long userId, UserUpdateNicknameDto request) {
         User user = findUserById(userId);
         user.updateUserNickname(request.getNickname()) ;

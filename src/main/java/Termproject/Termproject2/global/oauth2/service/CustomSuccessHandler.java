@@ -30,6 +30,12 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         Long userId = customUserDetails.getUserId();
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
+        // 비활성화 계정은 토큰 미발급, userId만 URL에 담아 리다이렉트
+        if (customUserDetails.isInactive()) {
+            getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/inactive?userId=" + userId);
+            return;
+        }
+
         // refreshToken 발급 후 Redis + HttpOnly 쿠키에 저장
         String refreshToken = jwtUtil.createJwt("refresh", userId, username, role, 60 * 60 * 24 * 14 * 1000L);
         refreshTokenService.save(userId, refreshToken);

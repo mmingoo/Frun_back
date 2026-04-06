@@ -4,22 +4,30 @@ import Termproject.Termproject2.domain.user.dto.response.NicknameCheckResponse;
 import Termproject.Termproject2.domain.user.dto.response.NicknameStatusResponse;
 import Termproject.Termproject2.domain.user.dto.response.UserProfileUpdateRequestDto;
 import Termproject.Termproject2.domain.user.dto.response.UserUpdateNicknameDto;
+import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.image.ImageService;
+import Termproject.Termproject2.global.jwt.JWTUtil;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
+import Termproject.Termproject2.global.jwt.RefreshTokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.Duration;
 
 @Tag(name = "User", description = "회원 관련 API")
 @RestController
@@ -31,6 +39,8 @@ public class UserController {
     private final UserService userService;
     private final ImageService imageService;
     private final JwtTokenExtractor jwtTokenExtractor;
+    private final JWTUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     private static final String NICKNAME_PATTERN = "^[가-힣a-zA-Z0-9]{5,20}$";
     private static final String NICKNAME_MESSAGE = "닉네임은 5~20자의 한글, 영문 대/소문자, 숫자만 사용 가능하며 공백은 허용되지 않습니다.";
@@ -111,6 +121,33 @@ public class UserController {
         return ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다.");
     }
 
+    @GetMapping("/{userId}/inactive-info")
+    @Operation(summary = "비활성화 계정 정보 조회", description = "비활성화 날짜와 3개월 뒤 삭제 예정일을 반환합니다.")
+    public ApiResponse<?> getInactiveInfo(@PathVariable Long userId) {
+        return ApiResponse.ok(userService.getInactiveInfo(userId), "비활성화 계정 정보를 조회했습니다.");
+    }
+
+    @PatchMapping("/{userId}/activate")
+    @Operation(summary = "유저 활성화", description = "비활성화된 계정을 다시 활성화하고 refreshToken 쿠키를 발급합니다.")
+    public ResponseEntity<ApiResponse<?>> userActivate(@PathVariable Long userId, HttpServletResponse response) {
+        userService.userActivate(userId);
+
+        User user = userService.findById(userId);
+        String refreshToken = jwtUtil.createJwt("refresh", userId, user.getUserName(), user.getRole().toString(), 60 * 60 * 24 * 14 * 1000L);
+        refreshTokenService.save(userId, refreshToken);
+
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(Duration.ofDays(14))
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(ApiResponse.ok(userId, "성공적으로 계정을 활성화하였습니다."));
+    }
+
     @DeleteMapping("/deactivate")
     @Operation(summary = "유저 비활성화")
     public ResponseEntity<ApiResponse<?>> userDeactivate(){
@@ -124,6 +161,7 @@ public class UserController {
     public ApiResponse<?> updateUserNickname(
             @Valid @RequestBody UserUpdateNicknameDto request) {
         Long userId = jwtTokenExtractor.getUserId();
+        System.out.println("닉네임 변경 시작 : " + request.getNickname());
         userService.updateUserNickname(userId, request);
         return ApiResponse.ok("성공적으로 유저의 닉네임을 변경하였습니다.");
     }

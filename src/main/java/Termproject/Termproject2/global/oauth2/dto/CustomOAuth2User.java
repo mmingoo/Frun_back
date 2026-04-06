@@ -59,4 +59,9 @@ public class CustomOAuth2User implements OAuth2User {
 
         return userDTO.isNewUser();
     }
+
+    public boolean isInactive() {
+
+        return userDTO.isInactive();
+    }
 }

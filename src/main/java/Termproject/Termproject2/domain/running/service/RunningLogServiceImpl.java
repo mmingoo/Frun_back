@@ -115,23 +115,13 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
         int newDistM = (int) (runningLog.getDistance().doubleValue() * 1000);
         int newDurSec = runningLog.getDuration().toSecondOfDay();
 
-        //  공개 여부 변화에 따른 통계 처리
-        if (wasPublic && willBePublic) {
-            // 공개 → 공개: 기존 값 차감 후 새 값 누적
-            System.out.println("공개 → 공개");
-            subtractStats(runningLog.getUser(), oldDate, oldDistM, oldDurSec);
-            accumulateStats(runningLog.getUser(), runningLog.getRunDate(), newDistM, newDurSec);
-        } else if (wasPublic && !willBePublic) {
-            System.out.println("공개 → 비공개");
-            // 공개 → 비공개: 기존 값 차감만
-            subtractStats(runningLog.getUser(), oldDate, oldDistM, oldDurSec);
-        } else if (!wasPublic && willBePublic) {
-            System.out.println(" 비공개 → 공개");
-            // 비공개 → 공개: 새 값 누적만
-            accumulateStats(runningLog.getUser(), runningLog.getRunDate(), newDistM, newDurSec);
-        }
-        // 비공개 → 비공개: 아무것도 하지 않음
-
+        // 러닝일지 수정에 따른 통계값 변경
+        adjustStatsOnVisibilityChange(
+                runningLog.getUser(),
+                wasPublic, willBePublic,
+                oldDate, oldDistM, oldDurSec,
+                runningLog.getRunDate(), newDistM, newDurSec
+        );
         setupRunningLogImage(runningLog, request.getKeepImageUrls(), images);
     }
 
@@ -304,19 +294,6 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
         findOrCreateStats(user, RunningStats.StatType.MONTHLY, toMonthKey(runDate)).accumulate(distM, durSec);
     }
 
-    //TODO : 통계 업데이트(데이터 빼기)
-    private void subtractStats(User user, LocalDate runDate, int distM, int durSec) {
-        System.out.println("데이터 빼기 실행");
-        System.out.println("distM : " + distM + "durSec : " + durSec);
-        // 주별 통계 데이터 찾기
-        // 데이터 가져온 후 통계값 차감
-        runningStatsRepository
-                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.WEEKLY, toWeekKey(runDate))
-                .ifPresent(s -> s.subtract(distM, durSec));
-        runningStatsRepository
-                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.MONTHLY, toMonthKey(runDate))
-                .ifPresent(s -> s.subtract(distM, durSec));
-    }
 
     //TODO : 통계 데이터 관리(찾기, 생성)
     private RunningStats findOrCreateStats(User user, RunningStats.StatType type, String key) {
@@ -327,6 +304,18 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
                 ));
     }
 
+    //TODO : 통계 업데이트(데이터 빼기)
+    private void subtractStats(User user, LocalDate runDate, int distM, int durSec) {
+
+        // 주별 통계 데이터 찾기
+        // 데이터 가져온 후 통계값 차감
+        runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.WEEKLY, toWeekKey(runDate))
+                .ifPresent(s -> s.subtract(distM, durSec));
+        runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.MONTHLY, toMonthKey(runDate))
+                .ifPresent(s -> s.subtract(distM, durSec));
+    }
     //TODO: stateKey 로 변환
     private String toWeekKey(LocalDate date) {
         int weekYear = date.get(IsoFields.WEEK_BASED_YEAR);
@@ -337,5 +326,60 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
     //TODO: monthKey 로 변환
     private String toMonthKey(LocalDate date) {
         return String.format("%d-%02d", date.getYear(), date.getMonthValue());
+    }
+
+    //TODO: 공개, 비공개 전환 여부에 따른 통계 데이터 수정
+    private void adjustStatsOnVisibilityChange(
+            User user,
+            boolean wasPublic, boolean willBePublic,
+            LocalDate oldDate, int oldDistM, int oldDurSec,
+            LocalDate newDate, int newDistM, int newDurSec
+    ) {
+        // 공개 → 공개: 주/월 단위로 변경 여부를 각각 판단 후 통계 조정
+        if (wasPublic && willBePublic) {
+            adjustWeekStats(user, oldDate, oldDistM, oldDurSec, newDate, newDistM, newDurSec);
+            adjustMonthStats(user, oldDate, oldDistM, oldDurSec, newDate, newDistM, newDurSec);
+
+        // 공개 → 비공개: 기존 통계 차감만 수행
+        } else if (wasPublic) {
+            subtractStats(user, oldDate, oldDistM, oldDurSec);
+
+        // 비공개 → 공개: 새 값 누적만 수행
+        } else if (willBePublic) {
+            accumulateStats(user, newDate, newDistM, newDurSec);
+        }
+        // 비공개 → 비공개: 통계 변경 없음
+    }
+
+    // 주별 통계 조정: 주가 바뀌었거나 거리/시간이 변경된 경우에만 업데이트
+    private void adjustWeekStats(
+            User user,
+            LocalDate oldDate, int oldDistM, int oldDurSec,
+            LocalDate newDate, int newDistM, int newDurSec
+    ) {
+        String oldKey = toWeekKey(oldDate);
+        String newKey = toWeekKey(newDate);
+        if (oldKey.equals(newKey) && oldDistM == newDistM && oldDurSec == newDurSec) return;
+
+        runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.WEEKLY, oldKey)
+                .ifPresent(s -> s.subtract(oldDistM, oldDurSec));
+        findOrCreateStats(user, RunningStats.StatType.WEEKLY, newKey).accumulate(newDistM, newDurSec);
+    }
+
+    // 월별 통계 조정: 월이 바뀌었거나 거리/시간이 변경된 경우에만 업데이트
+    private void adjustMonthStats(
+            User user,
+            LocalDate oldDate, int oldDistM, int oldDurSec,
+            LocalDate newDate, int newDistM, int newDurSec
+    ) {
+        String oldKey = toMonthKey(oldDate);
+        String newKey = toMonthKey(newDate);
+        if (oldKey.equals(newKey) && oldDistM == newDistM && oldDurSec == newDurSec) return;
+
+        runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.MONTHLY, oldKey)
+                .ifPresent(s -> s.subtract(oldDistM, oldDurSec));
+        findOrCreateStats(user, RunningStats.StatType.MONTHLY, newKey).accumulate(newDistM, newDurSec);
     }
 }

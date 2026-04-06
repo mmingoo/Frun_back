@@ -3,6 +3,7 @@ package Termproject.Termproject2.global.oauth2.service;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.entity.Role;
 import Termproject.Termproject2.domain.user.entity.SocialLoginType;
+import Termproject.Termproject2.domain.user.entity.UserStatus;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.domain.user.repository.SocialLoginTypeRepository;
 import Termproject.Termproject2.global.oauth2.dto.CustomOAuth2User;
@@ -84,6 +85,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userDTO.setName(oAuth2Response.getName());
             userDTO.setRole(existMember.getRole());
             userDTO.setNewUser(false);
+            userDTO.setInactive(existMember.getUserStatus() == UserStatus.INACTIVE);
 
             return new CustomOAuth2User(userDTO);
         }

@@ -12,4 +12,5 @@ public class UserDTO {
     private String username;
     private String name;
     private boolean isNewUser;
+    private boolean isInactive;
 }

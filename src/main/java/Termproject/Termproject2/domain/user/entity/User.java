@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "User")
 @Getter
@@ -51,6 +53,12 @@ public class User extends BaseTimeEntity {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    @Column(name = "deactivated_at")
+    private LocalDateTime deactivatedAt;
+
+    @Column(name = "deletion_scheduled_at")
+    private LocalDateTime deletionScheduledAt;
+
 
     // 프로필 소개글
     @Column(name = "bio", length = 50)
@@ -90,9 +98,13 @@ public class User extends BaseTimeEntity {
 
     public void setInActive(){
         this.userStatus = UserStatus.INACTIVE;
+        this.deactivatedAt = LocalDateTime.now();
+        this.deletionScheduledAt = this.deactivatedAt.plusMonths(3);
     }
     public void setActive(){
         this.userStatus = UserStatus.ACTIVE;
+        this.deactivatedAt = null;
+        this.deletionScheduledAt = null;
     }
 
     public void updateUserNickname(String nickName){
