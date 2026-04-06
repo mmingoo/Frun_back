@@ -103,7 +103,7 @@ public class FriendshipServiceImpl implements FriendShipService {
                     return UserSearchResponse.builder()
                             .userId(targetUser.getUserId())
                             .nickname(targetUser.getNickName())
-                            .profileImageUrl(targetUser.getImageUrl())
+                            .profileImageUrl(imageService.getProfileImageUrl(targetUser.getImageUrl()))
                             .friendStatus(status)
                             .build();
                 })

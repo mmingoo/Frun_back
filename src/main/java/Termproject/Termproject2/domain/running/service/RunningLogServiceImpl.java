@@ -43,39 +43,35 @@ public class RunningLogServiceImpl implements RunningLogService {
     private final LikeRepository likeRepository;
     private final RunningStatsRepository runningStatsRepository;
 
-    @Override
-    @Transactional
-    public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
+@Override
+@Transactional
+public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
+    int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
+    User user = userService.findById(userId);
 
-        // 분, 초 파싱 및 유효성 검사
-        int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
+    RunningLog runningLog = RunningLog.builder()
+            .user(user)
+            .runDate(request.getRunDate())
+            .duration(toLocalTime(duration[0], duration[1]))
+            .distance(request.getDistance())
+            .memo(request.getMemo())
+            .isPublic(request.isPublic())
+            .pace(calculatePace(duration[0], duration[1], request.getDistance()))
+            .build();
 
-        User user = userService.findById(userId);
+    runningLogRepository.save(runningLog);
 
-        RunningLog runningLog = RunningLog.builder()
-                .user(user)
-                .runDate(request.getRunDate())
-                .duration(toLocalTime(duration[0], duration[1]))
-                .distance(request.getDistance())
-                .memo(request.getMemo())
-                .isPublic(request.isPublic())
-                .pace(calculatePace(duration[0], duration[1], request.getDistance()))
-                .build();
-
-        runningLogRepository.save(runningLog);
-
-        // RunningStats 누적
+    // 공개 일지일 때만 통계 누적
+    if (request.isPublic()) {
+        System.out.println("공개 여부 : " + request.isPublic());
         int distM = (int) (request.getDistance().doubleValue() * 1000);
         int durSec = runningLog.getDuration().toSecondOfDay();
-
-        // 통계 업데이트
         accumulateStats(user, request.getRunDate(), distM, durSec);
-
-        // 이미지가 있으면 각각 저장
-        saveRunningLogImages(runningLog, userId, images);
-
-        return new RunningLogCreateResponse(runningLog.getRunningLogId());
     }
+
+    saveRunningLogImages(runningLog, userId, images);
+    return new RunningLogCreateResponse(runningLog.getRunningLogId());
+}
 
     // 피드 상세 조회
     @Override
@@ -97,51 +93,84 @@ public class RunningLogServiceImpl implements RunningLogService {
         return toFriendFeedResponseDto(runningLog, imageUrls, liked);
     }
 
+    // 공개 여부 변화에 따라 통계 처리
     @Override
     @Transactional
     public void updateRunningLog(Long runningLogId, Long userId, RunningLogUpdateRequest request, List<MultipartFile> images) {
-
-        // 러닝일지 조회 (삭제된 로그 제외)
         RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
-        // 유저가 해당 러닝일지의 작성자인지 검증
         validateAuthor(userId, runningLog);
 
-        // 업데이트 전 기존 stats 차감
+        boolean wasPublic = runningLog.isPublic();
+        boolean willBePublic = request.isPublic();
+
+        // 수정 전 데이터 보존 (변경 전 값으로 통계 차감해야 하므로)
         LocalDate oldDate = runningLog.getRunDate();
         int oldDistM = (int) (runningLog.getDistance().doubleValue() * 1000);
         int oldDurSec = runningLog.getDuration().toSecondOfDay();
-        subtractStats(runningLog.getUser(), oldDate, oldDistM, oldDurSec);
 
         // 러닝로그 업데이트
         setupRunningLog(runningLog, request);
 
-        // 업데이트 후 새 stats 누적
         int newDistM = (int) (runningLog.getDistance().doubleValue() * 1000);
         int newDurSec = runningLog.getDuration().toSecondOfDay();
-        accumulateStats(runningLog.getUser(), runningLog.getRunDate(), newDistM, newDurSec);
 
-        // 러닝로그 이미지 업데이트
+        //  공개 여부 변화에 따른 통계 처리
+        if (wasPublic && willBePublic) {
+            // 공개 → 공개: 기존 값 차감 후 새 값 누적
+            System.out.println("공개 → 공개");
+            subtractStats(runningLog.getUser(), oldDate, oldDistM, oldDurSec);
+            accumulateStats(runningLog.getUser(), runningLog.getRunDate(), newDistM, newDurSec);
+        } else if (wasPublic && !willBePublic) {
+            System.out.println("공개 → 비공개");
+            // 공개 → 비공개: 기존 값 차감만
+            subtractStats(runningLog.getUser(), oldDate, oldDistM, oldDurSec);
+        } else if (!wasPublic && willBePublic) {
+            System.out.println(" 비공개 → 공개");
+            // 비공개 → 공개: 새 값 누적만
+            accumulateStats(runningLog.getUser(), runningLog.getRunDate(), newDistM, newDurSec);
+        }
+        // 비공개 → 비공개: 아무것도 하지 않음
+
         setupRunningLogImage(runningLog, request.getKeepImageUrls(), images);
     }
 
+//    @Override
+//    @Transactional
+//    public void softDeleteRunningLog(Long runningLogId, Long userId) {
+//        // RunningLog 조회
+//        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
+//                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+//
+//        // 유저가 작성자인지 검증
+//        validateAuthor(userId, runningLog);
+//
+//        // RunningStats 차감
+//        int distM = (int) (runningLog.getDistance().doubleValue() * 1000);
+//        int durSec = runningLog.getDuration().toSecondOfDay();
+//        subtractStats(runningLog.getUser(), runningLog.getRunDate(), distM, durSec);
+//
+//        // soft 삭제
+//        runningLog.delete();
+//    }
+
+    //공개 일지일 때만 통계 차감
     @Override
     @Transactional
     public void softDeleteRunningLog(Long runningLogId, Long userId) {
-        // RunningLog 조회
         RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
-        // 유저가 작성자인지 검증
         validateAuthor(userId, runningLog);
 
-        // RunningStats 차감
-        int distM = (int) (runningLog.getDistance().doubleValue() * 1000);
-        int durSec = runningLog.getDuration().toSecondOfDay();
-        subtractStats(runningLog.getUser(), runningLog.getRunDate(), distM, durSec);
+        //  공개 일지일 때만 통계 차감
+        if (runningLog.isPublic()) {
+            int distM = (int) (runningLog.getDistance().doubleValue() * 1000);
+            int durSec = runningLog.getDuration().toSecondOfDay();
+            subtractStats(runningLog.getUser(), runningLog.getRunDate(), distM, durSec);
+        }
 
-        // soft 삭제
         runningLog.delete();
     }
 
@@ -263,7 +292,7 @@ public class RunningLogServiceImpl implements RunningLogService {
                 runningLog.getRunDate(), runningLog.getRunTime(), runningLog.getDistance(), runningLog.getPace(),
                 runningLog.getDuration(), runningLog.getMemo(), runningLog.getCreatedAt(),
                 runningLog.getCommentCtn(), runningLog.getLikeCtn(),
-                liked, imageUrls
+                liked, imageUrls , runningLog.isPublic()
         );
         dto.setLiked(liked);
         return dto;
@@ -296,6 +325,8 @@ public class RunningLogServiceImpl implements RunningLogService {
 
     //TODO : 통계 업데이트(데이터 빼기)
     private void subtractStats(User user, LocalDate runDate, int distM, int durSec) {
+        System.out.println("데이터 빼기 실행");
+        System.out.println("distM : " + distM + "durSec : " + durSec);
         // 주별 통계 데이터 찾기
         // 데이터 가져온 후 통계값 차감
         runningStatsRepository

@@ -17,7 +17,7 @@ public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, R
 
     // 게시물 수, 총 거리,평균 페이스 집계
     @Query(value = "SELECT COUNT(*), COALESCE(SUM(distance), 0.0), COALESCE(SUM(TIME_TO_SEC(duration)), 0) " +
-                   "FROM RUNNING_LOG WHERE user_id = :userId AND is_deleted = false",
+                   "FROM RUNNING_LOG WHERE user_id = :userId AND is_deleted = false AND  is_public = true",
            nativeQuery = true)
     List<Object[]> aggregateStatsByUserId(@Param("userId") Long userId);
 

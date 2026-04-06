@@ -9,8 +9,8 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public class CursorSliceResponse<T> {
-    private List<T> contents;
-    private boolean hasNext;
-    private Long nextCursor; // null이면 마지막 페이지
+    private List<T> contents; // 댓글 내용들
+    private boolean hasNext; // 다음 댓글이 있는지 여부
+    private Long nextCursor; // null이면 마지막 페이지, 아니라면 다음 댓글 시작할 댓글 id
     private long totalCount; // 전체 댓글(또는 답글) 수
 }

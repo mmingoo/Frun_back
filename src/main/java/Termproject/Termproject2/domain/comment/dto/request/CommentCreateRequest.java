@@ -5,10 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-// 생성 요청 DTO
+// 댓글 생성 요청 DTO
 @Getter
 public class CommentCreateRequest {
     @NotBlank
     @Max(value = 200, message ="댓글/답글은 최대 200자 까지 작성할 수 있습니다." )
-    private String content;
+    private String content; // 댓글/답글 내옹
 }

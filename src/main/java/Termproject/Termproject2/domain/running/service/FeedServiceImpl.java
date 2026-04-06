@@ -141,7 +141,8 @@ public class FeedServiceImpl implements FeedService {
                             dto.getCommentCtn(),
                             dto.getLikeCtn(),
                             dto.isLiked(),
-                            images
+                            images,
+                            dto.isPublic()
                     );
                 })
                 .toList();

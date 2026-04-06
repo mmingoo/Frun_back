@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.repository;
 
+import Termproject.Termproject2.domain.comment.QComment;
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.QReport;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
@@ -27,6 +28,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
         QRunningLog runningLog = QRunningLog.runningLog;
         QFriendship friendship = QFriendship.friendship;
         QReport report = QReport.report;
+        QComment comment = QComment.comment;
 
         return queryFactory
                 .select(Projections.constructor(FriendFeedResponseDto.class,
@@ -41,7 +43,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.duration,
                         runningLog.memo,
                         runningLog.createdAt,
-                        runningLog.commentCtn,
+                        JPAExpressions.select(comment.count().intValue())
+                                .from(comment)
+                                .where(comment.runningLog.runningLogId.eq(runningLog.runningLogId)),
                         runningLog.likeCtn))
                 .from(runningLog)
                 .join(friendship)
