@@ -54,13 +54,14 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void notifyFriendRequest(User receiver, FriendRequest friendRequest) {
+    public void notifyFriendRequest(User receiver, FriendRequest friendRequest , User sender) {
         System.out.println("친구요청 알림 생성");
         // 친구 요청 알림 생성
         Notification notification = Notification.builder()
                 .user(receiver)
                 .type(NotificationType.FRIEND_REQUEST)
                 .friendRequest(friendRequest)
+                .sender(sender)
                 .build();
 
         // 친구 요청 알림 저장

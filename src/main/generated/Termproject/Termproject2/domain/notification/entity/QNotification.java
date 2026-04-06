@@ -32,6 +32,10 @@ public class QNotification extends EntityPathBase<Notification> {
 
     public final NumberPath<Long> notificationId = createNumber("notificationId", Long.class);
 
+    public final Termproject.Termproject2.domain.running.entity.QRunningLog runningLog;
+
+    public final Termproject.Termproject2.domain.user.entity.QUser sender;
+
     public final EnumPath<NotificationType> type = createEnum("type", NotificationType.class);
 
     public final Termproject.Termproject2.domain.user.entity.QUser user;
@@ -56,6 +60,8 @@ public class QNotification extends EntityPathBase<Notification> {
         super(type, metadata, inits);
         this.comment = inits.isInitialized("comment") ? new Termproject.Termproject2.domain.comment.QComment(forProperty("comment"), inits.get("comment")) : null;
         this.friendRequest = inits.isInitialized("friendRequest") ? new Termproject.Termproject2.domain.friend.entity.QFriendRequest(forProperty("friendRequest"), inits.get("friendRequest")) : null;
+        this.runningLog = inits.isInitialized("runningLog") ? new Termproject.Termproject2.domain.running.entity.QRunningLog(forProperty("runningLog"), inits.get("runningLog")) : null;
+        this.sender = inits.isInitialized("sender") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("sender"), inits.get("sender")) : null;
         this.user = inits.isInitialized("user") ? new Termproject.Termproject2.domain.user.entity.QUser(forProperty("user"), inits.get("user")) : null;
     }
 

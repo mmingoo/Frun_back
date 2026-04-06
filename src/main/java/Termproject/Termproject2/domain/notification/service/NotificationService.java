@@ -8,7 +8,7 @@ import Termproject.Termproject2.domain.user.entity.User;
 
 public interface NotificationService {
     void notifyComment(User receiver, Comment comment);
-    void notifyFriendRequest(User receiver, FriendRequest friendRequest);
+    void notifyFriendRequest(User receiver, FriendRequest friendRequest, User sender);
     void notifyLike(User receiver, User sender, RunningLog runningLog);
 
     long countByUserUserIdAndIsReadFalse(Long userId);

@@ -157,12 +157,9 @@ public class FriendshipServiceImpl implements FriendShipService {
                 .build();
 
         // 친구 요청 전송
-        System.out.println("친구 요청");
         FriendRequest saved = friendRequestRepository.save(request);
-        System.out.println("FriendRequestId : " + saved.getFriendRequestId() );
-        System.out.println("받는 사람 : " + saved.getReceiver().getNickName());
         // 요청을 받는 상대방에게 친구 요청 알림 전송
-        notificationService.notifyFriendRequest(receiver, saved);
+        notificationService.notifyFriendRequest(receiver, saved, sender);
     }
 
     //TODO : 친구 요청 수락
