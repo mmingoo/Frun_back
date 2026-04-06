@@ -9,4 +9,5 @@ public class UserProfileInfoResponse {
     private Long userId;
     private String profileImageUrl;
     private String nickName;
+    private long notificationCnt;
 }

@@ -10,6 +10,7 @@ import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.entity.Friendship;
 import Termproject.Termproject2.domain.friend.repository.FriendRequestRepository;
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
+import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
@@ -34,6 +35,9 @@ public class FriendshipServiceImpl implements FriendShipService {
     private final UserRepository userRepository;
     private final FriendRequestService friendRequestService;
     private final FriendRequestRepository friendRequestRepository;
+
+    private final NotificationService notificationService;
+
 
     @Override
     public FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size) {
@@ -153,7 +157,12 @@ public class FriendshipServiceImpl implements FriendShipService {
                 .build();
 
         // 친구 요청 전송
-        friendRequestRepository.save(request);
+        System.out.println("친구 요청");
+        FriendRequest saved = friendRequestRepository.save(request);
+        System.out.println("FriendRequestId : " + saved.getFriendRequestId() );
+        System.out.println("받는 사람 : " + saved.getReceiver().getNickName());
+        // 요청을 받는 상대방에게 친구 요청 알림 전송
+        notificationService.notifyFriendRequest(receiver, saved);
     }
 
     //TODO : 친구 요청 수락

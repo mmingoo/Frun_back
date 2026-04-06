@@ -6,6 +6,7 @@ import Termproject.Termproject2.domain.comment.dto.response.CommentResponse;
 import Termproject.Termproject2.domain.comment.dto.response.CursorSliceResponse;
 import Termproject.Termproject2.domain.comment.dto.response.ReplyResponse;
 import Termproject.Termproject2.domain.comment.repository.CommentRepository;
+import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -29,6 +30,8 @@ public class CommentServiceImpl implements CommentService{
     private final RunningLogService runningLogService;
     private final UserService userService;
     private final ImageService imageService;
+    private final NotificationService notificationService;
+
 
     //TODO: 댓글 목록 조회
     @Override
@@ -123,7 +126,14 @@ public class CommentServiceImpl implements CommentService{
                 .content(request.getContent())
                 .build();
 
-        return commentRepository.save(comment).getCommentId(); // 댓글 저장
+        Comment saved = commentRepository.save(comment); // 댓글 저장
+
+
+        User logAuthor = runningLog.getUser(); // 작성자
+        notificationService.notifyComment(logAuthor, saved); // 댓글과 작성자에 대한 알림 생성
+
+
+        return saved.getCommentId(); // 댓글 저장
 
     }
 
@@ -154,7 +164,14 @@ public class CommentServiceImpl implements CommentService{
                 .parent(parent)
                 .build();
 
-        return commentRepository.save(reply).getCommentId();
+        // 답글 생성
+        Comment saved = commentRepository.save(reply);
+
+        // 부모 댓글 작성자에게 답글 알림 전송 (본인 댓글에 본인 답글이면 내부에서 필터링)
+        User parentCommentAuthor = parent.getUser();
+        notificationService.notifyComment(parentCommentAuthor, saved);
+
+        return saved.getCommentId();
     }
 
     //TODO: 댓글/답글 수정

@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.service;
 
+import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.domain.running.entity.Like;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.repository.LikeRepository;
@@ -20,9 +21,10 @@ public class LikeServiceImpl implements LikeService {
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
     private final RunningLogRepository runningLogRepository;
+    private final NotificationService notificationService;
 
 
-    // 좋아요 하기
+    //TODO: 러닝일지 좋아요 하기
     @Override
     @Transactional
     public void addLike(Long userId, Long runningLogId) {
@@ -50,6 +52,12 @@ public class LikeServiceImpl implements LikeService {
 
         // 러닝일지에 좋아요 cnt + 1
         runningLog.addLikeCnt();
+
+        // 본인 글에 본인이 좋아요 하는 경우 알림 생성 X
+        User logAuthor = runningLog.getUser();
+        if (!logAuthor.getUserId().equals(userId)) {
+            notificationService.notifyLike(logAuthor, user, runningLog);
+        }
     }
 
 

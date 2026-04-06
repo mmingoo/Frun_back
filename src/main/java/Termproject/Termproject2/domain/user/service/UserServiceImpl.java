@@ -3,6 +3,7 @@ package Termproject.Termproject2.domain.user.service;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
+import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -31,6 +32,7 @@ public class UserServiceImpl implements UserService {
     private final RunningLogRepository runningLogRepository;
     private final ImageService imageService;
     private final FriendShipService friendShipService;
+    private final NotificationService notificationService;
 
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
@@ -113,10 +115,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserProfileInfoResponse getUserInfo(Long userId) {
+        // 유저 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.NOT_FOUND));
+
+        // 이미지 경로 변환 후 조회
         String imageUrl = imageService.getProfileImageUrl(user.getImageUrl());
-        return new UserProfileInfoResponse(userId, imageUrl, user.getNickName());
+
+        // 알림 갯수 조회
+        long notificationCnt = notificationService.countByUserUserIdAndIsReadFalse(userId);
+        return new UserProfileInfoResponse(userId, imageUrl, user.getNickName(), notificationCnt);
     }
 
     @Override

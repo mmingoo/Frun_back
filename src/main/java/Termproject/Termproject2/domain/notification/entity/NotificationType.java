@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.notification;
+package Termproject.Termproject2.domain.notification.entity;
 
 public enum NotificationType {
     LIKE,

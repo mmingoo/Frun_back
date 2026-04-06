@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Table(name = "FRIEND_REQUEST")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-
 public class FriendRequest extends BaseCreatedEntity {
 
     @Id

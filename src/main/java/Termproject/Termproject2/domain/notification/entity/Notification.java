@@ -1,7 +1,8 @@
-package Termproject.Termproject2.domain.notification;
+package Termproject.Termproject2.domain.notification.entity;
 
 import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.friend.entity.FriendRequest;
+import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -44,17 +45,27 @@ public class Notification {
     @JoinColumn(name = "comment_id")
     private Comment comment;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private User sender;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "running_log_id")
+    private RunningLog runningLog;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
 
     @Builder
-    public Notification(User user, NotificationType type, FriendRequest friendRequest, Comment comment) {
+    public Notification(User user, NotificationType type, FriendRequest friendRequest, Comment comment, User sender, RunningLog runningLog) {
         this.user = user;
         this.type = type;
         this.friendRequest = friendRequest;
         this.comment = comment;
+        this.sender = sender;
+        this.runningLog = runningLog;
         this.isRead = false;
     }
 

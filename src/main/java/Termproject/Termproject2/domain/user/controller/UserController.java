@@ -95,7 +95,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    @Operation(summary = "nav바 유저 정보 조회(프로필 사진, userId, 유저 닉네임)", description = "유저의 정보를 조회합니다. 프로필 이미지와 userId 반환")
+    @Operation(summary = "nav바 유저 정보 조회(프로필 사진, userId, 유저 닉네임, 알림 갯수)", description = "유저의 정보를 조회합니다. 프로필 이미지와 userId, 알림 갯수 반환")
     public ApiResponse<?> getUserProfileInfo() {
         Long userId = jwtTokenExtractor.getUserId();
         return ApiResponse.ok(userService.getUserInfo(userId), "조회되었습니다.");
