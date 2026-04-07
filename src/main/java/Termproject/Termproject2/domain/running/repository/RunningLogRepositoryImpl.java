@@ -74,6 +74,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
     @Override
     public List<MyPageFeedResponseDto> findUserPageFeeds(Long userId, Long cursorId, int size, boolean isOwner) {
         QRunningLog runningLog = QRunningLog.runningLog;
+        QComment comment = QComment.comment;
 
         return queryFactory
                 .select(Projections.constructor(MyPageFeedResponseDto.class,
@@ -84,7 +85,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.pace,
                         runningLog.duration,
                         runningLog.likeCtn,
-                        runningLog.commentCtn,
+                        JPAExpressions.select(comment.count().intValue())
+                                .from(comment)
+                                .where(comment.runningLog.runningLogId.eq(runningLog.runningLogId)),
                         runningLog.memo))
                 .from(runningLog)
                 .where(

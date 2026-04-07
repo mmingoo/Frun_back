@@ -165,7 +165,7 @@ public class CommentServiceImpl implements CommentService{
                 .parent(parent)
                 .build();
 
-        // 답글 생성
+        // 답글 저장
         Comment saved = commentRepository.save(reply);
 
         // 부모 댓글 작성자에게 답글 알림 전송 (본인 댓글에 본인 답글이면 내부에서 필터링)

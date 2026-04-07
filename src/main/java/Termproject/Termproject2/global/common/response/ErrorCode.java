@@ -19,6 +19,7 @@ public enum ErrorCode {
     USER_NOT_AUTHORIZATION(HttpStatus.UNAUTHORIZED, "작성자가 아닙니다." ),
     USER_ALREADY_INACTIVE(HttpStatus.BAD_REQUEST, "이미 비활성화된 계정입니다." ),
     USER_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "이미 활성화된 계정입니다." ),
+    TERM_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "필수 약관을 선택해야 합니다."),
 
 
     // 러닝로그
@@ -51,10 +52,13 @@ public enum ErrorCode {
     INVALID_COMMENT_PARENT(HttpStatus.BAD_REQUEST, "해당 러닝일지에 해당 댓글이 소속돼있지 않습니다." ),
     NOT_COMMENT_OWNER(HttpStatus.UNAUTHORIZED,"본인의 댓글만 수정/삭제할 수 있습니다."),
 
+    // 공지사항
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 공지사항입니다."),
+
     // 신고
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다."),
     REPORT_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 신고 유형입니다."),
-    DUPLICATE_REPORT(HttpStatus.CONFLICT, "이미 신고한 사용자입니다."),
+    DUPLICATE_REPORT(HttpStatus.CONFLICT, "이미 신고한 러닝일지입니다."),
     REPORT_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인을 신고할 수 없습니다."),
     REPORT_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "이미 처리된 신고입니다.");
 

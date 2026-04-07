@@ -6,6 +6,7 @@ import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDt
 import Termproject.Termproject2.domain.running.dto.response.RunningLogCreateResponse;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.entity.RunningLogImage;
+import Termproject.Termproject2.domain.comment.repository.CommentRepository;
 import Termproject.Termproject2.domain.running.repository.LikeRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogImageRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
@@ -38,6 +39,7 @@ public class RunningLogServiceImpl implements RunningLogService {
 
     private final UserService userService;
     private final RunningLogRepository runningLogRepository;
+    private final CommentRepository commentRepository;
     private final RunningLogImageRepository runningLogImageRepository;
     private final ImageService imageService;
     private final LikeRepository likeRepository;
@@ -257,12 +259,13 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
     // RunningLog -> FriendFeedResponseDto 변환
     private FriendFeedResponseDto toFriendFeedResponseDto(RunningLog runningLog, List<String> imageUrls, boolean liked) {
         User author = runningLog.getUser();
+        int commentCtn = (int) commentRepository.countByRunningLogRunningLogId(runningLog.getRunningLogId());
         FriendFeedResponseDto dto = new FriendFeedResponseDto(
                 runningLog.getRunningLogId(), author.getUserId(), author.getNickName(),
                 imageService.getProfileImageUrl(author.getImageUrl()),
                 runningLog.getRunDate(), runningLog.getRunTime(), runningLog.getDistance(), runningLog.getPace(),
                 runningLog.getDuration(), runningLog.getMemo(), runningLog.getCreatedAt(),
-                runningLog.getCommentCtn(), runningLog.getLikeCtn(),
+                commentCtn, runningLog.getLikeCtn(),
                 liked, imageUrls , runningLog.isPublic()
         );
         dto.setLiked(liked);

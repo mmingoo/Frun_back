@@ -1,9 +1,12 @@
 package Termproject.Termproject2.domain.notice.service;
 
 import Termproject.Termproject2.domain.notice.Notice;
+import Termproject.Termproject2.domain.notice.dto.NoticeDetailResponse;
 import Termproject.Termproject2.domain.notice.dto.NoticeListResponse;
 import Termproject.Termproject2.domain.notice.dto.NoticeResponseDto;
 import Termproject.Termproject2.domain.notice.repository.NoticeRepository;
+import Termproject.Termproject2.global.common.response.ErrorCode;
+import Termproject.Termproject2.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,5 +40,12 @@ public class NoticeServiceImpl implements NoticeService {
 
         Long nextCursorId = hasNext ? results.get(results.size() - 1).getNoticeId() : null;
         return new NoticeListResponse(notices, hasNext, nextCursorId);
+    }
+
+    @Override
+    public NoticeDetailResponse getNoticeDetail(Long noticeId) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
+        return new NoticeDetailResponse(notice);
     }
 }
