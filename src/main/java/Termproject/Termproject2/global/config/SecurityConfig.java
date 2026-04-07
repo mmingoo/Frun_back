@@ -4,8 +4,10 @@ import Termproject.Termproject2.global.jwt.JWTFilter;
 import Termproject.Termproject2.global.jwt.JWTUtil;
 import Termproject.Termproject2.global.oauth2.service.CustomOAuth2UserService;
 import Termproject.Termproject2.global.oauth2.service.CustomSuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -61,18 +63,39 @@ public class SecurityConfig {
                         .successHandler(customSuccessHandler)
                 );
 
-        //경로별 인가 작업 (테스트용: 전체 허용)
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .anyRequest().permitAll());
-//                        .requestMatchers("/").permitAll()
-//                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-//                        .anyRequest().authenticated());
+                        // 인증 없이 접근 가능한 공개 경로
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 
-        //세션 설정 : STATELESS
+                        // OAuth2 로그인 관련 (Spring Security 내부 경로)
+                        .requestMatchers("/oauth2/**", "/login/**").permitAll()
+
+                        // 토큰 재발급, 로그아웃은 별도 처리
+                        .requestMatchers("/api/v1/auth/reissue").permitAll() // refreshToken 쿠키로 처리하므로 허용
+
+                        // 정적 이미지 파일 공개 접근 허용
+                        .requestMatchers("/images/**").permitAll()
+
+                        // 비활성화 계정 활성화 - 토큰 없는 상태이므로 허용
+                        // 단, 별도 보안 처리 필요
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/users/activate").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/inactive-info").permitAll()
+
+
+                        // 나머지 모든 API는 인증 필요
+                        .anyRequest().authenticated()
+                );
         http
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+        // 인증 실패 시 OAuth2 리다이렉트 대신 401 반환 (AJAX 요청 CORS 에러 방지)
+        http
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                );
 
         return http.build();
     }

@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.notification.repository;
 
+import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.friend.entity.FriendRequest;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto;
 import Termproject.Termproject2.domain.notification.entity.Notification;
@@ -35,6 +36,10 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<NotificationDto> findByUserUserId(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
 
     Optional<Notification> findByFriendRequest(FriendRequest friendRequest);
+
+    @Modifying
+    @Query("delete from Notification n where n.comment in :comments")
+    void deleteByCommentIn(@Param("comments") List<Comment> comments);
 
     @Modifying
     @Query("update Notification n set n.isRead = true where n.notificationId in :notificationIds")

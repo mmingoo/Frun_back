@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,4 +22,5 @@ public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, R
            nativeQuery = true)
     List<Object[]> aggregateStatsByUserId(@Param("userId") Long userId);
 
+    List<RunningLog> findAllByIsDeletedTrueAndDeletionScheduledAtBefore(LocalDateTime now);
 }

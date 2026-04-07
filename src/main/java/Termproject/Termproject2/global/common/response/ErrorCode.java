@@ -49,7 +49,14 @@ public enum ErrorCode {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다." ),
     EXCEEDED_COMMENT_DEPTH(HttpStatus.BAD_REQUEST, "답글에 답글을 달 수 없습니다." ),
     INVALID_COMMENT_PARENT(HttpStatus.BAD_REQUEST, "해당 러닝일지에 해당 댓글이 소속돼있지 않습니다." ),
-    NOT_COMMENT_OWNER(HttpStatus.UNAUTHORIZED,"본인의 댓글만 수정/삭제할 수 있습니다."), ;
+    NOT_COMMENT_OWNER(HttpStatus.UNAUTHORIZED,"본인의 댓글만 수정/삭제할 수 있습니다."),
+
+    // 신고
+    REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 신고입니다."),
+    REPORT_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 신고 유형입니다."),
+    DUPLICATE_REPORT(HttpStatus.CONFLICT, "이미 신고한 사용자입니다."),
+    REPORT_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인을 신고할 수 없습니다."),
+    REPORT_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "이미 처리된 신고입니다.");
 
 
     private final HttpStatus status;

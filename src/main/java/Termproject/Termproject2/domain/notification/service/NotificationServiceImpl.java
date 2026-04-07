@@ -178,6 +178,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void deleteByComments(List<Comment> comments) {
+        if (!comments.isEmpty()) {
+            notificationRepository.deleteByCommentIn(comments);
+        }
+    }
+
+    @Override
+    @Transactional
     public void updateFriendRequestNotificationStatus(FriendRequest friendRequest, FriendRequestStatus status) {
         System.out.println("friendRequest : " + friendRequest);
         notificationRepository.findByFriendRequest(friendRequest)

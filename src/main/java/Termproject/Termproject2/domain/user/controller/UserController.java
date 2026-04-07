@@ -7,6 +7,8 @@ import Termproject.Termproject2.domain.user.dto.response.UserUpdateNicknameDto;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
+import Termproject.Termproject2.global.common.response.ErrorCode;
+import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
 import Termproject.Termproject2.global.jwt.JWTUtil;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
@@ -121,21 +123,37 @@ public class UserController {
         return ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다.");
     }
 
-    @GetMapping("/{userId}/inactive-info")
-    @Operation(summary = "비활성화 계정 정보 조회", description = "비활성화 날짜와 3개월 뒤 삭제 예정일을 반환합니다.")
-    public ApiResponse<?> getInactiveInfo(@PathVariable Long userId) {
+    @GetMapping("/inactive-info")
+    @Operation(summary = "비활성화 계정 정보 조회", description = "임시 토큰으로 비활성화 날짜와 삭제 예정일을 반환합니다.")
+    public ApiResponse<?> getInactiveInfo(@RequestHeader("Authorization") String bearerToken) {
+        // JWT 토큰에서 userId 추출
+        Long userId = extractUserIdFromTempToken(bearerToken);
         return ApiResponse.ok(userService.getInactiveInfo(userId), "비활성화 계정 정보를 조회했습니다.");
     }
 
-    @PatchMapping("/{userId}/activate")
-    @Operation(summary = "유저 활성화", description = "비활성화된 계정을 다시 활성화하고 refreshToken 쿠키를 발급합니다.")
-    public ResponseEntity<ApiResponse<?>> userActivate(@PathVariable Long userId, HttpServletResponse response) {
+    @PatchMapping("/activate")
+    @Operation(summary = "유저 활성화", description = "임시 토큰으로 비활성화된 계정을 활성화하고 refreshToken 쿠키를 발급합니다.")
+    public ResponseEntity<ApiResponse<?>> userActivate(
+            @RequestHeader("Authorization") String bearerToken, // 토큰 요청
+            HttpServletResponse response // 토크 발급 후 반환할 response
+    ) {
+
+        // JWT 토큰에서 userId 추출
+        Long userId = extractUserIdFromTempToken(bearerToken);
+
+        // User 활성화
         userService.userActivate(userId);
 
+        // 유저 조회
         User user = userService.findById(userId);
+
+        // refreshToken 생성
         String refreshToken = jwtUtil.createJwt("refresh", userId, user.getUserName(), user.getRole().toString(), 60 * 60 * 24 * 14 * 1000L);
+
+        // refreshToken 저장
         refreshTokenService.save(userId, refreshToken);
 
+        // refreshToken 담은 쿠키 생성
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(false)
@@ -143,10 +161,13 @@ public class UserController {
                 .path("/")
                 .maxAge(Duration.ofDays(14))
                 .build();
+
+        // response 헤더에 쿠키 담고 반환
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok(ApiResponse.ok(userId, "성공적으로 계정을 활성화하였습니다."));
     }
+
 
     @DeleteMapping("/deactivate")
     @Operation(summary = "유저 비활성화")
@@ -164,5 +185,25 @@ public class UserController {
         System.out.println("닉네임 변경 시작 : " + request.getNickname());
         userService.updateUserNickname(userId, request);
         return ApiResponse.ok("성공적으로 유저의 닉네임을 변경하였습니다.");
+    }
+
+
+
+    //TODO: 임시토큰에서 userId 추출
+    private Long extractUserIdFromTempToken(String bearerToken) {
+        // 토큰이 null 이거나 "Bearer " 로 지삭하지 않으면 권한 에러 발생
+        if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        // 토큰 추출
+        String token = bearerToken.substring(7);
+
+        // 토큰 만료 여부 및 토큰의 카테고리 일치 여부 확인
+        if (jwtUtil.isExpired(token) || !"temp".equals(jwtUtil.getCategory(token))) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+
+        return jwtUtil.getUserId(token);
     }
 }

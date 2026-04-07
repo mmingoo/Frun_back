@@ -62,6 +62,9 @@ public class RunningLog {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    @Column(name = "deletion_scheduled_at")
+    private LocalDateTime deletionScheduledAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
@@ -105,6 +108,7 @@ public class RunningLog {
 
     public void delete() {
         this.isDeleted = true;
+        this.deletionScheduledAt = LocalDateTime.now().plusMonths(3);
     }
 
     public void addImage(RunningLogImage image){

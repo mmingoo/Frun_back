@@ -22,7 +22,7 @@ public interface UserService {
     List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size);
 
     Long userDeactivate(Long userId);
-    Long userActivate(Long userId);
+    void userActivate(Long userId);
     InactiveInfoResponse getInactiveInfo(Long userId);
 
     void updateUserNickname(Long userId, @Valid UserUpdateNicknameDto request);

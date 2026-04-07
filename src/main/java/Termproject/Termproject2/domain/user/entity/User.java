@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -110,5 +111,7 @@ public class User extends BaseTimeEntity {
     public void updateUserNickname(String nickName){
         this.nickName = nickName;
     }
+
+
 
 }

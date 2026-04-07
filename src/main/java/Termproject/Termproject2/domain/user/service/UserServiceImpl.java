@@ -1,7 +1,6 @@
 package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
-import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.global.jwt.RefreshTokenService;
@@ -13,7 +12,6 @@ import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
-import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -151,6 +150,52 @@ public class UserServiceImpl implements UserService {
         user.updateProfile(newBio, newImageUrl);
     }
 
+    //Todo: 계정 비활성화
+    @Override
+    @Transactional // 데이터 변경이 일어나므로 트랜잭션 보장이 필수입니다.
+    public Long userDeactivate(Long userId) {
+
+        // 1. 유저 조회
+        User user = findUserById(userId);
+
+        // 2. 이미 비활성화 상태인지 확인 (throw 문법 수정)
+        if (user.getUserStatus() == UserStatus.INACTIVE) {
+            throw new BusinessException(ErrorCode.USER_ALREADY_INACTIVE);
+        }
+
+        // 3. 상태 변경 (활성화 시점, 비활성화 시점, 삭제시점)
+        user.setInActive();
+
+        // 5. Redis의 refreshToken 즉시 무효화
+        refreshTokenService.delete(userId);
+
+        // 6. 처리된 유저의 ID 반환
+        return user.getUserId();
+    }
+
+    //TODO: 비활성화된 계정 정보 조회
+    @Override
+    public InactiveInfoResponse getInactiveInfo(Long userId) {
+        User user = findUserById(userId);
+        if (user.getUserStatus() != UserStatus.INACTIVE || user.getDeactivatedAt() == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt());
+    }
+
+    //TODO: 유저 활성화
+    @Override
+    @Transactional
+    public void userActivate(Long userId) {
+        User user = findUserById(userId);
+
+        if (user.getUserStatus() == UserStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.USER_ALREADY_ACTIVE);
+        }
+
+        user.setActive();
+    }
+
     @Override
     public Page<User> findByNicknameContaining(String keyword, Pageable pageable) {
         return userRepository.findByNickNameContaining(keyword, pageable);
@@ -167,50 +212,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
     }
 
-    //Todo: 계정 비활성화
-    @Override
-    @Transactional // 데이터 변경이 일어나므로 트랜잭션 보장이 필수입니다.
-    public Long userDeactivate(Long userId) {
 
-        // 1. 유저 조회
-        User user = findUserById(userId);
-
-        // 2. 이미 비활성화 상태인지 확인 (throw 문법 수정)
-        if (user.getUserStatus() == UserStatus.INACTIVE) {
-            throw new BusinessException(ErrorCode.USER_ALREADY_INACTIVE);
-        }
-
-        // 3. 상태 변경 (Dirty Checking 활용)
-        user.setInActive();
-
-        // 4. Redis의 refreshToken 즉시 무효화
-        refreshTokenService.delete(userId);
-
-        // 5. 처리된 유저의 ID 반환
-        return user.getUserId();
-    }
-
-    @Override
-    public InactiveInfoResponse getInactiveInfo(Long userId) {
-        User user = findUserById(userId);
-        if (user.getUserStatus() != UserStatus.INACTIVE || user.getDeactivatedAt() == null) {
-            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
-        }
-        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt());
-    }
-
-    @Override
-    @Transactional
-    public Long userActivate(Long userId) {
-        User user = findUserById(userId);
-
-        if (user.getUserStatus() == UserStatus.ACTIVE) {
-            throw new BusinessException(ErrorCode.USER_ALREADY_ACTIVE);
-        }
-
-        user.setActive();
-        return user.getUserId();
-    }
 
     //TODO: 닉네임 변경
     @Override

@@ -30,9 +30,15 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         Long userId = customUserDetails.getUserId();
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        // 비활성화 계정은 토큰 미발급, userId만 URL에 담아 리다이렉트
+        // 비활성화 계정인 경우 임시 토큰 발급하여 전달
         if (customUserDetails.isInactive()) {
-            getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/inactive?userId=" + userId);
+            System.out.println("비활성화 계정 로그인");
+            // 비활성화 계정인 경우 임시토큰 발급
+            String tempToken = jwtUtil.createJwt("temp", userId, username, role, 5 * 60 * 1000L);
+
+            // http://localhost:5173/inactive 로 리다이렉트
+            getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/inactive?token=" + tempToken);
+            System.out.println("리다이렉트 완료");
             return;
         }
 

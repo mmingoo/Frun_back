@@ -21,4 +21,5 @@ public class ReportType {
 
     @Column(name = "type_name", length = 30, nullable = false)
     private String typeName;
+
 }

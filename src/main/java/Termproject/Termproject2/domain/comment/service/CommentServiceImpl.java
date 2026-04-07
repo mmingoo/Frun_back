@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -189,6 +190,12 @@ public class CommentServiceImpl implements CommentService{
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = findCommentById(commentId);
         validateOwner(comment, userId);
+
+        // 댓글(+자식 답글)을 참조하는 알림 먼저 삭제
+        List<Comment> toDelete = new ArrayList<>(comment.getChildren());
+        toDelete.add(comment);
+        notificationService.deleteByComments(toDelete);
+
         commentRepository.delete(comment); // orphanRemoval = true로 자식(답글)도 같이 삭제
     }
 

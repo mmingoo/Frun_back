@@ -8,8 +8,11 @@ import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDtos
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.user.entity.User;
 
+import java.util.List;
+
 public interface NotificationService {
     void notifyComment(User receiver, Comment comment);
+    void deleteByComments(List<Comment> comments);
     void notifyFriendRequest(User receiver, FriendRequest friendRequest, User sender, FriendRequestStatus friendRequestStatus);
     void notifyLike(User receiver, User sender, RunningLog runningLog);
 

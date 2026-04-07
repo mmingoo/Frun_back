@@ -1,0 +1,77 @@
+package Termproject.Termproject2.domain.report.service;
+
+import Termproject.Termproject2.domain.report.Report;
+import Termproject.Termproject2.domain.report.ReportType;
+import Termproject.Termproject2.domain.report.dto.ReportRequestDto;
+import Termproject.Termproject2.domain.report.repository.ReportRepository;
+import Termproject.Termproject2.domain.report.repository.ReportTypeRepository;
+import Termproject.Termproject2.domain.running.entity.RunningLog;
+import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
+import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.repository.UserRepository;
+import Termproject.Termproject2.global.common.response.ErrorCode;
+import Termproject.Termproject2.global.exception.BusinessException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ReportServiceImpl implements ReportService {
+
+    private final ReportRepository reportRepository;
+    private final ReportTypeRepository reportTypeRepository;
+    private final UserRepository userRepository;
+    private final RunningLogRepository runningLogRepository;
+
+    /**
+     * 신고 접수
+     * 1. 신고자·신고 대상 사용자·신고 유형 조회
+     * 2. 본인 신고 / 중복 신고 검증
+     * 3. 러닝일지 신고인 경우 러닝일지 조회
+     * 4. Report 저장
+     */
+    @Override
+    @Transactional
+    public void submitRunningLogReport(Long reporterId, Long runningLogId, ReportRequestDto dto) {
+        // 신고자 조회
+        User reporter = userRepository.findById(reporterId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 러닝 로그 조회
+        RunningLog runningLog = runningLogRepository.findById(runningLogId)
+                .orElseThrow(()-> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+
+        Long reportedUserId =  runningLog.getUser().getUserId();
+
+        // 신고 대상 사용자 조회
+        User reportedUser = userRepository.findById(reportedUserId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 본인 신고 불가
+        if (reporterId.equals(reportedUserId) ){
+            throw new BusinessException(ErrorCode.REPORT_SELF_NOT_ALLOWED);
+        }
+
+        // 동일 대상에 대한 중복 신고 방지
+        if (reportRepository.existsByReporterAndReportedUser(reporter, reportedUser)) {
+            throw new BusinessException(ErrorCode.DUPLICATE_REPORT);
+        }
+
+        // 신고 유형 조회
+        ReportType reportType = reportTypeRepository.findByTypeName("RUNNING_LOG");
+
+
+        // 신고 저장
+        Report report = Report.builder()
+                .reporter(reporter)
+                .reportedUser(reportedUser)
+                .reportReason(dto.getReportReason())
+                .runningLog(runningLog)
+                .reportType(reportType)
+                .build();
+
+        reportRepository.save(report);
+    }
+}

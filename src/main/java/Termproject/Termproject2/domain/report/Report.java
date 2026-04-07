@@ -1,6 +1,5 @@
 package Termproject.Termproject2.domain.report;
 
-import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import jakarta.persistence.*;
@@ -23,8 +22,12 @@ public class Report {
     private Long reportId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "reported_user_id", nullable = false)
+    private User reportedUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reporter_id" ,  nullable = false)
+    private User reporter ;
 
     @Lob
     @Column(name = "report_reason", nullable = false)
@@ -36,9 +39,6 @@ public class Report {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "comment_id")
-    private Comment comment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id")
@@ -55,11 +55,11 @@ public class Report {
     }
 
     @Builder
-    public Report(User user, String reportReason, Comment comment,
+    public Report(User reporter, User reportedUser, String reportReason,
                   RunningLog runningLog, ReportType reportType) {
-        this.user = user;
+        this.reporter = reporter;
+        this.reportedUser = reportedUser;
         this.reportReason = reportReason;
-        this.comment = comment;
         this.runningLog = runningLog;
         this.reportType = reportType;
     }

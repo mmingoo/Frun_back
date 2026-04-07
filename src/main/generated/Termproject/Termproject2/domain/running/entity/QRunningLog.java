@@ -26,6 +26,8 @@ public class QRunningLog extends EntityPathBase<RunningLog> {
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
 
+    public final DateTimePath<java.time.LocalDateTime> deletionScheduledAt = createDateTime("deletionScheduledAt", java.time.LocalDateTime.class);
+
     public final NumberPath<java.math.BigDecimal> distance = createNumber("distance", java.math.BigDecimal.class);
 
     public final TimePath<java.time.LocalTime> duration = createTime("duration", java.time.LocalTime.class);

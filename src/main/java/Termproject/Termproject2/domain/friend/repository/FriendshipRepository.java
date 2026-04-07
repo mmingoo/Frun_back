@@ -16,5 +16,4 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long>, F
     long countByUserId(@Param("userId") Long userId);
     Optional<Friendship> findByIdReceiveUserIdAndIdSenderUserId(Long receiveUserId, Long senderUserId);
     void deleteByIdSenderUserIdAndIdReceiveUserId(Long senderUserId, Long receiveUserId);
-
 }

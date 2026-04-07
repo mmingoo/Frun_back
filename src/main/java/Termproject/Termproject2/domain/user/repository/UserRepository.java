@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.user.repository;
 
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.entity.UserStatus;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -26,4 +28,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% ORDER BY u.nickName ASC, u.userId ASC")
     List<User> findByNickNameContainingNoCursor(@Param("keyword") String keyword, Pageable pageable);
+
+    List<User> findAllByUserStatusAndDeletionScheduledAtBefore(UserStatus userStatus, LocalDateTime now);
 }
