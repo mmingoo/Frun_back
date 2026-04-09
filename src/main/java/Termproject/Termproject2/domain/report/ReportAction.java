@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+// 신고 처리 테이블
 @Entity
 @Table(name = "REPORT_ACTION")
 @Getter

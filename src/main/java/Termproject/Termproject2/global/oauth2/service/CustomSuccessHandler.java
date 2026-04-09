@@ -32,7 +32,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         // 비활성화 계정인 경우 임시 토큰 발급하여 전달
         if (customUserDetails.isInactive()) {
-            System.out.println("비활성화 계정 로그인");
+
             // 비활성화 계정인 경우 임시토큰 발급
             String tempToken = jwtUtil.createJwt("temp", userId, username, role, 5 * 60 * 1000L);
 
