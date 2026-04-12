@@ -56,7 +56,10 @@ public class Notification extends BaseCreatedEntity {
     @Column(name = "friend_request_status", length = 20)
     private FriendRequestStatus friendRequestStatus;
 
+    @Column(name = "friend_request_status", length = 50)
     private String message;
+
+    @Column(name = "friend_request_status", length = 200)
     private String content;
 
 

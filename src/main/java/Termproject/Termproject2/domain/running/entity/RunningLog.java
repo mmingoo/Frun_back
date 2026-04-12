@@ -31,7 +31,7 @@ public class RunningLog {
     @Column(name = "run_date", nullable = false)
     private LocalDate runDate;
 
-    @Column(name = "run_time")
+    @Column(name = "run_time", nullable = false)
     private LocalTime runTime;
 
 

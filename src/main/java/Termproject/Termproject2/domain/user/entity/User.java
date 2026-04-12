@@ -28,10 +28,10 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_name", length = 200, nullable = false)
     private String userName;
 
-    @Column(name = "user_email", length = 200, nullable = false)
+    @Column(name = "user_email", length = 50, nullable = false)
     private String userEmail;
 
-    @Column(name = "user_phone", length = 200, nullable = false)
+    @Column(name = "user_phone", length = 15, nullable = false)
     private String userPhone;
 
     // ── FRun_SQL USER 추가 컬럼 ─────────────────────────────────
