@@ -85,8 +85,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userDTO.setName(oAuth2Response.getName());
             userDTO.setRole(existMember.getRole());
             userDTO.setNewUser(false);
-            userDTO.setInactive(existMember.getUserStatus() == UserStatus.INACTIVE);
-
+            // INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 모두 비활성화로 처리
+            userDTO.setInactive(existMember.getUserStatus().isInactive());
+            System.out.println("[OAuth2Login] userId=" + existMember.getUserId()
+                    + ", status=" + existMember.getUserStatus());
             return new CustomOAuth2User(userDTO);
         }
     }

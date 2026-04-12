@@ -27,8 +27,10 @@ public class UserDeletionScheduler {
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void deleteExpiredUsers() {
-        List<User> targets = userRepository.findAllByUserStatusAndDeletionScheduledAtBefore(
-                UserStatus.INACTIVE, LocalDateTime.now());
+        // INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 세 상태 모두 삭제 대상으로 처리
+        List<User> targets = userRepository.findAllByUserStatusInAndDeletionScheduledAtBefore(
+                List.of(UserStatus.INACTIVE, UserStatus.DIRECT_INACTIVE, UserStatus.REPORT_INACTIVE),
+                LocalDateTime.now());
 
         if (targets.isEmpty()) return;
 

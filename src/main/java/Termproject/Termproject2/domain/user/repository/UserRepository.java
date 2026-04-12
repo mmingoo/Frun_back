@@ -30,4 +30,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByNickNameContainingNoCursor(@Param("keyword") String keyword, Pageable pageable);
 
     List<User> findAllByUserStatusAndDeletionScheduledAtBefore(UserStatus userStatus, LocalDateTime now);
+
+    /**
+     * INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 상태이면서 삭제 예정일이 지난 사용자 조회
+     * 스케줄러에서 세 가지 비활성화 상태를 한 번에 처리하기 위해 사용
+     */
+    @Query("SELECT u FROM User u WHERE u.userStatus IN :statuses AND u.deletionScheduledAt < :now")
+    List<User> findAllByUserStatusInAndDeletionScheduledAtBefore(
+            @Param("statuses") List<UserStatus> statuses,
+            @Param("now") LocalDateTime now);
 }

@@ -3,5 +3,7 @@ package Termproject.Termproject2.domain.notification.entity;
 public enum NotificationType {
     LIKE,
     COMMENT,
-    FRIEND_REQUEST
+    FRIEND_REQUEST,
+    REPORT_ACCEPTED,
+    REPORT_REJECTED
 }

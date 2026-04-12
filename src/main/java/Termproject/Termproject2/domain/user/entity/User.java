@@ -102,6 +102,21 @@ public class User extends BaseTimeEntity {
         this.deactivatedAt = LocalDateTime.now();
         this.deletionScheduledAt = this.deactivatedAt.plusMonths(3);
     }
+
+    // 관리자에 의한 강제 비활성화 (deactivatedAt, deletionScheduledAt 동일하게 설정)
+    public void setDirectInactive() {
+        this.userStatus = UserStatus.DIRECT_INACTIVE;
+        this.deactivatedAt = LocalDateTime.now();
+        this.deletionScheduledAt = this.deactivatedAt.plusMonths(3);
+    }
+
+    // 신고에 의한 비활성화 (deactivatedAt, deletionScheduledAt 동일하게 설정)
+    public void setReportInactive() {
+        this.userStatus = UserStatus.REPORT_INACTIVE;
+        this.deactivatedAt = LocalDateTime.now();
+        this.deletionScheduledAt = this.deactivatedAt.plusMonths(3);
+    }
+
     public void setActive(){
         this.userStatus = UserStatus.ACTIVE;
         this.deactivatedAt = null;

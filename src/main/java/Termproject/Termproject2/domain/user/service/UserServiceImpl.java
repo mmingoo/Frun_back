@@ -158,8 +158,8 @@ public class UserServiceImpl implements UserService {
         // 1. 유저 조회
         User user = findUserById(userId);
 
-        // 2. 이미 비활성화 상태인지 확인 (throw 문법 수정)
-        if (user.getUserStatus() == UserStatus.INACTIVE) {
+        // 2. 이미 비활성화 상태인지 확인 (INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 모두 포함)
+        if (user.getUserStatus().isInactive()) {
             throw new BusinessException(ErrorCode.USER_ALREADY_INACTIVE);
         }
 
@@ -177,10 +177,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public InactiveInfoResponse getInactiveInfo(Long userId) {
         User user = findUserById(userId);
-        if (user.getUserStatus() != UserStatus.INACTIVE || user.getDeactivatedAt() == null) {
+        // INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 모두 비활성 정보 조회 허용
+        // DIRECT_INACTIVE / REPORT_INACTIVE 는 기존 데이터에서 deactivatedAt 이 null 일 수 있으므로 상태만 체크
+        if (!user.getUserStatus().isInactive()) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
-        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt());
+        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt(), user.getUserStatus());
     }
 
     //TODO: 유저 활성화
