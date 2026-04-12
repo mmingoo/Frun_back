@@ -29,8 +29,7 @@ public class Report {
     @JoinColumn(name = "reporter_id" ,  nullable = false)
     private User reporter ;
 
-    @Lob
-    @Column(name = "report_reason", nullable = false)
+    @Column(name = "report_reason", length = 1000, nullable = false)
     private String reportReason;
 
     @Column(name = "status", length = 30, nullable = false)

@@ -29,7 +29,7 @@ public class Notice extends BaseTimeEntity {
     private String content;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "noticeType", length = 15, nullable = false)
+    @Column(name = "notice_type", length = 15, nullable = false)
     private NoticeType type;
 
     @Builder
