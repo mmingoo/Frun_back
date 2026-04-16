@@ -1,5 +1,13 @@
 package Termproject.Termproject2.domain.user.entity;
 
+import Termproject.Termproject2.domain.comment.Comment;
+import Termproject.Termproject2.domain.friend.entity.FriendRequest;
+import Termproject.Termproject2.domain.friend.entity.Friendship;
+import Termproject.Termproject2.domain.notification.entity.Notification;
+import Termproject.Termproject2.domain.report.entity.Report;
+import Termproject.Termproject2.domain.running.entity.Like;
+import Termproject.Termproject2.domain.running.entity.RunningLog;
+import Termproject.Termproject2.domain.stats.entity.RunningStats;
 import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -9,6 +17,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "User")
@@ -68,6 +78,50 @@ public class User extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "social_type_id")
     private SocialLoginType socialLoginType;
+
+    // ── 계정 삭제 시 cascade 대상 ────────────────────────────────
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> receivedNotifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> sentNotifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FriendRequest> receivedFriendRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FriendRequest> sentFriendRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "receiveUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Friendship> receivedFriendships = new ArrayList<>();
+
+    @OneToMany(mappedBy = "senderUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Friendship> sentFriendships = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reportedUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> receivedReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reporter", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> sentReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "targetUser", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserSanctionHistory> sanctionHistories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RunningStats> runningStats = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RunningLog> runningLogs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserTermsAgreement> termsAgreements = new ArrayList<>();
 
 
 

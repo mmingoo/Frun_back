@@ -115,12 +115,12 @@ public class UserController {
 
     @PatchMapping("/profile")
     @Operation(summary = "유저 프로필 업데이트 (프로필 사진, bio)")
-    public ApiResponse<?> updateUserProfile(
+    public ResponseEntity<ApiResponse<?>> updateUserProfile(
             @Valid @RequestParam(value = "bio") UserProfileUpdateRequestDto request,
             @RequestParam(value = "profileImage", required = false) MultipartFile profileImage) {
         Long userId = jwtTokenExtractor.getUserId();
         userService.updateUserProfile(userId, request, profileImage);
-        return ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다.");
+        return ResponseEntity.ok(ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다."));
     }
 
     @GetMapping("/inactive-info")
@@ -168,6 +168,14 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(userId, "성공적으로 계정을 활성화하였습니다."));
     }
 
+
+    @DeleteMapping("/me")
+    @Operation(summary = "회원 탈퇴", description = "계정과 관련된 모든 데이터를 삭제합니다.")
+    public ResponseEntity<ApiResponse<?>> deleteUser() {
+        Long userId = jwtTokenExtractor.getUserId();
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(ApiResponse.ok("성공적으로 계정을 삭제하였습니다."));
+    }
 
     @DeleteMapping("/deactivate")
     @Operation(summary = "유저 비활성화")

@@ -24,8 +24,7 @@ public class Notice extends BaseTimeEntity {
     @Column(name = "title", length = 300, nullable = false)
     private String title;
 
-    @Lob
-    @Column(name = "content", nullable = false)
+    @Column(name = "content", length = 2000, nullable = false)
     private String content;
 
     @Enumerated(EnumType.STRING)

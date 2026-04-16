@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.friend.repository;
 
 import Termproject.Termproject2.domain.friend.entity.Friendship;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,8 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long>, F
     long countByUserId(@Param("userId") Long userId);
     Optional<Friendship> findByIdReceiveUserIdAndIdSenderUserId(Long receiveUserId, Long senderUserId);
     void deleteByIdSenderUserIdAndIdReceiveUserId(Long senderUserId, Long receiveUserId);
+
+    @Modifying
+    @Query("DELETE FROM Friendship f WHERE f.id.receiveUserId = :userId OR f.id.senderUserId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.user.entity;
 
 import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
+import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "terms")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Terms extends BaseCreatedEntity {
+public class Terms extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

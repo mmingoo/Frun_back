@@ -43,3 +43,6 @@ docs
 /docs/*
 docker-compose.yml
 *.yml
+
+src/main/generated/
+build/generated/

@@ -1,6 +1,5 @@
 package Termproject.Termproject2.domain.user.entity;
 
-import Termproject.Termproject2.domain.report.Report;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;

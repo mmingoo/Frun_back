@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.comment;
 
+import Termproject.Termproject2.domain.notification.entity.Notification;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
@@ -43,6 +44,9 @@ public class Comment extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "parent", orphanRemoval = true)
     private List<Comment> children = new ArrayList<>();
+
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
 
 
     @Builder

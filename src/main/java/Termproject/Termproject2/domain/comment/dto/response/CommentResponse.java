@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.comment.dto.response;
 
 import Termproject.Termproject2.domain.comment.Comment;
+import Termproject.Termproject2.domain.user.entity.UserStatus;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,12 +21,13 @@ public class CommentResponse {
 
     // CommentResponse 생성하는 빌더
     public static CommentResponse of(Comment comment, long replyCount) {
+        boolean isInactive = comment.getUser().getUserStatus().isInactive();
         return CommentResponse.builder()
                 .commentId(comment.getCommentId())
                 .content(comment.getContent())
                 .userId(comment.getUser().getUserId())
-                .nickname(comment.getUser().getNickName())
-                .profileImageUrl(comment.getUser().getImageUrl())
+                .nickname(isInactive ? "비활성화 계정" : comment.getUser().getNickName())
+                .profileImageUrl(isInactive ? null : comment.getUser().getImageUrl())
                 .replyCount(replyCount)
                 .createdAt(comment.getCreatedAt())
                 .build();

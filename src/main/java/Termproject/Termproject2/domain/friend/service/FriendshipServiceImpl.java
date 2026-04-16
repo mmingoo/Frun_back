@@ -12,6 +12,7 @@ import Termproject.Termproject2.domain.friend.repository.FriendRequestRepository
 import Termproject.Termproject2.domain.friend.repository.FriendshipRepository;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.entity.UserStatus;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
@@ -87,9 +88,10 @@ public class FriendshipServiceImpl implements FriendShipService {
                 ? userRepository.findByNickNameContainingNoCursor(keyword, pageable)
                 : userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
 
-        // 자신 제외
+        // 자신 제외 + 비활성화 계정 제외
         List<User> filtered = searchedUsers.stream()
                 .filter(user -> !user.getUserId().equals(currentUserId))
+                .filter(user -> user.getUserStatus() == UserStatus.ACTIVE)
                 .collect(Collectors.toList());
 
 

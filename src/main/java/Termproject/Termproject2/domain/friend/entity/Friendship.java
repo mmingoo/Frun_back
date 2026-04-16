@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.friend.entity;
 
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Table(name = "FRIENDSHIP")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Friendship {
+public class Friendship extends BaseTimeEntity {
 
     @EmbeddedId
     private FriendshipId id;
@@ -27,14 +28,6 @@ public class Friendship {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user_id", referencedColumnName = "user_id")
     private User senderUser;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
     @Builder
     public Friendship(User receiveUser, User senderUser) {

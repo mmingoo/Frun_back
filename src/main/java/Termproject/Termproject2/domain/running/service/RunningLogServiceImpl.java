@@ -13,6 +13,7 @@ import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.stats.entity.RunningStats;
 import Termproject.Termproject2.domain.stats.repository.RunningStatsRepository;
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.entity.UserStatus;
 import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
@@ -45,34 +46,36 @@ public class RunningLogServiceImpl implements RunningLogService {
     private final LikeRepository likeRepository;
     private final RunningStatsRepository runningStatsRepository;
 
-@Override
-@Transactional
-public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
-    int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
-    User user = userService.findById(userId);
 
-    RunningLog runningLog = RunningLog.builder()
-            .user(user)
-            .runDate(request.getRunDate())
-            .duration(toLocalTime(duration[0], duration[1]))
-            .distance(request.getDistance())
-            .memo(request.getMemo())
-            .isPublic(request.isPublic())
-            .pace(calculatePace(duration[0], duration[1], request.getDistance()))
-            .build();
+    //TODO: 러닝일지 생성
+    @Override
+    @Transactional
+    public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
+        int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
+        User user = userService.findById(userId);
 
-    runningLogRepository.save(runningLog);
+        RunningLog runningLog = RunningLog.builder()
+                .user(user)
+                .runDate(request.getRunDate())
+                .duration(toLocalTime(duration[0], duration[1]))
+                .distance(request.getDistance())
+                .memo(request.getMemo())
+                .isPublic(request.isPublic())
+                .pace(calculatePace(duration[0], duration[1], request.getDistance()))
+                .build();
 
-    // 공개 일지일 때만 통계 누적
-    if (request.isPublic()) {
-        int distM = (int) (request.getDistance().doubleValue() * 1000);
-        int durSec = runningLog.getDuration().toSecondOfDay();
-        accumulateStats(user, request.getRunDate(), distM, durSec);
+        runningLogRepository.save(runningLog);
+
+        // 공개 일지일 때만 통계 누적
+        if (request.isPublic()) {
+            int distM = (int) (request.getDistance().doubleValue() * 1000);
+            int durSec = runningLog.getDuration().toSecondOfDay();
+            accumulateStats(user, request.getRunDate(), distM, durSec);
+        }
+
+        saveRunningLogImages(runningLog, userId, images);
+        return new RunningLogCreateResponse(runningLog.getRunningLogId());
     }
-
-    saveRunningLogImages(runningLog, userId, images);
-    return new RunningLogCreateResponse(runningLog.getRunningLogId());
-}
 
     // 피드 상세 조회
     @Override
@@ -80,6 +83,16 @@ public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRe
         // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
         RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+
+        // 러닝 로그의 실제 작성자가 authorId와 일치하지 않으면 404
+        if (!runningLog.getUser().getUserId().equals(authorId)) {
+            throw new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND);
+        }
+
+        // 비활성화된 계정의 러닝일지면 400
+        if(!runningLog.getUser().getUserStatus().equals(UserStatus.ACTIVE)){
+            throw new BusinessException(ErrorCode.USER_INACTIVE_RUNNING_LOG);
+        }
 
         // 작성자가 본인이 아닐 경우에 러닝일지 공개 여부 검증
         validatePublicAccess(userId, authorId, runningLog);

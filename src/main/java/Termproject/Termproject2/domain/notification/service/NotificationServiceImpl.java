@@ -132,6 +132,9 @@ public class NotificationServiceImpl implements NotificationService {
         // 파일명 > 이미지 url 로 변환
         toFullProfileImageUrl(result);
 
+        // 비활성화 계정 발신자 마스킹
+        maskInactiveSenders(result);
+
         // 2. 다음 데이터 있는지 여부
         boolean hasNext = hasNext(result, size);
 
@@ -200,5 +203,18 @@ public class NotificationServiceImpl implements NotificationService {
                     dto.setProfileImageUrl(imageService.getProfileImageUrl(dto.getUserProfileImageUrl()));
                 }
         );
+    }
+
+    // 비활성화 계정 발신자의 닉네임과 프로필 이미지 마스킹
+    private void maskInactiveSenders(List<NotificationDto> notificationDtoList) {
+        notificationDtoList.forEach(dto -> {
+            if (dto.getSenderStatus() != null && dto.getSenderStatus().isInactive()) {
+                dto.setProfileImageUrl(null);
+                String message = dto.getMessage();
+                if (message != null && message.contains("님이")) {
+                    dto.setMessage("비활성화 계정" + message.substring(message.indexOf("님이")));
+                }
+            }
+        });
     }
 }

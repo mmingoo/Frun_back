@@ -2,6 +2,7 @@ package Termproject.Termproject2.global.config;
 
 import Termproject.Termproject2.global.jwt.JWTFilter;
 import Termproject.Termproject2.global.jwt.JWTUtil;
+import Termproject.Termproject2.global.jwt.RefreshTokenService;
 import Termproject.Termproject2.global.oauth2.service.CustomOAuth2UserService;
 import Termproject.Termproject2.global.oauth2.service.CustomSuccessHandler;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,12 +27,14 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil) {
+    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil, RefreshTokenService refreshTokenService) {
 
         this.customOAuth2UserService = customOAuth2UserService;
         this.customSuccessHandler = customSuccessHandler;
         this.jwtUtil = jwtUtil;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Bean
@@ -53,7 +56,7 @@ public class SecurityConfig {
 
         //JWTFilter 추가
         http
-                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JWTFilter(jwtUtil, refreshTokenService), UsernamePasswordAuthenticationFilter.class);
 
         //oauth2
         http

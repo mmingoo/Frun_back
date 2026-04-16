@@ -19,6 +19,7 @@ import java.io.IOException;
 public class JWTFilter extends OncePerRequestFilter {
 
     private final JWTUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -54,6 +55,14 @@ public class JWTFilter extends OncePerRequestFilter {
         Long userId = jwtUtil.getUserId(token);
         String username = jwtUtil.getUsername(token);
         String role = jwtUtil.getRole(token);
+
+        // 블랙리스트 확인 (계정 비활성화된 경우 즉시 차단)
+        if (refreshTokenService.isBlacklisted(userId)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":\"ACCOUNT_INACTIVE\",\"message\":\"비활성화된 계정입니다.\"}");
+            return;
+        }
 
         // 추출한 정보로 UserDTO 및 CustomOAuth2User 객체 생성
         UserDTO userDTO = new UserDTO();

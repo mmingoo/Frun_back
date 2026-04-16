@@ -1,5 +1,8 @@
 package Termproject.Termproject2.domain.running.entity;
 
+import Termproject.Termproject2.domain.comment.Comment;
+import Termproject.Termproject2.domain.notification.entity.Notification;
+import Termproject.Termproject2.domain.report.entity.Report;
 import Termproject.Termproject2.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -31,7 +34,7 @@ public class RunningLog {
     @Column(name = "run_date", nullable = false)
     private LocalDate runDate;
 
-    @Column(name = "run_time", nullable = false)
+    @Column(name = "run_time")
     private LocalTime runTime;
 
 
@@ -53,6 +56,10 @@ public class RunningLog {
     @Column(name = "memo", length = 500)
     private String memo;
 
+    @Column(name = "delete_reason", length = 500)
+    private String deleteReason;
+
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -68,6 +75,19 @@ public class RunningLog {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
+
+    // Notification은 Comment FK를 가지므로 comments cascade 전에 선언
+    @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Report> reports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Like> likes = new ArrayList<>();
 
     @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RunningLogImage> images = new ArrayList<>();

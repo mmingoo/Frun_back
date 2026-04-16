@@ -26,4 +26,6 @@ public interface UserService {
     InactiveInfoResponse getInactiveInfo(Long userId);
 
     void updateUserNickname(Long userId, @Valid UserUpdateNicknameDto request);
+
+    void deleteUser(Long userId);
 }

@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.entity;
 
+import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "RUNNING_LOG_IMAGE")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RunningLogImage {
+public class RunningLogImage extends BaseCreatedEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,18 +23,11 @@ public class RunningLogImage {
     @Column(name = "image_url", length = 500, nullable = false)
     private String imageUrl;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id", nullable = false)
     private RunningLog runningLog;
 
-
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
 
     @Builder
     public RunningLogImage(RunningLog runningLog, String imageUrl) {

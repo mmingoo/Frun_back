@@ -24,7 +24,6 @@ public class FeedServiceImpl implements FeedService {
     private final ImageService imageService;
     private final LikeRepository likeRepository;
 
-    // ===================== 친구 피드 =====================
     // 친구 피드 커서 기반 조회
     @Override
     public FeedScrollResponseDto getFriendFeeds(Long userId, Long cursorId, int size) {
@@ -57,17 +56,21 @@ public class FeedServiceImpl implements FeedService {
     // 유저 페이지 피드 조회 (본인이면 비공개 포함, 타인이면 공개만)
     @Override
     public MyPageFeedScrollResponseDto getUserPageFeeds(Long viewerId, Long targetUserId, Long cursorId, int size) {
+        // 조회하려는 사람이 작성자인지 확인
         boolean isOwner = viewerId.equals(targetUserId);
 
+        // 마이페이지 피드 목록 조회
         List<MyPageFeedResponseDto> feeds = runningLogRepository.findUserPageFeeds(targetUserId, cursorId, size, isOwner);
 
+        // 커서 기반 페이징
         boolean hasNext = hasNext(feeds, size);
         feeds = trimToSize(feeds, size);
 
+        // 러닝일지의 id 들 (이미지 일괄 조회를 위함)
         List<Long> logIds = feeds.stream().map(MyPageFeedResponseDto::getRunningLogId).toList();
 
         Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds)
-                .entrySet().stream()
+                .entrySet().stream() // key 와 value 를 쌍으로 처리하기 위함
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e -> imageService.getRunningLogImageUrl(e.getValue())

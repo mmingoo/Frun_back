@@ -29,7 +29,7 @@ public class SwaggerConfig {
                         .title("FRun API")
                         .description("FRun 러닝 앱 API 문서")
                         .version("v1.0.0"))
-                .addServersItem(new Server().url("http://localhost:8080"))
+                .addServersItem(new Server().url("http://localhost:8081"))
                 .addSecurityItem(securityRequirement)
                 .components(new Components().addSecuritySchemes(jwtScheme, securityScheme));
     }

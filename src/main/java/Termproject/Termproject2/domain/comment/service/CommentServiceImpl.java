@@ -188,8 +188,9 @@ public class CommentServiceImpl implements CommentService{
     @Transactional
     @Override
     public void deleteComment(Long commentId, Long userId) {
-        Comment comment = findCommentById(commentId);
-        validateOwner(comment, userId);
+        Comment comment = commentRepository.findByIdWithRunningLogOwner(commentId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+        validateDeletePermission(comment, userId);
 
         // 댓글(+자식 답글)을 참조하는 알림 먼저 삭제
         List<Comment> toDelete = new ArrayList<>(comment.getChildren());
@@ -228,6 +229,15 @@ public class CommentServiceImpl implements CommentService{
     private void validateOwner(Comment comment, Long userId) {
         if (!comment.getUser().getUserId().equals(userId)) {
             throw new BusinessException( ErrorCode.NOT_COMMENT_OWNER);
+        }
+    }
+
+    // 댓글 작성자이거나 러닝일지 주인이면 삭제 가능
+    private void validateDeletePermission(Comment comment, Long userId) {
+        boolean isCommentOwner = comment.getUser().getUserId().equals(userId);
+        boolean isLogOwner = comment.getRunningLog().getUser().getUserId().equals(userId);
+        if (!isCommentOwner && !isLogOwner) {
+            throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
         }
     }
 

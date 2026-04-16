@@ -1,9 +1,10 @@
 package Termproject.Termproject2.domain.report.repository;
 
-import Termproject.Termproject2.domain.report.Report;
+import Termproject.Termproject2.domain.report.entity.Report;
 import Termproject.Termproject2.domain.user.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -43,4 +44,8 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
     List<Report> findAllWithCursor(
             @Param("lastReportId") Long lastReportId,
             Pageable pageable);
+
+    @Modifying
+    @Query("DELETE FROM Report r WHERE r.reporter.userId = :userId OR r.reportedUser.userId = :userId OR r.runningLog.user.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
 }

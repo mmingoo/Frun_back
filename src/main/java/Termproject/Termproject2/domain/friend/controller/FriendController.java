@@ -22,7 +22,7 @@ public class FriendController {
 
     @GetMapping("/friend-list")
     @Operation(summary = "친구 목록 조회", description = "닉네임 오름차순 커서 기반 무한 스크롤로 친구 목록을 조회합니다.")
-    public ApiResponse<?> getFriendList(
+    public ResponseEntity<ApiResponse<?>> getFriendList(
             @Parameter(description = "이전 페이지 마지막 친구 닉네임 (첫 요청 시 생략)") @RequestParam(required = false) String cursorName,
             @Parameter(description = "이전 페이지 마지막 friendId (cursorName과 함께 사용)") @RequestParam(required = false) Long cursorId,
             @Parameter(description = "한 번에 조회할 수 (기본값 20)") @RequestParam(defaultValue = "5") int size) {
@@ -30,7 +30,7 @@ public class FriendController {
         System.out.println("커서네임 : " + cursorName);
         System.out.println("커서아이디 : " + cursorId);
         Long userId = jwtTokenExtractor.getUserId();
-        return ApiResponse.ok(friendShipService.getFriendList(userId, cursorName, cursorId, size), "성공적으로 친구 목록을 조회하였습니다.");
+        return ResponseEntity.ok(ApiResponse.ok(friendShipService.getFriendList(userId, cursorName, cursorId, size), "성공적으로 친구 목록을 조회하였습니다."));
     }
 
     @GetMapping("/search")

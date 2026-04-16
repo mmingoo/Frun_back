@@ -1,7 +1,8 @@
 package Termproject.Termproject2.domain.report.service;
 
-import Termproject.Termproject2.domain.report.Report;
-import Termproject.Termproject2.domain.report.ReportType;
+import Termproject.Termproject2.domain.report.entity.Report;
+import Termproject.Termproject2.domain.report.entity.ReportStatus;
+import Termproject.Termproject2.domain.report.entity.ReportType;
 import Termproject.Termproject2.domain.report.dto.ReportRequestDto;
 import Termproject.Termproject2.domain.report.repository.ReportRepository;
 import Termproject.Termproject2.domain.report.repository.ReportTypeRepository;
@@ -70,6 +71,7 @@ public class ReportServiceImpl implements ReportService {
                 .reportReason(dto.getReportReason())
                 .runningLog(runningLog)
                 .reportType(reportType)
+                .status(ReportStatus.PENDING)
                 .build();
 
         reportRepository.save(report);

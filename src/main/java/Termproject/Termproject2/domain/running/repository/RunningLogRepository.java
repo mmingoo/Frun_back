@@ -23,4 +23,8 @@ public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, R
     List<Object[]> aggregateStatsByUserId(@Param("userId") Long userId);
 
     List<RunningLog> findAllByIsDeletedTrueAndDeletionScheduledAtBefore(LocalDateTime now);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("DELETE FROM RunningLog rl WHERE rl.user.userId = :userId")
+    void deleteAllByUserUserId(@Param("userId") Long userId);
 }

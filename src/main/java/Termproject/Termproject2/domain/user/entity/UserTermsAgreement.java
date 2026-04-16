@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.user.entity;
 import Termproject.Termproject2.global.common.basedTime.BaseCreatedEntity;
+import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "user_terms_agreement")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserTermsAgreement extends BaseCreatedEntity {
+public class UserTermsAgreement extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +24,7 @@ public class UserTermsAgreement extends BaseCreatedEntity {
     @JoinColumn(name = "terms_id", nullable = false)
     private Terms terms;
 
-    @Column(nullable = false)
+    @Column(name = "is_agreed", nullable = false)
     private Boolean isAgreed;
 
 

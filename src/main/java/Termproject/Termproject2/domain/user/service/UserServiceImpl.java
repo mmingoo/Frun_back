@@ -3,7 +3,6 @@ package Termproject.Termproject2.domain.user.service;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
-import Termproject.Termproject2.global.jwt.RefreshTokenService;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -12,6 +11,7 @@ import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
+import Termproject.Termproject2.global.jwt.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -83,6 +83,10 @@ public class UserServiceImpl implements UserService {
         long friendCount = friendShipService.getFriendCount(targetUserId);
 
         boolean isOwner = viewerId.equals(targetUserId);
+
+        if (!isOwner && user.getUserStatus().isInactive()) {
+            throw new BusinessException(ErrorCode.USER_INACTIVE);
+        }
 
         if(!isOwner){
             status =  friendShipService.getStatus(viewerId,targetUserId);
@@ -224,6 +228,14 @@ public class UserServiceImpl implements UserService {
         user.updateUserNickname(request.getNickname()) ;
     }
 
+
+    @Override
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = findUserById(userId);
+        refreshTokenService.delete(userId);
+        userRepository.delete(user);
+    }
 
     //TODO: USER 반환 메서드, 에러 처리
     private User findUserById(Long userId){

@@ -24,6 +24,7 @@ public class UserDeletionScheduler {
     private final RunningLogRepository runningLogRepository;
     private final EntityManager em;
 
+    //TODO: 유저 계정 삭제 스케줄러
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void deleteExpiredUsers() {
@@ -91,6 +92,7 @@ public class UserDeletionScheduler {
         }
     }
 
+    //TODO: 러닝로그 스케쥴러
     @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void deleteExpiredRunningLogs() {
