@@ -20,6 +20,7 @@ public enum ErrorCode {
     USER_ALREADY_INACTIVE(HttpStatus.BAD_REQUEST, "이미 비활성화된 계정입니다." ),
     USER_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "이미 활성화된 계정입니다." ),
     TERM_NOT_COMPLETED(HttpStatus.BAD_REQUEST, "필수 약관을 선택해야 합니다."),
+    TERMS_AGREEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 약관 동의 내역이 존재하지 않습니다."),
     USER_INACTIVE_RUNNING_LOG(HttpStatus.BAD_REQUEST, "비활성화된 계정의 러닝일지입니다." ),
     USER_INACTIVE(HttpStatus.BAD_REQUEST, "비활성화된 계정입니다." ),
 

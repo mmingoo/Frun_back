@@ -25,6 +25,9 @@ public class Terms extends BaseTimeEntity {
     @Column(nullable = false, length = 200)
     private String title;
 
+    @Column(nullable = false , length = 2000)
+    private String content;
+
     @Column(nullable = false)
     private Boolean isRequired;
 

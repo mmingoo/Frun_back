@@ -1,7 +1,8 @@
 package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.user.dto.request.TermsAgreementRequest;
-import Termproject.Termproject2.domain.user.dto.response.TermsResponse;
+import Termproject.Termproject2.domain.user.dto.request.TermsUpdateRequest;
+import Termproject.Termproject2.domain.user.dto.response.TermsResponseDto;
 import Termproject.Termproject2.domain.user.entity.Terms;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.entity.UserTermsAgreement;
@@ -45,6 +46,42 @@ public class TermsServiceImpl implements TermsService {
         userTermsAgreementRepository.saveAll(agreements);
     }
 
+    @Override
+    @Transactional
+    public void updateAgreements(Long userId, TermsUpdateRequest request) {
+        validateRequiredAgreementsForUpdate(request);
+
+        for (TermsUpdateRequest.TermsUpdateItem item : request.getAgreements()) {
+            UserTermsAgreement agreement = userTermsAgreementRepository
+                    .findByUserIdAndTermsId(userId, item.getTermId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.TERMS_AGREEMENT_NOT_FOUND));
+            agreement.updateAgreement(item.getAgreed());
+        }
+    }
+
+    @Override
+    public List<TermsResponseDto> getTerms() {
+        return termsRepository.findAllTerms();
+    }
+
+
+    private void validateRequiredAgreementsForUpdate(TermsUpdateRequest request) {
+        List<Terms> requiredTermsList = termsRepository.findAll().stream()
+                .filter(Terms::getIsRequired)
+                .collect(Collectors.toList());
+
+        Set<Long> agreedRequiredIds = request.getAgreements().stream()
+                .filter(TermsUpdateRequest.TermsUpdateItem::getAgreed)
+                .map(TermsUpdateRequest.TermsUpdateItem::getTermId)
+                .collect(Collectors.toSet());
+
+        boolean allRequiredAgreed = requiredTermsList.stream()
+                .allMatch(terms -> agreedRequiredIds.contains(terms.getTermsId()));
+
+        if (!allRequiredAgreed) {
+            throw new BusinessException(ErrorCode.TERM_NOT_COMPLETED);
+        }
+    }
 
     private void validateRequiredAgreements(TermsAgreementRequest request) {
         // 필수 약관 전체 조회

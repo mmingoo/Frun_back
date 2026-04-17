@@ -35,4 +35,8 @@ public class UserTermsAgreement extends BaseTimeEntity {
         agreement.isAgreed = isAgreed;
         return agreement;
     }
+
+    public void updateAgreement(Boolean isAgreed) {
+        this.isAgreed = isAgreed;
+    }
 }
