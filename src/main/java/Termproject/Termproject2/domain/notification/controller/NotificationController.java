@@ -1,16 +1,14 @@
 package Termproject.Termproject2.domain.notification.controller;
 
+import Termproject.Termproject2.domain.notification.dto.request.SelectedNotificationRequestDto;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -30,5 +28,23 @@ public class NotificationController {
         Long userId = jwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(notificationService.getNotificationList(userId, lastNotificationId, size), "알림 목록을 성공적으로 조회하였습니다."));
+    }
+
+    @DeleteMapping("/selected-notification")
+    @Operation(summary = "선택한 알림 삭제")
+    public ResponseEntity<ApiResponse<?>> deleteSelectedNotificationList(
+            @RequestBody SelectedNotificationRequestDto selectedNotificationRequestDto
+    ) {
+        Long userId = jwtTokenExtractor.getUserId();
+        notificationService.deleteSelectedNotification(userId, selectedNotificationRequestDto);
+        return ResponseEntity.ok(ApiResponse.ok("선택한 알림 삭제하였습니다."));
+    }
+
+    @DeleteMapping
+    @Operation(summary = "알림 전체 삭제")
+    public ResponseEntity<ApiResponse<?>> deleteAllNotification() {
+        Long userId = jwtTokenExtractor.getUserId();
+        notificationService.deleteAllNotification(userId);
+        return ResponseEntity.ok(ApiResponse.ok("모든 알림을 삭제하였습니다."));
     }
 }

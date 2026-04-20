@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.notification.repository;
 
 import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto;
+import Termproject.Termproject2.domain.notification.dto.request.SelectedNotificationRequestDto;
 import Termproject.Termproject2.domain.notification.entity.Notification;
 import Termproject.Termproject2.domain.notification.entity.NotificationType;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +35,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         "order by n.notificationId desc")
     List<NotificationDto> findByUserUserId(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
 
-    Optional<Notification> findByFriendRequestId(Long friendRequestId);
+    @Query("select n from Notification n where n.sender.userId = :senderUserId and n.user.userId = :userUserId and n.type = :type order by n.notificationId desc limit 1")
+    Optional<Notification> findLatestBySenderUserIdAndUserUserIdAndType(@Param("senderUserId") Long senderUserId, @Param("userUserId") Long userUserId, @Param("type") NotificationType type);
 
     @Modifying
     @Query("delete from Notification n where n.comment in :comments")
@@ -50,15 +52,21 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             LEFT JOIN RUNNING_LOG rl ON n.running_log_id = rl.running_log_id
             LEFT JOIN COMMENT c ON n.comment_id = c.comment_id
             LEFT JOIN COMMENT cp ON c.parent_id = cp.comment_id
-            LEFT JOIN FRIEND_REQUEST fr ON n.friend_request_id = fr.friend_request_id
             WHERE n.user_id = :userId
                OR n.sender_id = :userId
                OR rl.user_id = :userId
                OR c.user_id = :userId
                OR c.running_log_id IN (SELECT running_log_id FROM RUNNING_LOG WHERE user_id = :userId)
                OR cp.user_id = :userId
-               OR fr.sender_id = :userId
-               OR fr.receiver_id = :userId
             """, nativeQuery = true)
     void deleteAllRelatedToUser(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("delete from Notification n where n.notificationId in :ids and n.user.userId = :userId")
+    void deleteSelectedNotification(@Param("userId") Long userId, @Param("ids") List<Long> ids);
+
+    @Modifying
+    @Query("delete from Notification n where n.user.userId = :userId")
+    void deleteAllByUserId(@Param("userId") Long userId);
+
 }

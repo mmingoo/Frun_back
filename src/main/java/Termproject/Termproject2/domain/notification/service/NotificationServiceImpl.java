@@ -2,10 +2,10 @@
 package Termproject.Termproject2.domain.notification.service;
 
 import Termproject.Termproject2.domain.comment.Comment;
-import Termproject.Termproject2.domain.friend.entity.FriendRequest;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDtos;
+import Termproject.Termproject2.domain.notification.dto.request.SelectedNotificationRequestDto;
 import Termproject.Termproject2.domain.notification.entity.Notification;
 import Termproject.Termproject2.domain.notification.entity.NotificationType;
 import Termproject.Termproject2.domain.notification.repository.NotificationRepository;
@@ -71,19 +71,15 @@ public class NotificationServiceImpl implements NotificationService {
      */
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public void notifyFriendRequest(User receiver, FriendRequest friendRequest, User sender, FriendRequestStatus friendRequestStatus) {
-        System.out.println("친구요청 알림 생성");
-        // 친구 요청 알림 생성
+    public void notifyFriendRequest(User receiver, User sender, FriendRequestStatus friendRequestStatus) {
         Notification notification = Notification.builder()
                 .user(receiver)
                 .type(NotificationType.FRIEND_REQUEST)
-                .friendRequestId(friendRequest.getFriendRequestId())
                 .sender(sender)
                 .message(sender.getNickName() + "님이 친구 요청을 보냈습니다.")
                 .friendRequestStatus(friendRequestStatus)
                 .build();
 
-        // 친구 요청 알림 저장
         notificationRepository.save(notification);
     }
 
@@ -189,9 +185,46 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void notifyFriendRequestAccepted(User sender, User receiver) {
+        Notification notification = Notification.builder()
+                .user(sender)
+                .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
+                .sender(receiver)
+                .message(receiver.getNickName() + "님이 친구 요청을 수락했습니다.")
+                .build();
+        notificationRepository.save(notification);
+    }
+
+    //
+    @Override
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void notifyFriendRequestRejected(User sender, User receiver) {
+        Notification notification = Notification.builder()
+                .user(sender)
+                .type(NotificationType.FRIEND_REQUEST_REJECTED)
+                .sender(receiver)
+                .message(receiver.getNickName() + "님이 친구 요청을 거절했습니다.")
+                .build();
+        notificationRepository.save(notification);
+    }
+
+    @Override
     @Transactional
-    public void updateFriendRequestNotificationStatus(Long friendRequestId, FriendRequestStatus status) {
-        notificationRepository.findByFriendRequestId(friendRequestId)
+    public void deleteSelectedNotification(Long userId, SelectedNotificationRequestDto selectedNotificationRequestDto) {
+        notificationRepository.deleteSelectedNotification(userId, selectedNotificationRequestDto.getSelectedNotificationIds());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllNotification(Long userId) {
+        notificationRepository.deleteAllByUserId(userId);
+    }
+
+    @Override
+    @Transactional
+    public void updateFriendRequestNotificationStatus(Long senderUserId, Long receiverUserId, FriendRequestStatus status) {
+        notificationRepository.findLatestBySenderUserIdAndUserUserIdAndType(senderUserId, receiverUserId, NotificationType.FRIEND_REQUEST)
                 .ifPresent(notification -> notification.updateFriendRequestStatus(status));
     }
 
@@ -216,10 +249,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     private String buildMaskedMessage(NotificationType type) {
         return switch (type) {
-            case COMMENT        -> "비활성화 계정님이 댓글을 남겼습니다.";
-            case LIKE           -> "비활성화 계정님이 러닝일지에 좋아요를 눌렀습니다.";
-            case FRIEND_REQUEST -> "비활성화 계정님이 친구 요청을 보냈습니다.";
-            default             -> "비활성화 계정의 알림입니다.";
+            case COMMENT                  -> "비활성화 계정님이 댓글을 남겼습니다.";
+            case LIKE                     -> "비활성화 계정님이 러닝일지에 좋아요를 눌렀습니다.";
+            case FRIEND_REQUEST           -> "비활성화 계정님이 친구 요청을 보냈습니다.";
+            case FRIEND_REQUEST_ACCEPTED  -> "비활성화 계정님이 친구 요청을 수락했습니다.";
+            case FRIEND_REQUEST_REJECTED  -> "비활성화 계정님이 친구 요청을 거절했습니다.";
+            default                       -> "비활성화 계정의 알림입니다.";
         };
     }
 }

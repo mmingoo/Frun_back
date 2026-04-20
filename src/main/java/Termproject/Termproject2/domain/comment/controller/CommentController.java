@@ -85,4 +85,5 @@ public class CommentController {
         commentService.deleteComment(commentId, userId);
         return ResponseEntity.ok( ApiResponse.ok("댓글을 성공적으로 삭제하였습니다."));
     }
+
 }

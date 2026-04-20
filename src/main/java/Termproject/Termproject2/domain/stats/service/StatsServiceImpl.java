@@ -43,7 +43,7 @@ public class StatsServiceImpl implements StatsService {
 
         //주에 해당하는 러닝일지 조회
         List<RunningLog> logs = runningLogRepository
-                .findByUserUserIdAndIsDeletedFalseAndRunDateBetween(userId, weekStart, weekEnd);
+                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, weekStart, weekEnd);
 
         // 날짜별 거리 합산
         Map<LocalDate, Double> distMap = buildDistanceMap(logs);
@@ -86,7 +86,7 @@ public class StatsServiceImpl implements StatsService {
         System.out.println("monthStart :" );
         // 월에 해당하는 러닝로그 조회(chart용 일별 분해)
         List<RunningLog> logs = runningLogRepository
-                .findByUserUserIdAndIsDeletedFalseAndRunDateBetween(userId, monthStart, monthEnd);
+                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, monthStart, monthEnd);
 
         // 날짜별 거리 합산
         Map<LocalDate, Double> distMap = buildDistanceMap(logs);
@@ -134,7 +134,7 @@ public class StatsServiceImpl implements StatsService {
 
         //기간에 해당하는 러닝일지 조회
         List<RunningLog> logs = runningLogRepository
-                .findByUserUserIdAndIsDeletedFalseAndRunDateBetween(userId, from, to);
+                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, from, to);
 
         // 요약본 생성
         StatsSummaryDto summary = buildSummary(logs);

@@ -13,7 +13,7 @@ import java.util.Optional;
 
 
 public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, RunningLogRepositoryCustom {
-    List<RunningLog> findByUserUserIdAndIsDeletedFalseAndRunDateBetween(Long userId, LocalDate start, LocalDate end);
+    List<RunningLog> findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(Long userId, LocalDate start, LocalDate end);
     Optional<RunningLog> findByRunningLogIdAndIsDeletedFalse(Long runningLogId);
 
     // 게시물 수, 총 거리,평균 페이스 집계

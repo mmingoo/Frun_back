@@ -8,6 +8,8 @@ import Termproject.Termproject2.domain.comment.dto.response.CursorSliceResponse;
 import Termproject.Termproject2.domain.comment.dto.response.ReplyResponse;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface CommentService {
     //TODO: 댓글 목록 조회
     CursorSliceResponse<CommentResponse> getComment(Long runningId, Long cursorId, int size);
@@ -30,5 +32,7 @@ public interface CommentService {
     //TODO: 댓글/답글 삭제
     @Transactional
     void deleteComment(Long commentId, Long userId);
+
+
 
 }

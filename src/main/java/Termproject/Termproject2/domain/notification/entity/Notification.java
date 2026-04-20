@@ -29,9 +29,6 @@ public class Notification extends BaseCreatedEntity {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    @Column(name = "friend_request_id")
-    private Long friendRequestId;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
     private User user;
@@ -60,12 +57,11 @@ public class Notification extends BaseCreatedEntity {
 
 
     @Builder
-    public Notification(User user, NotificationType type, Long friendRequestId,
+    public Notification(User user, NotificationType type,
                         Comment comment, User sender, RunningLog runningLog, String message, String content,
                         FriendRequestStatus friendRequestStatus) {
         this.user = user;
         this.type = type;
-        this.friendRequestId = friendRequestId;
         this.comment = comment;
         this.sender = sender;
         this.runningLog = runningLog;
