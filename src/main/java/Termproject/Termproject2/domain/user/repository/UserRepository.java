@@ -14,26 +14,33 @@ import java.util.List;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+    //TODO: 소셜 로그인 식별자로 유저 조회
     User findByUserName(String username);
+
+    //TODO: 닉네임 중복 여부 확인
     boolean existsByNickName(String checkNickname);
 
-
+    //TODO: userId로 프로필 이미지 경로만 조회
     @Query("SELECT u.imageUrl FROM User u WHERE u.userId = :userId")
     String findImageUrlByUserId(@Param(value = "userId") Long userId);
 
+    //TODO: 닉네임 포함 유저 페이지 조회
     Page<User> findByNickNameContaining(String nickName, Pageable page);
 
+    //TODO: 닉네임 포함 유저 커서 기반 조회 (닉네임 오름차순)
     @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% AND (u.nickName > :cursorName OR (u.nickName = :cursorName AND u.userId > :cursorId)) ORDER BY u.nickName ASC, u.userId ASC")
     List<User> findByNickNameContainingWithCursor(@Param("keyword") String keyword, @Param("cursorName") String cursorName, @Param("cursorId") Long cursorId, Pageable pageable);
 
+    //TODO: 닉네임 포함 유저 조회 (커서 없이 첫 페이지)
     @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% ORDER BY u.nickName ASC, u.userId ASC")
     List<User> findByNickNameContainingNoCursor(@Param("keyword") String keyword, Pageable pageable);
 
+    //TODO: 상태·삭제 예정일로 유저 조회
     List<User> findAllByUserStatusAndDeletionScheduledAtBefore(UserStatus userStatus, LocalDateTime now);
 
     /**
      * INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 상태이면서 삭제 예정일이 지난 사용자 조회
-     * 스케줄러에서 세 가지 비활성화 상태를 한 번에 처리하기 위해 사용
+     * - 스케줄러에서 세 가지 비활성화 상태를 한 번에 처리하기 위해 사용
      */
     @Query("SELECT u FROM User u WHERE u.userStatus IN :statuses AND u.deletionScheduledAt < :now")
     List<User> findAllByUserStatusInAndDeletionScheduledAtBefore(

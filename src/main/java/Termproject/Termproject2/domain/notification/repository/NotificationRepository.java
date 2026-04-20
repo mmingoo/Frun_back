@@ -16,11 +16,14 @@ import java.util.Optional;
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    //TODO: 미읽음 알림 수 조회
     long countByUserUserIdAndIsReadFalse(Long userId);
 
+    //TODO: 특정 발신자·러닝일지·유형 조합의 알림 존재 여부 (중복 좋아요 알림 방지)
     boolean existsBySenderUserIdAndRunningLogRunningLogIdAndType(
             Long senderId, Long runningLogId, NotificationType type);
 
+    //TODO: 유저의 알림 목록 커서 기반 조회 (발신자, 러닝일지, 댓글 정보 포함)
     @Query("select new Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto(" +
         "n.message, n.isRead, n.notificationId, n.content, " +
             "s.imageUrl, s.userId, rl.runningLogId, " +
@@ -35,17 +38,21 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         "order by n.notificationId desc")
     List<NotificationDto> findByUserUserId(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
 
+    //TODO: 특정 발신자·수신자·유형 조합의 최신 알림 조회 (친구 요청 상태 업데이트용)
     @Query("select n from Notification n where n.sender.userId = :senderUserId and n.user.userId = :userUserId and n.type = :type order by n.notificationId desc limit 1")
     Optional<Notification> findLatestBySenderUserIdAndUserUserIdAndType(@Param("senderUserId") Long senderUserId, @Param("userUserId") Long userUserId, @Param("type") NotificationType type);
 
+    //TODO: 댓글 목록에 연관된 알림 삭제 (댓글 삭제 시 호출)
     @Modifying
     @Query("delete from Notification n where n.comment in :comments")
     void deleteByCommentIn(@Param("comments") List<Comment> comments);
 
+    //TODO: 알림 읽음 처리
     @Modifying
     @Query("update Notification n set n.isRead = true where n.notificationId in :notificationIds")
     void updateIsReadToTrue(@Param("notificationIds") List<Long> notificationIds);
 
+    //TODO: 유저와 관련된 모든 알림 삭제 (회원 탈퇴 시)
     @Modifying
     @Query(value = """
             DELETE n FROM NOTIFICATION n
@@ -61,10 +68,12 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             """, nativeQuery = true)
     void deleteAllRelatedToUser(@Param("userId") Long userId);
 
+    //TODO: 선택한 알림 삭제
     @Modifying
     @Query("delete from Notification n where n.notificationId in :ids and n.user.userId = :userId")
     void deleteSelectedNotification(@Param("userId") Long userId, @Param("ids") List<Long> ids);
 
+    //TODO: 유저의 전체 알림 삭제
     @Modifying
     @Query("delete from Notification n where n.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);

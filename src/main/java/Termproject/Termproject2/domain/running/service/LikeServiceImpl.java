@@ -61,7 +61,7 @@ public class LikeServiceImpl implements LikeService {
     }
 
 
-    // 좋아요 취소
+    //TODO: 러닝일지 좋아요 취소
     @Override
     @Transactional
     public void removeLike(Long userId, Long runningLogId) {

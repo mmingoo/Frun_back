@@ -19,17 +19,17 @@ public class Notice extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notice_id")
-    private Long noticeId;
+    private Long noticeId; // 공지사항 ID
 
     @Column(name = "title", length = 300, nullable = false)
-    private String title;
+    private String title; // 제목
 
     @Column(name = "content", length = 2000, nullable = false)
-    private String content;
+    private String content; // 내용
 
     @Enumerated(EnumType.STRING)
     @Column(name = "notice_type", length = 15, nullable = false)
-    private NoticeType type;
+    private NoticeType type; // 공지 유형
 
     @Builder
     public Notice(String title, String content) {

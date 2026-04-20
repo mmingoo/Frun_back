@@ -25,6 +25,10 @@ public class ReissueController {
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
+    /**
+     * [POST] /api/v1/auth/reissue
+     * 토큰 재발급 - RTR 방식으로 accessToken 발급 및 refreshToken 갱신
+     */
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,

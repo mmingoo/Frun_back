@@ -83,7 +83,6 @@ public class StatsServiceImpl implements StatsService {
                 .map(this::toSummaryDto)
                 .orElseGet(this::emptySummary);
 
-        System.out.println("monthStart :" );
         // 월에 해당하는 러닝로그 조회(chart용 일별 분해)
         List<RunningLog> logs = runningLogRepository
                 .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, monthStart, monthEnd);

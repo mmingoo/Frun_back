@@ -20,40 +20,40 @@ public class Notification extends BaseCreatedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "notification_id")
-    private Long notificationId;
+    private Long notificationId; // 알림 ID
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", length = 30, nullable = false)
-    private NotificationType type;
+    private NotificationType type; // 알림 유형 (COMMENT, LIKE, FRIEND_REQUEST 등)
 
     @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
+    private boolean isRead = false; // 읽음 여부
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private User user;
+    private User user; // 알림 수신자
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id")
-    private Comment comment;
+    private Comment comment; // 관련 댓글 (댓글 알림 시)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")
-    private User sender;
+    private User sender; // 알림 발신자
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id")
-    private RunningLog runningLog;
+    private RunningLog runningLog; // 관련 러닝일지
 
     @Enumerated(EnumType.STRING)
     @Column(name = "friend_request_status", length = 20)
-    private FriendRequestStatus friendRequestStatus;
+    private FriendRequestStatus friendRequestStatus; // 친구 요청 상태 (친구 요청 알림 시)
 
     @Column(name = "message", length = 100)
-    private String message;
+    private String message; // 알림 메시지
 
     @Column(name = "content", length = 200)
-    private String content;
+    private String content; // 댓글 내용 미리보기 (댓글 알림 시)
 
 
     @Builder

@@ -24,23 +24,25 @@ public class TermsController {
     private final JwtTokenExtractor jwtTokenExtractor;
 
 
+    /**
+     * [POST] /api/terms/agree
+     * 약관 동의 저장 - 회원가입 시 필수 약관 동의 여부 포함 저장
+     */
     @PostMapping("/agree")
     @Operation(summary = "약관 동의 저장 (회원가입 시 호출)")
     public ResponseEntity<ApiResponse<?>> agreeTerms(
             @RequestBody TermsAgreementRequest request
     ) {
         Long userId = jwtTokenExtractor.getUserId();
-        for (TermsAgreementRequest.TermsAgreementItem item : request.getAgreements()){
-            System.out.println("item.getTermsId() : " + item.getTermsId());
-            System.out.println("item.getIsAgreed() : " + item.getIsAgreed());
-
-        }
-        System.out.println("");
         termsService.saveAgreements(userId, request);
 
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 약관을 동의하였습니다."));
     }
 
+    /**
+     * [PATCH] /api/terms/agree
+     * 약관 동의 변경 - 필수 약관 미동의 시 예외 처리
+     */
     @PatchMapping("/agree")
     @Operation(summary = "약관 동의 변경")
     public ResponseEntity<ApiResponse<?>> updateTerms(
@@ -51,12 +53,20 @@ public class TermsController {
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 약관을 동의하였습니다."));
     }
 
+    /**
+     * [GET] /api/terms
+     * 약관 내용 조회 - 전체 약관 목록 반환
+     */
     @GetMapping
     @Operation(summary = "약관 내용 조회")
     public ResponseEntity<ApiResponse<?>> getTerms(){
         return ResponseEntity.ok(ApiResponse.ok( termsService.getTerms(), "성공적으로 약관을 조회했습니다"));
     }
 
+    /**
+     * [GET] /api/terms/my
+     * 내 약관 동의 내역 조회
+     */
     @GetMapping("/my")
     @Operation(summary = "유저가 현재 동의한 약관 내역 조회")
     public ResponseEntity<List<UserTermsAgreementResponseDto>> getMyTermsAgreements() {

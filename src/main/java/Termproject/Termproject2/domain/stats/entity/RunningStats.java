@@ -16,27 +16,27 @@ public class RunningStats extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "running_stats_id")
-    private Long id;
+    private Long id; // 통계 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User user; // 통계 소유 유저
 
     @Enumerated(EnumType.STRING)
     @Column(name = "stat_type", nullable = false, length = 10)
-    private StatType statType;
+    private StatType statType; // 통계 유형 (WEEKLY / MONTHLY)
 
     @Column(name = "stat_key", nullable = false, length = 20)
-    private String statKey;  // ex) "2026-W14", "2026-04"
+    private String statKey; // 통계 키 (예: "2026-W14", "2026-04")
 
     @Column(name = "run_count")
-    private int runCount = 0;
+    private int runCount = 0; // 러닝 횟수
 
     @Column(name = "total_dist_m")
-    private int totalDistM = 0;
+    private int totalDistM = 0; // 누적 거리 (미터)
 
     @Column(name = "total_dur_sec")
-    private int totalDurSec = 0;
+    private int totalDurSec = 0; // 누적 시간 (초)
 
     // stat_type 열거형
     public enum StatType {

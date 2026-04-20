@@ -26,13 +26,7 @@ public class ReportServiceImpl implements ReportService {
     private final UserRepository userRepository;
     private final RunningLogRepository runningLogRepository;
 
-    /**
-     * 신고 접수
-     * 1. 신고자·신고 대상 사용자·신고 유형 조회
-     * 2. 본인 신고 / 중복 신고 검증
-     * 3. 러닝일지 신고인 경우 러닝일지 조회
-     * 4. Report 저장
-     */
+    //TODO: 러닝일지 신고 접수
     @Override
     @Transactional
     public void submitRunningLogReport(Long reporterId, Long runningLogId, ReportRequestDto dto) {

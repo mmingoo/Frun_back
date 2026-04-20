@@ -18,6 +18,10 @@ public class CommentController {
     private final JwtTokenExtractor jwtTokenExtractor;
     private final CommentService commentService;
 
+    /**
+     * [GET] /api/v1/running-logs/{running_log_id}/comments
+     * 댓글 목록 조회 - 커서 기반 무한 스크롤, 30개씩
+     */
     @Operation(summary = "댓글 목록 조회" , description = "댓글 목록 조회, 무한 스크롤 방식, 30개씩 조회")
     @GetMapping("/running-logs/{running_log_id}/comments")
     public ResponseEntity<ApiResponse<?>> loadComment(
@@ -29,6 +33,10 @@ public class CommentController {
     }
 
 
+    /**
+     * [GET] /api/v1/running-logs/reply/{parentId}
+     * 답글 목록 조회 - 커서 기반 무한 스크롤
+     */
     @Operation(summary = "답글 목록 조회" , description = "답글 목록 조회, 무한 스크롤 방식, 15개씩 조회")
     @GetMapping("/running-logs/reply/{parentId}")
     public ResponseEntity<ApiResponse<?>> loadReply(
@@ -39,6 +47,10 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.ok(commentService.getReplies(parentId, cursorId, size), "답글을 성공적으로 조회하였습니다."));
     }
 
+    /**
+     * [POST] /api/v1/running-logs/{running_log_id}/comments
+     * 댓글 생성
+     */
     @Operation(summary = "댓글 생성")
     @PostMapping("/running-logs/{running_log_id}/comments")
     public ResponseEntity<ApiResponse<?>> createComment(
@@ -51,6 +63,10 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.ok(commentService.createComment(running_log_id, userId, request), "댓글을 성공적으로 생성하였습니다."));
     }
 
+    /**
+     * [POST] /api/v1/running-logs/{running_log_id}/{parentId}/comments
+     * 답글 생성
+     */
     @Operation(summary = "답글 생성")
     @PostMapping("/running-logs/{running_log_id}/{parentId}/comments")
     public ResponseEntity<ApiResponse<?>> createReply(
@@ -63,6 +79,10 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.ok(commentService.createReply(running_log_id, userId,parentId, request), "답글을 성공적으로 생성하였습니다."));
     }
 
+    /**
+     * [PATCH] /api/v1/running-logs/comments/{commentId}
+     * 댓글/답글 수정 - 작성자 본인만 가능
+     */
     @Operation(summary = "댓글/답글 수정")
     @PatchMapping("/running-logs/comments/{commentId}")
     public ResponseEntity<ApiResponse<?>> updateComment(
@@ -75,6 +95,10 @@ public class CommentController {
         return ResponseEntity.ok( ApiResponse.ok("댓글을 성공적으로 수정하였습니다."));
     }
 
+    /**
+     * [DELETE] /api/v1/running-logs/comments/{commentId}
+     * 댓글/답글 삭제 - 작성자 또는 러닝일지 작성자 가능
+     */
     @Operation(summary = "댓글/답글 삭제")
     @DeleteMapping("/running-logs/comments/{commentId}")
     public ResponseEntity<ApiResponse<?>> deleteComment(

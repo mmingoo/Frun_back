@@ -200,32 +200,30 @@ public class CommentServiceImpl implements CommentService{
         commentRepository.delete(comment); // orphanRemoval = true로 자식(답글)도 같이 삭제
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: commentId로 댓글 조회
     public Comment findCommentById(Long commentId) {
-        System.out.println("부모 답글 찾기");
         return commentRepository.findById(commentId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: runningLogId로 러닝일지 조회
     private RunningLog findRunningLogById(Long runningLogId) {
         return runningLogService.findById(runningLogId);
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: userId로 유저 조회
     private User findUserById(Long userId) {
-        System.out.println("유저찾기");
         return userService.findById(userId);
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: 러닝일지 존재 여부 검증
     private void validateRunningLogExists(Long runningLogId) {
         if (!runningLogService.existsById(runningLogId)) {
             throw new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND);
         }
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: 댓글 작성자 검증
     private void validateOwner(Comment comment, Long userId) {
         if (!comment.getUser().getUserId().equals(userId)) {
             throw new BusinessException( ErrorCode.NOT_COMMENT_OWNER);
@@ -241,12 +239,12 @@ public class CommentServiceImpl implements CommentService{
         }
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: 다음 페이지 존재 여부 판단
     private boolean getHasNext(List<Comment> comments, int size){
         return comments.size() > size;
     }
 
-    //TODO: 댓글 찾기 내부 메서드
+    //TODO: 다음 커서 ID 계산
     private Long getNextCursorId(List<Comment> contents, boolean hasNext) {
         return hasNext
                 ? contents.get(contents.size() -1).getCommentId() // hasNext 가 true인 경우

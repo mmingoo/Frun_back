@@ -9,8 +9,9 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
+// 기간별 통계 응답
 public class PeriodStatsResponse {
-    private StatsSummaryDto summary;
-    private List<PeriodDayDto> chart;
-    private List<Object> friendStats;
+    private StatsSummaryDto summary; // 기간 요약 통계
+    private List<PeriodDayDto> chart; // 날짜별 거리 차트 데이터
+    private List<Object> friendStats; // 친구 통계 (미구현)
 }

@@ -29,13 +29,6 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final ImageService imageService;
 
-    /**
-     * 댓글/답글 알림 생성
-     * - receiver: 러닝일지 작성자 (알림을 받을 사람)
-     * - comment: 작성된 댓글 또는 답글 엔티티
-     * 주의: 본인이 본인 글에 댓글을 달 경우 알림을 보내지 않음
-     */
-
     //TODO: 댓글/답글 알림 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
@@ -64,11 +57,7 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
     }
 
-    /**
-     * 친구 요청 알림 생성
-     * - receiver: 친구 요청을 받는 사람
-     * - friendRequest: 생성된 친구 요청 엔티티
-     */
+    //TODO: 친구 요청 알림 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyFriendRequest(User receiver, User sender, FriendRequestStatus friendRequestStatus) {
@@ -83,14 +72,7 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
     }
 
-    /**
-     * 좋아요 알림 생성
-     * - receiver: 러닝일지 작성자 (알림을 받을 사람)
-     * - sender: 좋아요를 누른 사람
-     * - runningLog: 좋아요가 눌린 러닝일지
-     * 주의: 본인 글에 본인이 좋아요 하는 경우는 LikeService에서 미리 필터링
-     * 동일한 (sender, runningLog) 조합에 대해 좋아요 알림은 1번만 발송
-     */
+    //TODO: 좋아요 알림 생성 (중복 방지, 본인 글 제외)
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyLike(User receiver, User sender, RunningLog runningLog) {
@@ -175,6 +157,7 @@ public class NotificationServiceImpl implements NotificationService {
         else return content;
     }
 
+    //TODO: 댓글 목록에 연관된 알림 삭제
     @Override
     @Transactional
     public void deleteByComments(List<Comment> comments) {
@@ -184,6 +167,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
 
+    //TODO: 친구 요청 수락 알림 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyFriendRequestAccepted(User sender, User receiver) {
@@ -196,7 +180,7 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
     }
 
-    //
+    //TODO: 친구 요청 거절 알림 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyFriendRequestRejected(User sender, User receiver) {
@@ -209,18 +193,21 @@ public class NotificationServiceImpl implements NotificationService {
         notificationRepository.save(notification);
     }
 
+    //TODO: 선택 알림 삭제
     @Override
     @Transactional
     public void deleteSelectedNotification(Long userId, SelectedNotificationRequestDto selectedNotificationRequestDto) {
         notificationRepository.deleteSelectedNotification(userId, selectedNotificationRequestDto.getSelectedNotificationIds());
     }
 
+    //TODO: 전체 알림 삭제
     @Override
     @Transactional
     public void deleteAllNotification(Long userId) {
         notificationRepository.deleteAllByUserId(userId);
     }
 
+    //TODO: 친구 요청 알림 상태 업데이트 (수락/거절 반영)
     @Override
     @Transactional
     public void updateFriendRequestNotificationStatus(Long senderUserId, Long receiverUserId, FriendRequestStatus status) {

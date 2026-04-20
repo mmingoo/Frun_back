@@ -14,18 +14,18 @@ public class UserTermsAgreement extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long agreementId;
+    private Long agreementId; // 동의 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User user; // 동의한 유저
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "terms_id", nullable = false)
-    private Terms terms;
+    private Terms terms; // 동의 대상 약관
 
     @Column(name = "is_agreed", nullable = false)
-    private Boolean isAgreed;
+    private Boolean isAgreed; // 동의 여부
 
 
     public static UserTermsAgreement of(User user, Terms terms, Boolean isAgreed) {

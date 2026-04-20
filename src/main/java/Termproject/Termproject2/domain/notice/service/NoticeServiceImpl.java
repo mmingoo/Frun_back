@@ -23,6 +23,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     private final NoticeRepository noticeRepository;
 
+    //TODO: 공지사항 목록 커서 기반 조회
     @Override
     public NoticeListResponse getNoticeList(Long cursorId) {
         List<Notice> results = cursorId == null
@@ -42,6 +43,7 @@ public class NoticeServiceImpl implements NoticeService {
         return new NoticeListResponse(notices, hasNext, nextCursorId);
     }
 
+    //TODO: 공지사항 상세 조회
     @Override
     public NoticeDetailResponse getNoticeDetail(Long noticeId) {
         Notice notice = noticeRepository.findById(noticeId)

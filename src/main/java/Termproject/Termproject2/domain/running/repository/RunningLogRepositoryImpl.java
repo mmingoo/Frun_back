@@ -24,13 +24,7 @@ import java.util.stream.Collectors;
 public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
-    /**
-     * 친구 피드 목록 조회
-     * - 나와 친구 관계인 사용자의 러닝 로그만 노출
-     * - 삭제되지 않고, 공개 설정된 로그이며, 사용자가 활성화 상태여야 함
-     * - 신고가 완료된(COMPLETED) 로그는 제외
-     * - 커서 기반 페이징 적용
-     */
+    //TODO: 친구 피드 목록 커서 기반 조회 (공개·활성·미신고 로그만)
     @Override
     public List<FriendFeedResponseDto> findFriendFeeds(Long userId, Long cursorId, int size) {
 
@@ -85,11 +79,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .fetch();
     }
 
-    /**
-     * 마이페이지/유저페이지 피드 조회
-     * - 본인일 경우(isOwner=true): 모든 로그(비공개 포함) 노출
-     * - 타인일 경우(isOwner=false): 공개된 로그 및 활성 유저 로그만 노출
-     */
+    //TODO: 마이페이지·유저페이지 피드 커서 기반 조회 (본인이면 비공개 포함)
     @Override
     public List<MyPageFeedResponseDto> findUserPageFeeds(Long userId, Long cursorId, int size, boolean isOwner) {
         QRunningLog runningLog = QRunningLog.runningLog;
@@ -123,10 +113,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .fetch();
     }
 
-    /**
-     * 여러 러닝 로그들에 대한 전체 이미지 목록 조회
-     * - 반환 타입: Map<러닝로그ID, 이미지URL리스트>
-     */
+    //TODO: 러닝일지 ID 목록으로 전체 이미지 URL 조회 (Map<logId, List<url>>)
     @Override
     public Map<Long, List<String>> findImagesByRunningLogIds(List<Long> runningLogIds) {
         // 파라미터 유효성 검사
@@ -150,10 +137,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 ));
     }
 
-    /**
-     * 여러 러닝 로그들에 대한 대표 이미지(첫 번째 이미지) 1개씩 조회
-     * - 반환 타입: Map<러닝로그ID, 대표이미지URL>
-     */
+    //TODO: 러닝일지 ID 목록으로 대표 이미지 URL 1개씩 조회 (Map<logId, url>)
     @Override
     public Map<Long, String> findImageByRunningLogIds(List<Long> runningLogIds) {
 

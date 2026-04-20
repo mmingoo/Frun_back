@@ -19,6 +19,10 @@ public class LogoutController {
     private final RefreshTokenService refreshTokenService;
     private final JwtTokenExtractor jwtTokenExtractor;
 
+    /**
+     * [POST] /api/v1/auth/logout
+     * 로그아웃 - Redis refreshToken 삭제 및 쿠키 만료 처리
+     */
     @PostMapping("/logout")
     public ApiResponse<?> logout(HttpServletResponse response) {
 

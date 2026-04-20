@@ -24,29 +24,28 @@ public class Comment extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
-    private Long commentId;
+    private Long commentId; // 댓글 ID
 
     @Column(name = "content", nullable = false, length = 200)
-    private String content;
+    private String content; // 댓글 내용 (최대 200자)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id", nullable = false)
-    private RunningLog runningLog;
+    private RunningLog runningLog; // 댓글이 달린 러닝일지
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private User user;
-
+    private User user; // 댓글 작성자
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
-    private Comment parent;
+    private Comment parent; // 부모 댓글 (null이면 최상위 댓글)
 
     @OneToMany(mappedBy = "parent", orphanRemoval = true)
-    private List<Comment> children = new ArrayList<>();
+    private List<Comment> children = new ArrayList<>(); // 답글 목록
 
     @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
+    private List<Notification> notifications = new ArrayList<>(); // 이 댓글로 생성된 알림 목록
 
 
     @Builder

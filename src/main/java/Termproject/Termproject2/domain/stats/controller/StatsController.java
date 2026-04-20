@@ -24,6 +24,10 @@ public class StatsController {
     private final StatsService statsService;
 
 
+    /**
+     * [GET] /api/v1/stats/weekly/{userId}
+     * 주별 통계 조회 - 현재 주 기준 요일별 거리 및 요약 반환
+     */
     @GetMapping("/weekly/{userId}")
     @Operation(summary = "주별 통계 조회")
     public ResponseEntity<ApiResponse<WeeklyStatsResponse>> getWeeklyStats(
@@ -34,6 +38,10 @@ public class StatsController {
     }
 
 
+    /**
+     * [GET] /api/v1/stats/monthly/{userId}
+     * 월별 통계 조회 - 현재 월 기준 주차별 거리 및 요약 반환
+     */
     @GetMapping("/monthly/{userId}")
     @Operation(summary = "월별 통계 조회")
     public ResponseEntity<ApiResponse<MonthlyStatsResponse>> getMonthlyStats(
@@ -44,6 +52,10 @@ public class StatsController {
         return ResponseEntity.ok(ApiResponse.ok(statsService.getMonthlyStats(userId, year, month)));
     }
 
+    /**
+     * [GET] /api/v1/stats/period/{userId}
+     * 기간별 통계 조회 - from~to 범위의 일별 거리 및 요약 반환
+     */
     @GetMapping("/period/{userId}")
     @Operation(summary = "기간별 통계 조회")
     public ResponseEntity<ApiResponse<PeriodStatsResponse>> getPeriodStats(
@@ -54,7 +66,10 @@ public class StatsController {
         return ResponseEntity.ok(ApiResponse.ok(statsService.getPeriodStats(userId, from, to)));
     }
 
-     //추후 친구 페이지에서도 친구의 통계 요약본 조회를 위해 userId 를 pathvariable 로 받음
+    /**
+     * [GET] /api/v1/stats/summary/{userId}
+     * 통계 요약 조회 - 주/월 기준 거리·횟수·페이스·시간 반환 (사이드바용)
+     */
     @GetMapping("/summary/{userId}")
     @Operation(summary = "통계 요약 조회" , description = "메인 화면 사이드바에 있는 통계 요약 조회 api 입니다")
 

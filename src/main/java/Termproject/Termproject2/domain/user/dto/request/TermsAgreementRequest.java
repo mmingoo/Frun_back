@@ -7,18 +7,17 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-// 요청 - 프론트에서 약관별 동의 여부 리스트로 받음
+// 약관 동의 저장 요청 DTO (회원가입 시)
 @Getter
 @NoArgsConstructor
 public class TermsAgreementRequest {
-    private List<TermsAgreementItem> agreements;
+    private List<TermsAgreementItem> agreements; // 약관별 동의 여부 목록
 
     @Getter
     @NoArgsConstructor
     public static class TermsAgreementItem {
-        private Long termsId;
-        private Boolean isAgreed;
+        private Long termsId; // 약관 ID
+        private Boolean isAgreed; // 동의 여부
     }
-
 }
 

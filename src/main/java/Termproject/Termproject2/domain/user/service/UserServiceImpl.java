@@ -35,12 +35,14 @@ public class UserServiceImpl implements UserService {
     private final NotificationService notificationService;
     private final RefreshTokenService refreshTokenService;
 
+    //TODO: 닉네임 중복 여부 확인
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
         boolean isExists = userRepository.existsByNickName(checkNickname);
         return new NicknameCheckResponse(isExists);
     }
 
+    //TODO: 닉네임 설정 여부 조회
     @Override
     public NicknameStatusResponse getNicknameStatus(Long userId) {
         User user = userRepository.findById(userId)
@@ -49,10 +51,7 @@ public class UserServiceImpl implements UserService {
         return new NicknameStatusResponse(hasNickname);
     }
 
-    /**
-     * 최초 프로필 설정 (닉네임 + 이미지)
-     * - 닉네임 중복 여부는 비즈니스 규칙이므로 서비스에서 검증
-     */
+    //TODO: 최초 프로필 설정 (닉네임 + 이미지)
     @Override
     @Transactional
     public void setupProfile(Long userId, String nickname, String imageUrl) {
@@ -67,13 +66,14 @@ public class UserServiceImpl implements UserService {
         user.setUpProfile(nickname, imageUrl);
     }
 
+    //TODO: userId로 유저 조회
     @Override
     public User findById(Long userId) {
-        System.out.println("userId : " + userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 
+    //TODO: 유저 페이지 정보 조회 (친구 관계·통계 포함)
     @Override
     public UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId) {
         FriendRequestStatus status = null;
@@ -118,6 +118,7 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    //TODO: 헤더용 유저 프로필 간략 정보 조회
     @Override
     public UserProfileInfoResponse getUserInfo(Long userId) {
         // 유저 조회
@@ -132,6 +133,7 @@ public class UserServiceImpl implements UserService {
         return new UserProfileInfoResponse(userId, imageUrl, user.getNickName(), notificationCnt);
     }
 
+    //TODO: 유저 프로필 수정 (소개글·이미지)
     @Override
     @Transactional
     public void updateUserProfile(Long userId, UserProfileUpdateRequestDto request, MultipartFile profileImage) {
@@ -154,9 +156,9 @@ public class UserServiceImpl implements UserService {
         user.updateProfile(newBio, newImageUrl);
     }
 
-    //Todo: 계정 비활성화
+    //TODO: 계정 비활성화
     @Override
-    @Transactional // 데이터 변경이 일어나므로 트랜잭션 보장이 필수입니다.
+    @Transactional
     public Long userDeactivate(Long userId) {
 
         // 1. 유저 조회
@@ -202,11 +204,13 @@ public class UserServiceImpl implements UserService {
         user.setActive();
     }
 
+    //TODO: 닉네임 포함 유저 페이지 조회
     @Override
     public Page<User> findByNicknameContaining(String keyword, Pageable pageable) {
         return userRepository.findByNickNameContaining(keyword, pageable);
     }
 
+    //TODO: 닉네임 포함 유저 커서 기반 조회
     @Override
     public List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size) {
         Pageable pageable = PageRequest.of(0, size);
@@ -229,6 +233,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    //TODO: 유저 삭제 (회원 탈퇴)
     @Override
     @Transactional
     public void deleteUser(Long userId) {

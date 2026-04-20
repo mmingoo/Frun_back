@@ -17,19 +17,19 @@ public class Terms extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long termsId;
+    private Long termsId; // 약관 ID
 
     @Column(nullable = false, length = 50)
-    private String termsType;
+    private String termsType; // 약관 유형 구분자
 
     @Column(nullable = false, length = 200)
-    private String title;
+    private String title; // 약관 제목
 
     @Column(nullable = false , length = 2000)
-    private String content;
+    private String content; // 약관 내용
 
     @Column(nullable = false)
-    private Boolean isRequired;
+    private Boolean isRequired; // 필수 동의 여부
 
 
 }

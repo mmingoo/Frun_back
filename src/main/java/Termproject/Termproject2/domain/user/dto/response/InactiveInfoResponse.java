@@ -5,11 +5,12 @@ import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+// 비활성화 계정 정보 응답
 @Getter
 public class InactiveInfoResponse {
-    private final LocalDateTime deactivatedAt;
-    private final LocalDateTime deletionScheduledAt;
-    private final UserStatus userStatus;
+    private final LocalDateTime deactivatedAt; // 비활성화 일시
+    private final LocalDateTime deletionScheduledAt; // 삭제 예정 일시
+    private final UserStatus userStatus; // 비활성화 상태 유형
 
     public InactiveInfoResponse(LocalDateTime deactivatedAt, LocalDateTime deletionScheduledAt, UserStatus userStatus) {
         this.deactivatedAt = deactivatedAt;

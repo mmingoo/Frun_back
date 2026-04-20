@@ -7,9 +7,10 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
+// 유저 검색 목록 커서 기반 응답
 public class UserSearchListResponse {
-    private List<UserSearchResponse> users;
-    private boolean hasNext;
-    private Long nextCursorId;
-    private String nextCursorName;
+    private List<UserSearchResponse> users; // 검색된 유저 목록
+    private boolean hasNext; // 다음 페이지 존재 여부
+    private Long nextCursorId; // 다음 커서 ID
+    private String nextCursorName; // 다음 커서 닉네임
 }

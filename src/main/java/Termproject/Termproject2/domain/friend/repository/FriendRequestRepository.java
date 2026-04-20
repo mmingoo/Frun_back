@@ -13,10 +13,13 @@ import java.util.Optional;
 @Repository
 public interface FriendRequestRepository extends JpaRepository<FriendRequest, Long> {
 
+    //TODO: 수신자·발신자 ID로 친구 요청 조회
     Optional<FriendRequest> findByReceiver_UserIdAndSender_UserId(Long receiverUserId, Long senderUserId);
 
+    //TODO: 발신자·수신자로 친구 요청 삭제
     void deleteBySenderAndReceiver(User sender, User receiver);
 
+    //TODO: 유저와 관련된 모든 친구 요청 삭제 (회원 탈퇴 시)
     @Modifying
     @Query("DELETE FROM FriendRequest fr WHERE fr.receiver.userId = :userId OR fr.sender.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);

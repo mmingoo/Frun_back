@@ -12,12 +12,17 @@ import java.util.Optional;
 
 public interface FriendshipRepository extends JpaRepository<Friendship, Long>, FriendshipRepositoryCustom {
 
-    // 조건이 정적이므로 JPQL 사용
+    //TODO: 유저의 친구 수 조회
     @Query("SELECT COUNT(f) FROM Friendship f WHERE f.id.senderUserId = :userId OR f.id.receiveUserId = :userId")
     long countByUserId(@Param("userId") Long userId);
+
+    //TODO: 수신자·발신자 ID로 친구 관계 조회
     Optional<Friendship> findByIdReceiveUserIdAndIdSenderUserId(Long receiveUserId, Long senderUserId);
+
+    //TODO: 발신자·수신자 ID로 친구 관계 삭제
     void deleteByIdSenderUserIdAndIdReceiveUserId(Long senderUserId, Long receiveUserId);
 
+    //TODO: 유저의 모든 친구 관계 삭제 (회원 탈퇴 시)
     @Modifying
     @Query("DELETE FROM Friendship f WHERE f.id.receiveUserId = :userId OR f.id.senderUserId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);

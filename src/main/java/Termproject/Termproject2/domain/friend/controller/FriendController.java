@@ -20,19 +20,24 @@ public class FriendController {
     private final JwtTokenExtractor jwtTokenExtractor;
     private final FriendShipService friendShipService;
 
+    /**
+     * [GET] /api/v1/friend/friend-list
+     * 친구 목록 조회 - 닉네임 오름차순 커서 기반 무한 스크롤
+     */
     @GetMapping("/friend-list")
     @Operation(summary = "친구 목록 조회", description = "닉네임 오름차순 커서 기반 무한 스크롤로 친구 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<?>> getFriendList(
             @Parameter(description = "이전 페이지 마지막 친구 닉네임 (첫 요청 시 생략)") @RequestParam(required = false) String cursorName,
             @Parameter(description = "이전 페이지 마지막 friendId (cursorName과 함께 사용)") @RequestParam(required = false) Long cursorId,
             @Parameter(description = "한 번에 조회할 수 (기본값 20)") @RequestParam(defaultValue = "5") int size) {
-        System.out.println("친구 목록 조회");
-        System.out.println("커서네임 : " + cursorName);
-        System.out.println("커서아이디 : " + cursorId);
         Long userId = jwtTokenExtractor.getUserId();
         return ResponseEntity.ok(ApiResponse.ok(friendShipService.getFriendList(userId, cursorName, cursorId, size), "성공적으로 친구 목록을 조회하였습니다."));
     }
 
+    /**
+     * [GET] /api/v1/friend/search
+     * 유저 검색 - 닉네임 키워드 기반 커서 무한 스크롤, 친구 상태 포함
+     */
     @GetMapping("/search")
     @Operation(summary = "친구 검색", description = "닉네임 오름차순 커서 기반 무한 스크롤로 유저를 검색합니다.")
     public ResponseEntity<ApiResponse<UserSearchListResponse>> search(
@@ -50,6 +55,10 @@ public class FriendController {
 
 
 
+    /**
+     * [POST] /api/v1/friend/request/{friendId}
+     * 친구 요청 전송
+     */
     @PostMapping("/request/{friendId}")
     @Operation(summary = "친구 요청")
     public ResponseEntity<ApiResponse<?>> sendRequest(
@@ -61,6 +70,10 @@ public class FriendController {
     }
 
 
+    /**
+     * [POST] /api/v1/friend/request/accept/{senderId}
+     * 친구 요청 수락 - Friendship 테이블에 관계 저장
+     */
     @PostMapping("/request/accept/{senderId}")
     @Operation(summary = "친구 요청 수락")
     public ResponseEntity<ApiResponse<?>> acceptRequest(@PathVariable Long senderId) {
@@ -69,6 +82,10 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponse.ok("친구 요청을 수락했습니다."));
     }
 
+    /**
+     * [DELETE] /api/v1/friend/request/reject/{senderId}
+     * 친구 요청 거절 - 요청 데이터 삭제
+     */
     @DeleteMapping("/request/reject/{senderId}")
     @Operation(summary = "친구 요청 거절")
     public ResponseEntity<ApiResponse<?>> rejectRequest(@PathVariable Long senderId) {
@@ -77,6 +94,10 @@ public class FriendController {
         return ResponseEntity.ok(ApiResponse.ok("친구 요청을 거절했습니다."));
     }
 
+    /**
+     * [DELETE] /api/v1/friend/{friendId}
+     * 친구 삭제 - Friendship 관계 및 FriendRequest 기록 모두 삭제
+     */
     @DeleteMapping("/{friendId}")
     @Operation(summary = "친구 삭제")
     public ResponseEntity<ApiResponse<Void>> deleteFriend(

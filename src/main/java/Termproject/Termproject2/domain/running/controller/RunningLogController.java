@@ -27,6 +27,10 @@ public class RunningLogController {
     private final RunningLogService runningLogService;
     private final LikeService likeService;
 
+    /**
+     * [GET] /api/v1/running-logs/users/{userId}/feeds
+     * 유저 페이지 피드 목록 조회 - 본인이면 비공개 포함, 최신순 무한 스크롤
+     */
     @GetMapping("/users/{userId}/feeds")
     @Operation(summary = "유저 페이지 피드 목록 조회", description = "유저의 러닝 피드를 최신순으로 조회 (무한스크롤). 본인이면 비공개 피드도 포함.")
     public ApiResponse<?> getUserPageFeeds(
@@ -38,6 +42,10 @@ public class RunningLogController {
         return ApiResponse.ok(feedService.getUserPageFeeds(viewerId, userId, cursorId, size), "유저 페이지 피드 조회 성공");
     }
 
+    /**
+     * [GET] /api/v1/running-logs/feed
+     * 친구 피드 목록 조회 - 최신순 커서 기반 무한 스크롤
+     */
     @GetMapping("/feed")
     @Operation(summary = "메인 feed 목록(친구) 조회", description = "친구들의 feed를 최신순으로 조회 (무한스크롤)")
     public ApiResponse<?> getFriendsFeeds(
@@ -48,6 +56,10 @@ public class RunningLogController {
         return ApiResponse.ok(feedService.getFriendFeeds(userId, cursorId, size), "친구 피드 조회 성공");
     }
 
+    /**
+     * [POST] /api/v1/running-logs
+     * 러닝 일지 등록 - 이미지 최대 5장 포함, 공개 설정 시 통계 자동 누적
+     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "러닝 일지 등록", description = "이미지와 러닝 일지 저장")
     public ApiResponse<?> createRunningLog(
@@ -64,8 +76,9 @@ public class RunningLogController {
     }
 
     /**
-     * 친구의 러닝 일지만 조회 가능
-     * */
+     * [GET] /api/v1/running-logs/{runningLogId}/{authorId}
+     * 러닝로그 상세 조회 - 본인 또는 친구의 공개 일지만 조회 가능
+     */
     @GetMapping("/{runningLogId}/{authorId}")
     @Operation(summary = "러닝로그 상세 조회")
     public ApiResponse<?> getRunningLogDetail(
@@ -80,6 +93,10 @@ public class RunningLogController {
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }
 
+    /**
+     * [PATCH] /api/v1/running-logs/{runningLogId}
+     * 러닝 일지 수정 - 이미지 교체 포함, 공개 여부 변경 시 통계 자동 조정
+     */
     @PatchMapping(value = "/{runningLogId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "러닝 일지 수정", description = "이미지와 러닝 일지 수정")
     public ApiResponse<?> updateRunningLog(
@@ -93,6 +110,10 @@ public class RunningLogController {
         return ApiResponse.ok("러닝일지가 수정되었습니다.");
     }
 
+    /**
+     * [DELETE] /api/v1/running-logs/{runningLogId}
+     * 러닝 일지 soft 삭제 - isDeleted=true, 공개 일지면 통계 차감
+     */
     @DeleteMapping(value = "/{runningLogId}")
     @Operation(summary = "러닝 일지 soft 삭제", description = "러닝일지를 soft 삭제합니다")
     public ApiResponse<?> softDeleteRunningLog(
@@ -104,6 +125,10 @@ public class RunningLogController {
 
     }
 
+    /**
+     * [POST] /api/v1/running-logs/likes/{runningLogId}
+     * 러닝일지 좋아요 - 본인 글에는 알림 미전송
+     */
     @PostMapping("/likes/{runningLogId}")
     @Operation(summary = "러닝일지 좋아요")
     public ApiResponse<?> likeRunningLog(
@@ -114,6 +139,10 @@ public class RunningLogController {
         return ApiResponse.ok("좋아요가 처리되었습니다.");
     }
 
+    /**
+     * [DELETE] /api/v1/running-logs/likes/{runningLogId}
+     * 러닝일지 좋아요 취소
+     */
     @DeleteMapping("/likes/{runningLogId}")
     @Operation(summary = "러닝일지 좋아요 취소")
     public ApiResponse<?> unlikeRunningLog(

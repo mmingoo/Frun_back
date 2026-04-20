@@ -18,6 +18,10 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final JwtTokenExtractor jwtTokenExtractor;
 
+    /**
+     * [GET] /api/v1/notification
+     * 알림 목록 조회 - 커서 기반 무한 스크롤, 조회 시 읽음 처리
+     */
     @GetMapping
     @Operation(summary = "알림 목록 조회", description = "알림 리스트를 15개씩 무한 스크롤")
     public ResponseEntity<ApiResponse<?>> getNotificationList(
@@ -30,6 +34,10 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.ok(notificationService.getNotificationList(userId, lastNotificationId, size), "알림 목록을 성공적으로 조회하였습니다."));
     }
 
+    /**
+     * [DELETE] /api/v1/notification/selected-notification
+     * 선택한 알림 삭제
+     */
     @DeleteMapping("/selected-notification")
     @Operation(summary = "선택한 알림 삭제")
     public ResponseEntity<ApiResponse<?>> deleteSelectedNotificationList(
@@ -40,6 +48,10 @@ public class NotificationController {
         return ResponseEntity.ok(ApiResponse.ok("선택한 알림 삭제하였습니다."));
     }
 
+    /**
+     * [DELETE] /api/v1/notification
+     * 알림 전체 삭제
+     */
     @DeleteMapping
     @Operation(summary = "알림 전체 삭제")
     public ResponseEntity<ApiResponse<?>> deleteAllNotification() {

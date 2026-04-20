@@ -29,51 +29,45 @@ public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", length = 20, nullable = false)
-    private Long userId;
+    private Long userId; // 유저 ID
 
     @Column(name = "name", length = 20, nullable = false)
-    private String name;
+    private String name; // 실명
 
-    // 속성으로 둘까 고민하였지만, 추루 구글 소셜로그인 기능 추가했을 때 providerId가 겹칠 가능성이 있어 socialType + providerId 로 정의함
     @Column(name = "user_name", length = 200, nullable = false)
-    private String userName;
+    private String userName; // 소셜 로그인 식별자 (socialType + providerId 조합)
 
     @Column(name = "user_email", length = 50, nullable = false)
-    private String userEmail;
+    private String userEmail; // 이메일
 
     @Column(name = "user_phone", length = 15, nullable = false)
-    private String userPhone;
+    private String userPhone; // 전화번호
 
-    // ── FRun_SQL USER 추가 컬럼 ─────────────────────────────────
     @Column(name = "provider_id", length = 255)
-    private String providerId;
+    private String providerId; // 소셜 제공자 ID
 
     @Column(name = "nick_name", length = 20)
-    private String nickName;
+    private String nickName; // 닉네임 (5~20자, 최초 설정 전 null)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_status", length = 20, nullable = false)
-    private UserStatus userStatus;
+    private UserStatus userStatus; // 계정 상태 (ACTIVE / INACTIVE 등)
 
-
-    // 권한 제어를 위한 role 추가
     @Enumerated(EnumType.STRING)
     @Column(name = "role", length = 10, nullable = false)
-    private Role role;
+    private Role role; // 권한 (USER / ADMIN)
 
     @Column(name = "image_url", length = 500)
-    private String imageUrl;
+    private String imageUrl; // 프로필 이미지 파일명
 
     @Column(name = "deactivated_at")
-    private LocalDateTime deactivatedAt;
+    private LocalDateTime deactivatedAt; // 비활성화 시각
 
     @Column(name = "deletion_scheduled_at")
-    private LocalDateTime deletionScheduledAt;
+    private LocalDateTime deletionScheduledAt; // 물리 삭제 예정일 (비활성화 후 3개월)
 
-
-    // 프로필 소개글
     @Column(name = "bio", length = 50)
-    private String bio;
+    private String bio; // 프로필 소개글 (최대 50자)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "social_type_id")

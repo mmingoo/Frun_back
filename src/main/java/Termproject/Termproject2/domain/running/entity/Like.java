@@ -20,15 +20,15 @@ public class Like extends BaseCreatedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "like_id")
-    private Long likeId;
+    private Long likeId; // 좋아요 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
-    private User user;
+    private User user; // 좋아요 누른 유저
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id", nullable = false)
-    private RunningLog runningLog;
+    private RunningLog runningLog; // 좋아요 대상 러닝일지
 
     @Builder
     public Like(User user, RunningLog runningLog) {

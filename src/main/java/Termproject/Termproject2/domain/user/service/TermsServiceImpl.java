@@ -28,6 +28,7 @@ public class TermsServiceImpl implements TermsService {
     private final UserService userService;
 
 
+    //TODO: 약관 동의 저장 (최초 가입 시)
     @Override
     @Transactional
     public void saveAgreements(Long userId, TermsAgreementRequest request) {
@@ -46,6 +47,7 @@ public class TermsServiceImpl implements TermsService {
         userTermsAgreementRepository.saveAll(agreements);
     }
 
+    //TODO: 약관 동의 변경
     @Override
     @Transactional
     public void updateAgreements(Long userId, TermsUpdateRequest request) {
@@ -59,6 +61,7 @@ public class TermsServiceImpl implements TermsService {
         }
     }
 
+    //TODO: 전체 약관 목록 조회
     @Override
     public List<TermsResponseDto> getTerms() {
         return termsRepository.findAllTerms();

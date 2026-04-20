@@ -40,6 +40,7 @@ public class FriendshipServiceImpl implements FriendShipService {
     private final NotificationService notificationService;
 
 
+    //TODO: 친구 목록 커서 기반 조회
     @Override
     public FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size) {
         // size+1 개 조회 - 실제 필요한 것보다 1개 더 가져와서 다음 페이지 존재 여부 확인
@@ -60,7 +61,6 @@ public class FriendshipServiceImpl implements FriendShipService {
                 ))
                 .collect(Collectors.toList());
 
-        System.out.println("친구 프로필 이미지 : " + results.get(0).getFriendProfileImage());
         // 다음 페이지 조회 시작점(커서)으로 현재 목록의 마지막 항목 사용
         // hasNext가 false면 커서 불필요하므로 null 처리
         FriendResponseDto last = hasNext ? results.get(results.size() - 1) : null;
@@ -69,7 +69,7 @@ public class FriendshipServiceImpl implements FriendShipService {
                 last != null ? last.getFriendName() : null);
     }
 
-    // 유저와 작성자가 친구인지 여부 확인 메서드
+    //TODO: 유저와 작성자가 친구인지 검증
     @Override
     public void isFriendWithAuthor(Long userId, Long authorId) {
 
@@ -226,11 +226,13 @@ public class FriendshipServiceImpl implements FriendShipService {
         return status;
     }
 
+    //TODO: 친구 수 조회
     @Override
     public long getFriendCount(Long targetUserId){
         return friendshipRepository.countByUserId(targetUserId);
     }
 
+    //TODO: 두 유저 간 친구 요청 상태 조회
     @Override
     public FriendRequestStatus getStatus(Long me, Long other) {
         // 1. 예외를 던지지 않고 null을 허용하도록 변경

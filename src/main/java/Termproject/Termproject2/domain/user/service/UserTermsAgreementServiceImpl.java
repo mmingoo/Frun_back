@@ -11,12 +11,13 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserTermsAgreementServiceImpl implements UserTermsAgreementService {
 
     private final UserTermsAgreementRepository userTermsAgreementRepository;
 
+    //TODO: 내 약관 동의 목록 조회
     @Override
-    @Transactional(readOnly = true)
     public List<UserTermsAgreementResponseDto> getMyTermsAgreements(Long userId) {
         return userTermsAgreementRepository.findAllByUserId(userId);
     }

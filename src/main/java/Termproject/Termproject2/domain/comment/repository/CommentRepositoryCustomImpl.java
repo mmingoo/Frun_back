@@ -20,7 +20,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
     private final QComment comment = QComment.comment;
     private final QComment reply = new QComment("reply"); // 답글 수 서브쿼리용
 
-    //TODO: 댓글 상조회
+    //TODO: 최상위 댓글 커서 기반 조회
     @Override
     public List<Comment> findTopLevelComments(Long runningLogId, Long cursorId, int size){
         // 댓글 조회
@@ -38,6 +38,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
         return comments;
     }
 
+    //TODO: 여러 부모 댓글의 답글 수 일괄 집계
     @Override
     public Map<Long, Long> countRepliesByParentIds(List<Long> parentIds) {
         return jpaQueryFactory
@@ -53,6 +54,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 ));
     }
 
+    //TODO: 특정 댓글의 답글 커서 기반 조회
     @Override
     public List<Comment> findReplies(Long parentId, Long cursorId, int size) {
         return jpaQueryFactory
@@ -68,6 +70,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
     }
 
 
+    //TODO: 특정 러닝일지의 최상위 댓글 수 조회
     @Override
     public long countTopLevelComments(Long runningLogId) {
         Long count = jpaQueryFactory
@@ -81,6 +84,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
         return count != null ? count : 0L;
     }
 
+    //TODO: 특정 댓글의 답글 수 조회
     @Override
     public long countReplies(Long parentId) {
         Long count = jpaQueryFactory

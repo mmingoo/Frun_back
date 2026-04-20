@@ -77,7 +77,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         return new RunningLogCreateResponse(runningLog.getRunningLogId());
     }
 
-    // 피드 상세 조회
+    //TODO: 피드 상세 조회
     @Override
     public FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId) {
         // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
@@ -107,7 +107,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         return toFriendFeedResponseDto(runningLog, imageUrls, liked);
     }
 
-    // 공개 여부 변화에 따라 통계 처리
+    //TODO: 러닝일지 수정 (공개 여부 변화에 따라 통계 처리 포함)
     @Override
     @Transactional
     public void updateRunningLog(Long runningLogId, Long userId, RunningLogUpdateRequest request, List<MultipartFile> images) {
@@ -141,7 +141,7 @@ public class RunningLogServiceImpl implements RunningLogService {
     }
 
 
-    //공개 일지일 때만 통계 차감
+    //TODO: 러닝일지 소프트 삭제 (공개 일지면 통계 차감)
     @Override
     @Transactional
     public void softDeleteRunningLog(Long runningLogId, Long userId) {
@@ -160,12 +160,14 @@ public class RunningLogServiceImpl implements RunningLogService {
         runningLog.delete();
     }
 
+    //TODO: runningLogId로 러닝일지 조회
     @Override
     public RunningLog findById(Long runningLogId) {
         return runningLogRepository.findById(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
     }
 
+    //TODO: runningLogId 존재 여부 확인
     @Override
     public boolean existsById(Long runningLogId) {
         return runningLogRepository.existsById(runningLogId);

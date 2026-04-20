@@ -48,6 +48,10 @@ public class UserController {
     private static final String NICKNAME_MESSAGE = "닉네임은 5~20자의 한글, 영문 대/소문자, 숫자만 사용 가능하며 공백은 허용되지 않습니다.";
 
 
+    /**
+     * [GET] /api/v1/users/check
+     * 닉네임 중복 확인 - 포맷 검증(@Pattern)은 컨트롤러에서, 중복 여부는 서비스에서 처리
+     */
     @GetMapping("/check")
     @Operation(summary = "닉네임 중복 확인", description = "닉네임 사용 가능 여부를 확인합니다.")
     public ApiResponse<NicknameCheckResponse> checkNickname(
@@ -67,6 +71,10 @@ public class UserController {
         }
     }
 
+    /**
+     * [GET] /api/v1/users/me/nickname-status
+     * 닉네임 설정 여부 확인 - 소셜 로그인 후 닉네임 미설정 유저 판별용
+     */
     @GetMapping("/me/nickname-status")
     @Operation(summary = "닉네임 보유 여부 확인", description = "현재 로그인한 유저의 닉네임 설정 여부를 확인")
     public ApiResponse<NicknameStatusResponse> getNicknameStatus() {
@@ -75,6 +83,10 @@ public class UserController {
         return ApiResponse.ok(result, result.isHasNickname() ? "닉네임이 설정되어 있습니다." : "닉네임이 설정되지 않았습니다.");
     }
 
+    /**
+     * [POST] /api/v1/users/nickname-setup
+     * 최초 프로필 설정 - 닉네임 + 프로필 이미지 저장 (소셜 로그인 후 1회 호출)
+     */
     @PostMapping(value = "/nickname-setup", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "프로필 설정 (최초 닉네임 설정)", description = "닉네임과 프로필 사진을 함께 저장합니다. 이미지는 최대 3MB, jpg/jpeg/png만 허용")
     public ApiResponse<?> setupProfile(
@@ -99,6 +111,10 @@ public class UserController {
         return ApiResponse.ok("프로필 설정이 완료되었습니다.");
     }
 
+    /**
+     * [GET] /api/v1/users/{userId}/mypage
+     * 유저 페이지 정보 조회 - 친구 수, 러닝 통계, 친구 관계 상태 포함
+     */
     @GetMapping("/{userId}/mypage")
     @Operation(summary = "유저 페이지 정보 조회", description = "유저의 페이지 정보를 조회합니다. 본인이면 isOwner=true, isFriend=false.")
     public ApiResponse<?> getUserPage(@PathVariable Long userId) {
@@ -106,6 +122,10 @@ public class UserController {
         return ApiResponse.ok(userService.getUserPageInfo(viewerId, userId), "조회되었습니다.");
     }
 
+    /**
+     * [GET] /api/v1/users/me
+     * 내 정보 조회 - 프로필 이미지, userId, 닉네임, 미읽음 알림 갯수 반환 (nav바용)
+     */
     @GetMapping("/me")
     @Operation(summary = "nav바 유저 정보 조회(프로필 사진, userId, 유저 닉네임, 알림 갯수)", description = "유저의 정보를 조회합니다. 프로필 이미지와 userId, 알림 갯수 반환")
     public ApiResponse<?> getUserProfileInfo() {
@@ -113,6 +133,10 @@ public class UserController {
         return ApiResponse.ok(userService.getUserInfo(userId), "조회되었습니다.");
     }
 
+    /**
+     * [PATCH] /api/v1/users/profile
+     * 유저 프로필 업데이트 - bio, 프로필 이미지 변경
+     */
     @PatchMapping("/profile")
     @Operation(summary = "유저 프로필 업데이트 (프로필 사진, bio)")
     public ResponseEntity<ApiResponse<?>> updateUserProfile(
@@ -123,6 +147,10 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다."));
     }
 
+    /**
+     * [POST] /api/v1/users/inactive/token
+     * 임시 토큰 발급 - 비활성화 코드(UUID)를 5분 유효 임시 토큰으로 교환
+     */
     @PostMapping("/inactive/token")
     @Operation(summary = "임시 토큰 발급", description = "비활성화 코드(UUID)를 임시 토큰으로 교환합니다. 코드는 일회성이며 5분간 유효합니다.")
     public ResponseEntity<ApiResponse<?>> exchangeInactiveToken(@RequestParam String code) {
@@ -135,6 +163,10 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(tempToken, "임시 토큰이 발급되었습니다."));
     }
 
+    /**
+     * [GET] /api/v1/users/inactive-info
+     * 비활성화 계정 정보 조회 - 임시 토큰 필요, 비활성화 날짜·삭제 예정일 반환
+     */
     @GetMapping("/inactive-info")
     @Operation(summary = "비활성화 계정 정보 조회", description = "임시 토큰으로 비활성화 날짜와 삭제 예정일을 반환합니다.")
     public ApiResponse<?> getInactiveInfo(@RequestHeader("Authorization") String bearerToken) {
@@ -143,6 +175,10 @@ public class UserController {
         return ApiResponse.ok(userService.getInactiveInfo(userId), "비활성화 계정 정보를 조회했습니다.");
     }
 
+    /**
+     * [PATCH] /api/v1/users/activate
+     * 계정 활성화 - 임시 토큰으로 INACTIVE 계정을 ACTIVE 상태로 변경 후 refreshToken 쿠키 발급
+     */
     @PatchMapping("/activate")
     @Operation(summary = "유저 활성화", description = "임시 토큰으로 비활성화된 계정을 활성화하고 refreshToken 쿠키를 발급합니다.")
     public ResponseEntity<ApiResponse<?>> userActivate(
@@ -181,6 +217,10 @@ public class UserController {
     }
 
 
+    /**
+     * [DELETE] /api/v1/users/me
+     * 회원 탈퇴 - 계정 및 관련 데이터 모두 삭제, refreshToken 무효화
+     */
     @DeleteMapping("/me")
     @Operation(summary = "회원 탈퇴", description = "계정과 관련된 모든 데이터를 삭제합니다.")
     public ResponseEntity<ApiResponse<?>> deleteUser() {
@@ -189,6 +229,10 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 계정을 삭제하였습니다."));
     }
 
+    /**
+     * [DELETE] /api/v1/users/deactivate
+     * 계정 비활성화 - INACTIVE 상태로 변경, refreshToken 즉시 무효화
+     */
     @DeleteMapping("/deactivate")
     @Operation(summary = "유저 비활성화")
     public ResponseEntity<ApiResponse<?>> userDeactivate(){
@@ -197,12 +241,15 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok(userService.userDeactivate(userId),"성공적으로 계정을 비활성화하였습니다."));
     }
 
+    /**
+     * [PATCH] /api/v1/users/nickname
+     * 닉네임 변경
+     */
     @PatchMapping("/nickname")
     @Operation(summary = "유저 닉네임 변경 ")
     public ApiResponse<?> updateUserNickname(
             @Valid @RequestBody UserUpdateNicknameDto request) {
         Long userId = jwtTokenExtractor.getUserId();
-        System.out.println("닉네임 변경 시작 : " + request.getNickname());
         userService.updateUserNickname(userId, request);
         return ApiResponse.ok("성공적으로 유저의 닉네임을 변경하였습니다.");
     }

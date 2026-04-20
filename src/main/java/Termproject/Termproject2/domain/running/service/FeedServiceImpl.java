@@ -9,6 +9,7 @@ import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -18,13 +19,14 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class FeedServiceImpl implements FeedService {
 
     private final RunningLogRepository runningLogRepository;
     private final ImageService imageService;
     private final LikeRepository likeRepository;
 
-    // 친구 피드 커서 기반 조회
+    //TODO: 친구 피드 커서 기반 조회
     @Override
     public FeedScrollResponseDto getFriendFeeds(Long userId, Long cursorId, int size) {
 
@@ -52,8 +54,7 @@ public class FeedServiceImpl implements FeedService {
 
 
 
-    // ===================== 유저 페이지 피드 =====================
-    // 유저 페이지 피드 조회 (본인이면 비공개 포함, 타인이면 공개만)
+    //TODO: 유저 페이지 피드 커서 기반 조회 (본인이면 비공개 포함)
     @Override
     public MyPageFeedScrollResponseDto getUserPageFeeds(Long viewerId, Long targetUserId, Long cursorId, int size) {
         // 조회하려는 사람이 작성자인지 확인

@@ -21,31 +21,30 @@ public class Report extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "report_id")
-    private Long reportId;
+    private Long reportId; // 신고 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reported_user_id", nullable = false)
-    private User reportedUser;
+    private User reportedUser; // 신고 대상 유저
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reporter_id" ,  nullable = false)
-    private User reporter ;
+    private User reporter; // 신고자
 
     @Column(name = "report_reason", length = 1000, nullable = false)
-    private String reportReason;
+    private String reportReason; // 신고 사유
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 30, nullable = false)
-    private ReportStatus status;
-
+    private ReportStatus status; // 처리 상태 (PENDING / COMPLETED)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id")
-    private RunningLog runningLog;
+    private RunningLog runningLog; // 신고된 러닝일지
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "report_type_id", nullable = false)
-    private ReportType reportType;
+    private ReportType reportType; // 신고 유형
 
 
     @Builder

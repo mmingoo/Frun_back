@@ -26,51 +26,49 @@ public class RunningLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "running_log_id")
-    private Long runningLogId;
+    private Long runningLogId; // 러닝일지 ID
 
     @Column(name = "duration", nullable = false)
-    private LocalTime duration;
+    private LocalTime duration; // 러닝 총 소요 시간
 
     @Column(name = "run_date", nullable = false)
-    private LocalDate runDate;
+    private LocalDate runDate; // 러닝 날짜
 
     @Column(name = "run_time")
-    private LocalTime runTime;
-
+    private LocalTime runTime; // 러닝 시작 시간
 
     @Column(name = "distance", nullable = false, precision = 5, scale = 2) // 최대 100.00km
-    private BigDecimal distance;
+    private BigDecimal distance; // 러닝 거리 (km)
 
     @Column(name = "pace", length = 10, nullable = false)
-    private String pace;
+    private String pace; // 평균 페이스 (분'초" 형식)
 
     @Column(name = "is_public", nullable = false)
-    private boolean isPublic;
+    private boolean isPublic; // 공개 여부
 
     @Column(name = "comment_ctn")
-    private int commentCtn;
+    private int commentCtn; // 댓글 수
 
     @Column(name = "like_ctn")
-    private int likeCtn;
+    private int likeCtn; // 좋아요 수
 
     @Column(name = "memo", length = 500)
-    private String memo;
+    private String memo; // 메모 (최대 500자)
 
     @Column(name = "delete_reason", length = 500)
-    private String deleteReason;
-
+    private String deleteReason; // 삭제 사유
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // 생성일시
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDateTime updatedAt; // 수정일시
 
     @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
+    private boolean isDeleted = false; // soft 삭제 여부
 
     @Column(name = "deletion_scheduled_at")
-    private LocalDateTime deletionScheduledAt;
+    private LocalDateTime deletionScheduledAt; // 물리 삭제 예정일 (soft 삭제 후 3개월)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)

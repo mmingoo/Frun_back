@@ -10,25 +10,26 @@ import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 
+// 친구 피드 응답 DTO (피드 목록 및 상세 조회에 공통 사용)
 @Getter
 @Builder
 public class FriendFeedResponseDto {
-    private Long runningLogId;
-    private Long userId;
-    private String nickName;
-    private String imageUrl;
-    private LocalDate runDate;
-    private LocalTime runTime;
-    private BigDecimal distance;
-    private String pace;
-    private LocalTime duration;
-    private String memo;
-    private LocalDateTime createdAt;
-    private int commentCtn;
-    private int likeCtn;
-    private boolean liked;
-    private List<String> logImages;
-    private boolean isPublic;
+    private Long runningLogId; // 러닝일지 ID
+    private Long userId; // 작성자 ID
+    private String nickName; // 작성자 닉네임
+    private String imageUrl; // 작성자 프로필 이미지 URL
+    private LocalDate runDate; // 러닝 날짜
+    private LocalTime runTime; // 러닝 시작 시간
+    private BigDecimal distance; // 거리 (km)
+    private String pace; // 평균 페이스
+    private LocalTime duration; // 소요 시간
+    private String memo; // 메모
+    private LocalDateTime createdAt; // 작성일시
+    private int commentCtn; // 댓글 수
+    private int likeCtn; // 좋아요 수
+    private boolean liked; // 내 좋아요 여부
+    private List<String> logImages; // 러닝일지 이미지 URL 목록
+    private boolean isPublic; // 공개 여부
 
     // QueryDSL Projections 용 (이미지 제외, liked는 서비스 레이어에서 설정)
     public FriendFeedResponseDto(Long runningLogId, Long userId, String nickName, String imageUrl,
