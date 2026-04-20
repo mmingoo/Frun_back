@@ -20,5 +20,5 @@ public interface NotificationService {
 
     NotificationDtos getNotificationList(Long userId, Long lastNotificationId, int size);
 
-    void updateFriendRequestNotificationStatus(FriendRequest friendRequest, FriendRequestStatus status);
+    void updateFriendRequestNotificationStatus(Long friendRequestId, FriendRequestStatus status);
 }

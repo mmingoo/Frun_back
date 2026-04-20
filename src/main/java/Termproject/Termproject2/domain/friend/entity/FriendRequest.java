@@ -37,8 +37,6 @@ public class FriendRequest extends BaseTimeEntity {
     @Column(name = "status", length = 10, nullable = false)
     private FriendRequestStatus status;
 
-    @OneToMany(mappedBy = "friendRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Notification> notifications = new ArrayList<>();
 
     @Builder
     public FriendRequest(User receiver, User sender, FriendRequestStatus status) {

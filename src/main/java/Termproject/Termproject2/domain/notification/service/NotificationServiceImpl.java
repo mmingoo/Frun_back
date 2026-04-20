@@ -77,7 +77,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = Notification.builder()
                 .user(receiver)
                 .type(NotificationType.FRIEND_REQUEST)
-                .friendRequest(friendRequest)
+                .friendRequestId(friendRequest.getFriendRequestId())
                 .sender(sender)
                 .message(sender.getNickName() + "님이 친구 요청을 보냈습니다.")
                 .friendRequestStatus(friendRequestStatus)
@@ -187,11 +187,11 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+
     @Override
     @Transactional
-    public void updateFriendRequestNotificationStatus(FriendRequest friendRequest, FriendRequestStatus status) {
-        System.out.println("friendRequest : " + friendRequest);
-        notificationRepository.findByFriendRequest(friendRequest)
+    public void updateFriendRequestNotificationStatus(Long friendRequestId, FriendRequestStatus status) {
+        notificationRepository.findByFriendRequestId(friendRequestId)
                 .ifPresent(notification -> notification.updateFriendRequestStatus(status));
     }
 
@@ -205,16 +205,21 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
-    // 비활성화 계정 발신자의 닉네임과 프로필 이미지 마스킹
     private void maskInactiveSenders(List<NotificationDto> notificationDtoList) {
         notificationDtoList.forEach(dto -> {
-            if (dto.getSenderStatus() != null && dto.getSenderStatus().isInactive()) {
-                dto.setProfileImageUrl(null);
-                String message = dto.getMessage();
-                if (message != null && message.contains("님이")) {
-                    dto.setMessage("비활성화 계정" + message.substring(message.indexOf("님이")));
-                }
-            }
+            if (dto.getSenderStatus() == null || !dto.getSenderStatus().isInactive()) return;
+            if (dto.getType() == NotificationType.REPORT_ACCEPTED || dto.getType() == NotificationType.REPORT_REJECTED) return;
+            dto.setProfileImageUrl(null);
+            dto.setMessage(buildMaskedMessage(dto.getType()));
         });
+    }
+
+    private String buildMaskedMessage(NotificationType type) {
+        return switch (type) {
+            case COMMENT        -> "비활성화 계정님이 댓글을 남겼습니다.";
+            case LIKE           -> "비활성화 계정님이 러닝일지에 좋아요를 눌렀습니다.";
+            case FRIEND_REQUEST -> "비활성화 계정님이 친구 요청을 보냈습니다.";
+            default             -> "비활성화 계정의 알림입니다.";
+        };
     }
 }

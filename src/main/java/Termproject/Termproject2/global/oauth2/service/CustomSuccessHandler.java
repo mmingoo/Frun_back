@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -30,16 +31,12 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         Long userId = customUserDetails.getUserId();
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        // 비활성화 계정인 경우 임시 토큰 발급하여 전달
+        // 비활성화 계정인 경우 UUID 코드를 Redis에 저장 후 전달
         if (customUserDetails.isInactive()) {
-            System.out.println("비활성화계정");
+            String code = UUID.randomUUID().toString();
+            refreshTokenService.saveInactiveCode(code, userId);
 
-            // 비활성화 계정인 경우 임시토큰 발급
-            String tempToken = jwtUtil.createJwt("temp", userId, username, role, 5 * 60 * 1000L);
-
-            // http://localhost:5173/inactive 로 리다이렉트
-            getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/inactive?token=" + tempToken);
-            System.out.println("리다이렉트 완료");
+            getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/inactive?code=" + code);
             return;
         }
 

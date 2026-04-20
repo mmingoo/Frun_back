@@ -123,6 +123,18 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 유저의 프로필을 업데이트 했습니다."));
     }
 
+    @PostMapping("/inactive/token")
+    @Operation(summary = "임시 토큰 발급", description = "비활성화 코드(UUID)를 임시 토큰으로 교환합니다. 코드는 일회성이며 5분간 유효합니다.")
+    public ResponseEntity<ApiResponse<?>> exchangeInactiveToken(@RequestParam String code) {
+        Long userId = refreshTokenService.getAndDeleteInactiveCode(code);
+        if (userId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+        User user = userService.findById(userId);
+        String tempToken = jwtUtil.createJwt("temp", userId, user.getUserName(), user.getRole().toString(), 5 * 60 * 1000L);
+        return ResponseEntity.ok(ApiResponse.ok(tempToken, "임시 토큰이 발급되었습니다."));
+    }
+
     @GetMapping("/inactive-info")
     @Operation(summary = "비활성화 계정 정보 조회", description = "임시 토큰으로 비활성화 날짜와 삭제 예정일을 반환합니다.")
     public ApiResponse<?> getInactiveInfo(@RequestHeader("Authorization") String bearerToken) {

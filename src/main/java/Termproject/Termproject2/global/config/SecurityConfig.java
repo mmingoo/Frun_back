@@ -82,6 +82,7 @@ public class SecurityConfig {
 
                         // 비활성화 계정 활성화 - 토큰 없는 상태이므로 허용
                         // 단, 별도 보안 처리 필요
+                        .requestMatchers(HttpMethod.POST, "/api/v1/users/inactive/token").permitAll()
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/users/activate").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/inactive-info").permitAll()
 

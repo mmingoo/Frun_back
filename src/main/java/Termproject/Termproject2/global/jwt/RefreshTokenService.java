@@ -46,4 +46,19 @@ public class RefreshTokenService {
     public boolean isBlacklisted(Long userId) {
         return Boolean.TRUE.equals(redisTemplate.hasKey("blacklist:" + userId));
     }
+
+    // 비활성화 코드 저장 (UUID → userId, TTL 5분)
+    public void saveInactiveCode(String code, Long userId) {
+        redisTemplate.opsForValue()
+                .set("inactive:" + code, String.valueOf(userId), 5, TimeUnit.MINUTES);
+    }
+
+    // 비활성화 코드 조회 및 즉시 삭제 (일회성 보장)
+    public Long getAndDeleteInactiveCode(String code) {
+        String key = "inactive:" + code;
+        String value = redisTemplate.opsForValue().get(key);
+        if (value == null) return null;
+        redisTemplate.delete(key);
+        return Long.valueOf(value);
+    }
 }

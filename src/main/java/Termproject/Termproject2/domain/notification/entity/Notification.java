@@ -1,7 +1,6 @@
 package Termproject.Termproject2.domain.notification.entity;
 
 import Termproject.Termproject2.domain.comment.Comment;
-import Termproject.Termproject2.domain.friend.entity.FriendRequest;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.user.entity.User;
@@ -11,8 +10,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "NOTIFICATION")
@@ -32,9 +29,8 @@ public class Notification extends BaseCreatedEntity {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "friend_request_id")
-    private FriendRequest friendRequest;
+    @Column(name = "friend_request_id")
+    private Long friendRequestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "user_id", nullable = false)
@@ -64,12 +60,12 @@ public class Notification extends BaseCreatedEntity {
 
 
     @Builder
-    public Notification(User user, NotificationType type, FriendRequest friendRequest,
+    public Notification(User user, NotificationType type, Long friendRequestId,
                         Comment comment, User sender, RunningLog runningLog, String message, String content,
                         FriendRequestStatus friendRequestStatus) {
         this.user = user;
         this.type = type;
-        this.friendRequest = friendRequest;
+        this.friendRequestId = friendRequestId;
         this.comment = comment;
         this.sender = sender;
         this.runningLog = runningLog;
@@ -85,6 +81,7 @@ public class Notification extends BaseCreatedEntity {
 
     public void updateFriendRequestStatus(FriendRequestStatus status) {
         this.friendRequestStatus = status;
-        this.friendRequest = null; // FK 참조 제거 (삭제 시 TransientObjectException 방지)
     }
+
+
 }

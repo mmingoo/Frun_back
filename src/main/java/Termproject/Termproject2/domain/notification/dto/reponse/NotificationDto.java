@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.notification.dto.reponse;
 
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
+import Termproject.Termproject2.domain.notification.entity.NotificationType;
 import Termproject.Termproject2.domain.user.entity.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,12 +14,13 @@ public class NotificationDto {
     private Long notificationId;
     private String content;
     private String userProfileImageUrl;
-    private Long senderId; // 알림 생성자 id
+    private Long senderId;
     private Long runningLogId;
-    private Long authorId; // 러닝일지 작성자 id
+    private Long authorId;
     private Long commentId;
-    private FriendRequestStatus friendRequestStatus; // 친구 요청 알림 시 PENDING or SENDED
-    private UserStatus senderStatus; // 발신자 계정 상태
+    private FriendRequestStatus friendRequestStatus;
+    private UserStatus senderStatus;
+    private NotificationType type;
 
     public void setProfileImageUrl(String userProfileImageUrl){
         this.userProfileImageUrl = userProfileImageUrl;

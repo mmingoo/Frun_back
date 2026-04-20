@@ -1,7 +1,6 @@
 package Termproject.Termproject2.domain.notification.repository;
 
 import Termproject.Termproject2.domain.comment.Comment;
-import Termproject.Termproject2.domain.friend.entity.FriendRequest;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto;
 import Termproject.Termproject2.domain.notification.entity.Notification;
 import Termproject.Termproject2.domain.notification.entity.NotificationType;
@@ -25,7 +24,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         "n.message, n.isRead, n.notificationId, n.content, " +
             "s.imageUrl, s.userId, rl.runningLogId, " +
             "rl.user.userId, " +
-            "c.commentId, n.friendRequestStatus, s.userStatus) " +
+            "c.commentId, n.friendRequestStatus, s.userStatus, n.type) " +
         "from Notification n " +
         "left join n.sender s " +
         "left join n.runningLog rl " +
@@ -35,7 +34,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
         "order by n.notificationId desc")
     List<NotificationDto> findByUserUserId(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
 
-    Optional<Notification> findByFriendRequest(FriendRequest friendRequest);
+    Optional<Notification> findByFriendRequestId(Long friendRequestId);
 
     @Modifying
     @Query("delete from Notification n where n.comment in :comments")

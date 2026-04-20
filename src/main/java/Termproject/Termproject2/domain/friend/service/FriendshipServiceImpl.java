@@ -190,8 +190,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         friendshipRepository.save(friendship);
 
         // 친구 요청 알림 상태 업데이트 (PENDING → FRIEND)
-        System.out.println("request : " + request.getFriendRequestId());
-        notificationService.updateFriendRequestNotificationStatus(request, FriendRequestStatus.FRIEND);
+        notificationService.updateFriendRequestNotificationStatus(request.getFriendRequestId(), FriendRequestStatus.FRIEND);
 
     }
 
@@ -208,7 +207,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         }
 
         // 친구 요청 알림 상태 업데이트 (PENDING → REJECTED)
-        notificationService.updateFriendRequestNotificationStatus(request, FriendRequestStatus.REJECTED);
+        notificationService.updateFriendRequestNotificationStatus(request.getFriendRequestId(), FriendRequestStatus.REJECTED);
 
         // 친구 요청 데이터 삭제
         friendRequestRepository.delete(request);
