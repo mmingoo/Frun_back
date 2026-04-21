@@ -23,19 +23,22 @@ public class FriendRequest extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "friend_request_id")
-    private Long friendRequestId; // 친구 요청 ID
+    private Long friendRequestId;
 
+    // 요청을 받은 유저
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id", referencedColumnName = "user_id", nullable = false)
-    private User receiver; // 요청을 받은 유저
+    private User receiver;
 
+    // 요청을 보낸 유저
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", referencedColumnName = "user_id", nullable = false)
-    private User sender; // 요청을 보낸 유저
+    private User sender;
 
+    // 요청 상태 (SENDED / FRIEND / REJECTED / PENDING)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 10, nullable = false)
-    private FriendRequestStatus status; // 요청 상태 (SENDED / FRIEND / REJECTED / PENDING)
+    private FriendRequestStatus status;
 
 
     @Builder

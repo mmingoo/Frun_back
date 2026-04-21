@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.report.service;
 
+import Termproject.Termproject2.domain.report.converter.ReportConverter;
 import Termproject.Termproject2.domain.report.entity.Report;
 import Termproject.Termproject2.domain.report.entity.ReportStatus;
 import Termproject.Termproject2.domain.report.entity.ReportType;
@@ -38,6 +39,7 @@ public class ReportServiceImpl implements ReportService {
         RunningLog runningLog = runningLogRepository.findById(runningLogId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
+        // 신고 당한 사람 userId
         Long reportedUserId =  runningLog.getUser().getUserId();
 
         // 신고 대상 사용자 조회
@@ -57,17 +59,8 @@ public class ReportServiceImpl implements ReportService {
         // 신고 유형 조회
         ReportType reportType = reportTypeRepository.findByTypeName("RUNNING_LOG");
 
-
         // 신고 저장
-        Report report = Report.builder()
-                .reporter(reporter)
-                .reportedUser(reportedUser)
-                .reportReason(dto.getReportReason())
-                .runningLog(runningLog)
-                .reportType(reportType)
-                .status(ReportStatus.PENDING)
-                .build();
-
-        reportRepository.save(report);
+        reportRepository.save(ReportConverter.toReport(
+                reporter, reportedUser, dto.getReportReason(), runningLog, reportType));
     }
 }

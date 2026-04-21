@@ -18,10 +18,10 @@ public class RunningLogImage extends BaseCreatedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "log_image_id")
-    private Long logImageId; // 이미지 ID
+    private Long logImageId;
 
     @Column(name = "image_url", length = 500, nullable = false)
-    private String imageUrl; // 이미지 URL (S3 경로)
+    private String imageUrl; // 이미지 URL
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "running_log_id", nullable = false)

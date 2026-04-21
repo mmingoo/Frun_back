@@ -19,8 +19,4 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     @Query("select l.runningLog.runningLogId from Like l where l.user.userId = :userId and l.runningLog.runningLogId In :logIds")
     Set<Long> findLikedLogIds(@Param("userId") Long userId , @Param("logIds") List<Long> logIds);
 
-    //TODO: 유저와 관련된 모든 좋아요 삭제 (회원 탈퇴 시)
-    @Modifying
-    @org.springframework.data.jpa.repository.Query("DELETE FROM Like l WHERE l.user.userId = :userId OR l.runningLog.user.userId = :userId")
-    void deleteAllByUserId(@org.springframework.data.repository.query.Param("userId") Long userId);
 }

@@ -20,7 +20,7 @@ public interface UserService {
     void setupProfile(Long userId, String nickname, String imageUrl);
 
     //TODO: userId로 유저 조회
-    User findById(Long userId);
+    User findUserById(Long userId);
 
     //TODO: 유저 페이지 정보 조회 (친구 수, 러닝 통계, 친구 상태 포함)
     UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId);

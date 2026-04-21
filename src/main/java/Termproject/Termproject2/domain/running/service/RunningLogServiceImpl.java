@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.service;
 
+import Termproject.Termproject2.domain.running.converter.RunningLogConverter;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
@@ -7,6 +8,7 @@ import Termproject.Termproject2.domain.running.dto.response.RunningLogCreateResp
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.entity.RunningLogImage;
 import Termproject.Termproject2.domain.comment.repository.CommentRepository;
+import Termproject.Termproject2.domain.stats.converter.StatsConverter;
 import Termproject.Termproject2.domain.running.repository.LikeRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogImageRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
@@ -52,18 +54,16 @@ public class RunningLogServiceImpl implements RunningLogService {
     @Transactional
     public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
         int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
-        User user = userService.findById(userId);
+        User user = userService.findUserById(userId);
 
-        RunningLog runningLog = RunningLog.builder()
-                .user(user)
-                .runDate(request.getRunDate())
-                .duration(toLocalTime(duration[0], duration[1]))
-                .distance(request.getDistance())
-                .memo(request.getMemo())
-                .isPublic(request.isPublic())
-                .pace(calculatePace(duration[0], duration[1], request.getDistance()))
-                .build();
+        // 컨버터로 러닝로그 생성
+        RunningLog runningLog = RunningLogConverter.toRunningLog(
+                user, request,
+                toLocalTime(duration[0], duration[1]),
+                calculatePace(duration[0], duration[1], request.getDistance())
+        );
 
+        // 러닝 로그 저장
         runningLogRepository.save(runningLog);
 
         // 공개 일지일 때만 통계 누적
@@ -73,26 +73,25 @@ public class RunningLogServiceImpl implements RunningLogService {
             accumulateStats(user, request.getRunDate(), distM, durSec);
         }
 
+        // 러닝 로그 이미지들 저장
         saveRunningLogImages(runningLog, userId, images);
+
         return new RunningLogCreateResponse(runningLog.getRunningLogId());
     }
 
     //TODO: 피드 상세 조회
     @Override
     public FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId) {
+
         // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
-        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+        RunningLog runningLog = findRunningLogById(runningLogId);
+
 
         // 러닝 로그의 실제 작성자가 authorId와 일치하지 않으면 404
-        if (!runningLog.getUser().getUserId().equals(authorId)) {
-            throw new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND);
-        }
+        isRunningLogAuthor(runningLog, authorId);
 
         // 비활성화된 계정의 러닝일지면 400
-        if(!runningLog.getUser().getUserStatus().equals(UserStatus.ACTIVE)){
-            throw new BusinessException(ErrorCode.USER_INACTIVE_RUNNING_LOG);
-        }
+        isActiveUser(runningLog);
 
         // 작성자가 본인이 아닐 경우에 러닝일지 공개 여부 검증
         validatePublicAccess(userId, authorId, runningLog);
@@ -104,8 +103,16 @@ public class RunningLogServiceImpl implements RunningLogService {
         boolean liked = likeRepository.existsByUserUserIdAndRunningLogRunningLogId(userId, runningLogId);
 
         // FriendFeedResponseDto 생성 후 반환
-        return toFriendFeedResponseDto(runningLog, imageUrls, liked);
+        int commentCtn = (int) commentRepository.countByRunningLogRunningLogId(runningLog.getRunningLogId());
+
+        return RunningLogConverter.toFriendFeedResponseDto(
+                runningLog,
+                imageService.getProfileImageUrl(runningLog.getUser().getImageUrl()),
+                imageUrls, liked, commentCtn
+        );
     }
+
+
 
     //TODO: 러닝일지 수정 (공개 여부 변화에 따라 통계 처리 포함)
     @Override
@@ -137,6 +144,8 @@ public class RunningLogServiceImpl implements RunningLogService {
                 oldDate, oldDistM, oldDurSec,
                 runningLog.getRunDate(), newDistM, newDurSec
         );
+
+        //러닝일지 이미지 setup
         setupRunningLogImage(runningLog, request.getKeepImageUrls(), images);
     }
 
@@ -173,8 +182,13 @@ public class RunningLogServiceImpl implements RunningLogService {
         return runningLogRepository.existsById(runningLogId);
     }
 
+
+
+
+    // ===================== private 메서드 =====================\
+
     // 러닝 로그 설정
-    public void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request) {
+    private void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request) {
         // 분, 초 파싱 및 유효성 검사
         int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
 
@@ -192,12 +206,12 @@ public class RunningLogServiceImpl implements RunningLogService {
     // 러닝 로그 이미지 업데이트
     // - keepImageUrls: 유지할 기존 이미지 파일명 목록 (null이면 기존 이미지 전부 유지)
     // - newImages: 새로 추가할 파일 목록 (null이면 추가 없음)
-    public void setupRunningLogImage(RunningLog runningLog, List<String> keepImageUrls, List<MultipartFile> newImages) {
+    private void setupRunningLogImage(RunningLog runningLog, List<String> keepImageUrls, List<MultipartFile> newImages) {
         // URL에서 파일명만 추출
         List<String> keeps = keepImageUrls != null
                 ? keepImageUrls.stream()
                 .map(this::extractFileName)
-                .collect(Collectors.toList())
+                .toList()
                 : List.of();
         List<MultipartFile> additions = newImages != null ? newImages : List.of();
 
@@ -212,8 +226,6 @@ public class RunningLogServiceImpl implements RunningLogService {
         // 새 이미지 업로드 후 추가
         saveRunningLogImages(runningLog, runningLog.getUser().getUserId(), additions);
     }
-
-    // ===================== private 메서드 =====================
 
     // 유저가 해당 러닝일지의 작성자인지 검증
     private static void validateAuthor(Long userId, RunningLog runningLog) {
@@ -250,12 +262,7 @@ public class RunningLogServiceImpl implements RunningLogService {
         // 각 이미지 저장
         for (MultipartFile image : images) {
             String fileName = imageService.saveRunningLogImage(userId, image);
-            runningLogImageRepository.save(
-                    RunningLogImage.builder()
-                            .runningLog(runningLog)
-                            .imageUrl(fileName)
-                            .build()
-            );
+            runningLogImageRepository.save(RunningLogConverter.toRunningLogImage(runningLog, fileName));
         }
     }
 
@@ -269,22 +276,6 @@ public class RunningLogServiceImpl implements RunningLogService {
     // URL에서 파일명만 추출 (슬래시 포함 URL 또는 파일명 그대로 처리)
     private String extractFileName(String url) {
         return url.contains("/") ? url.substring(url.lastIndexOf('/') + 1) : url;
-    }
-
-    // RunningLog -> FriendFeedResponseDto 변환
-    private FriendFeedResponseDto toFriendFeedResponseDto(RunningLog runningLog, List<String> imageUrls, boolean liked) {
-        User author = runningLog.getUser();
-        int commentCtn = (int) commentRepository.countByRunningLogRunningLogId(runningLog.getRunningLogId());
-        FriendFeedResponseDto dto = new FriendFeedResponseDto(
-                runningLog.getRunningLogId(), author.getUserId(), author.getNickName(),
-                imageService.getProfileImageUrl(author.getImageUrl()),
-                runningLog.getRunDate(), runningLog.getRunTime(), runningLog.getDistance(), runningLog.getPace(),
-                runningLog.getDuration(), runningLog.getMemo(), runningLog.getCreatedAt(),
-                commentCtn, runningLog.getLikeCtn(),
-                liked, imageUrls , runningLog.isPublic()
-        );
-        dto.setLiked(liked);
-        return dto;
     }
 
     // 페이스 계산 (총 시간(초) / 거리 → "분'초\"" 형식)
@@ -303,9 +294,31 @@ public class RunningLogServiceImpl implements RunningLogService {
         return LocalTime.of(totalSeconds / 3600, (totalSeconds % 3600) / 60, totalSeconds % 60);
     }
 
+    //러닝 로그의 작성자인지 검증
+    private void isRunningLogAuthor(RunningLog runningLog, Long authorId) {
+        // 1. 작성자 일치 여부 확인 (본인 것이 아니면 보안상 NOT_FOUND 처리)
+        if (!runningLog.getUser().getUserId().equals(authorId)) {
+            throw new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND);
+        }
+    }
+
+    //활성화 유저의 러닝일지인지 검증
+    private void isActiveUser(RunningLog runningLog){
+        // 2. 작성자의 계정 상태 확인 (비활성화 계정 여부)
+        if (!runningLog.getUser().getUserStatus().equals(UserStatus.ACTIVE)) {
+            throw new BusinessException(ErrorCode.USER_INACTIVE_RUNNING_LOG);
+        }
+
+    }
+    private RunningLog findRunningLogById(Long runningLogId) {
+        return runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+    }
+
+
     // ===================== RunningStats 유지 메서드 =====================
 
-    //TODO : 통계 업데이트(데이터 더하기)
+    //통계 업데이트(데이터 더하기)
     private void accumulateStats(User user, LocalDate runDate, int distM, int durSec) {
         // 기존 통계값이 있으면 값을 업데이트, 없다면 새로운 통계 데이터 생성
         findOrCreateStats(user, RunningStats.StatType.WEEKLY, toWeekKey(runDate)).accumulate(distM, durSec);
@@ -313,16 +326,16 @@ public class RunningLogServiceImpl implements RunningLogService {
     }
 
 
-    //TODO : 통계 데이터 관리(찾기, 생성)
+    //통계 데이터 관리(찾기, 생성)
     private RunningStats findOrCreateStats(User user, RunningStats.StatType type, String key) {
         return runningStatsRepository
                 .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), type, key) //StateKey : 26-w13 형태 , Type : WEEKLY, MONTHLY
                 .orElseGet(() -> runningStatsRepository.save(  // 데이터가 없다면 생성
-                        RunningStats.builder().user(user).statType(type).statKey(key).build()
+                        StatsConverter.toRunningStats(user, type, key)
                 ));
     }
 
-    //TODO : 통계 업데이트(데이터 빼기)
+    //통계 업데이트(데이터 빼기)
     private void subtractStats(User user, LocalDate runDate, int distM, int durSec) {
 
         // 주별 통계 데이터 찾기
@@ -334,19 +347,19 @@ public class RunningLogServiceImpl implements RunningLogService {
                 .findByUserUserIdAndStatTypeAndStatKey(user.getUserId(), RunningStats.StatType.MONTHLY, toMonthKey(runDate))
                 .ifPresent(s -> s.subtract(distM, durSec));
     }
-    //TODO: stateKey 로 변환
+    //stateKey 로 변환
     private String toWeekKey(LocalDate date) {
         int weekYear = date.get(IsoFields.WEEK_BASED_YEAR);
         int weekNum  = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         return weekYear + "-W" + String.format("%02d", weekNum);
     }
 
-    //TODO: monthKey 로 변환
+    //monthKey 로 변환
     private String toMonthKey(LocalDate date) {
         return String.format("%d-%02d", date.getYear(), date.getMonthValue());
     }
 
-    //TODO: 공개, 비공개 전환 여부에 따른 통계 데이터 수정
+    //공개, 비공개 전환 여부에 따른 통계 데이터 수정
     private void adjustStatsOnVisibilityChange(
             User user,
             boolean wasPublic, boolean willBePublic,
@@ -400,4 +413,6 @@ public class RunningLogServiceImpl implements RunningLogService {
                 .ifPresent(s -> s.subtract(oldDistM, oldDurSec));
         findOrCreateStats(user, RunningStats.StatType.MONTHLY, newKey).accumulate(newDistM, newDurSec);
     }
+
+
 }

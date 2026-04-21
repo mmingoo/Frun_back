@@ -23,10 +23,10 @@ public class NoticeController {
      * 공지사항 목록 조회 - 5개씩 커서 기반 무한 스크롤
      */
     @GetMapping
-    @Operation(summary = "공지사항 목록 조회", description = "공지사항 제목 목록을 5개씩 커서 기반으로 조회합니다.")
+    @Operation(summary = "공지사항 목록 조회", description = "공지사항 제목 목록을 5개씩 페이지 기반으로 조회합니다.")
     public ApiResponse<?> getNoticeList(
-            @Parameter(description = "이전 페이지 마지막 noticeId (첫 요청 시 생략)") @RequestParam(required = false) Long cursorId) {
-        return ApiResponse.ok(noticeService.getNoticeList(cursorId), "공지사항 목록을 성공적으로 조회하였습니다.");
+            @Parameter(description = "페이지 번호 (0부터 시작, 기본값 0)") @RequestParam(defaultValue = "0") int page) {
+        return ApiResponse.ok(noticeService.getNoticeList(page), "공지사항 목록을 성공적으로 조회하였습니다.");
     }
 
     /**

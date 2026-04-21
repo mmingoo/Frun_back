@@ -9,9 +9,6 @@ public interface FriendShipService {
     //TODO: 친구 목록 커서 기반 조회
     FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size);
 
-    //TODO: 두 유저가 친구인지 검증 (아니면 예외)
-    void isFriendWithAuthor(Long userId, Long authorId);
-
     //TODO: 닉네임 키워드로 유저 검색 (친구 상태 포함)
     UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size);
 

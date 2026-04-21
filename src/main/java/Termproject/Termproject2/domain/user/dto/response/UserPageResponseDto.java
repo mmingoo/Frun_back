@@ -8,8 +8,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class UserPageResponseDto {
-    private Long userId; // 유저 ID
-    private String nickname; // 닉네임
+    private Long userId;
+    private String nickname;
     private String profileImageUrl; // 프로필 이미지 URL
     private String bio; // 소개글
     private long friendCount; // 친구 수

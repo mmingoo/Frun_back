@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 @Builder
 public class ReplyResponse {
     private Long commentId;
-    private String content; // 답글 내용
-    private Long userId; // 답글 작성자 id
+    private String content;
+    private Long userId;
     private String nickname; // 답글 작성자의 nickname
     private String profileImageUrl; // 답글 작성자의 프로필 사진 url
     private LocalDateTime createdAt;

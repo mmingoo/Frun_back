@@ -1,14 +1,11 @@
-package Termproject.Termproject2.domain.notice;
+package Termproject.Termproject2.domain.notice.entity;
 
-import Termproject.Termproject2.domain.notification.entity.NotificationType;
 import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "NOTICE")

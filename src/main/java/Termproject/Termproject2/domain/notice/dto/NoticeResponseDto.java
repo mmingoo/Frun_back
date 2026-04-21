@@ -1,7 +1,7 @@
 package Termproject.Termproject2.domain.notice.dto;
 
-import Termproject.Termproject2.domain.notice.Notice;
-import Termproject.Termproject2.domain.notice.NoticeType;
+import Termproject.Termproject2.domain.notice.entity.Notice;
+import Termproject.Termproject2.domain.notice.entity.NoticeType;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 @Getter
 public class NoticeResponseDto {
 
-    private final Long noticeId; // 공지사항 ID
-    private final String title; // 제목
+    private final Long noticeId;
+    private final String title;
     private final NoticeType noticeType; // 공지 유형
     private final LocalDateTime createdDate; // 작성일시
 

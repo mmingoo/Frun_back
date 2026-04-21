@@ -7,8 +7,8 @@ import lombok.Getter;
 @AllArgsConstructor
 // 마이페이지 기본 정보 응답
 public class MyPageResponseDto {
-    private Long userId; // 유저 ID
-    private String nickname; // 닉네임
+    private Long userId;
+    private String nickname;
     private String profileImageUrl; // 프로필 이미지 URL
     private String bio; // 한 줄 소개
     private long friendCount; // 친구 수

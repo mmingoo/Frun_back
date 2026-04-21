@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SocialLoginTypeRepository extends JpaRepository<SocialLoginType, Long> {
+    //TODO: 타입 이름으로 조회
     SocialLoginType findByTypeName(String typeName);
 }

@@ -26,9 +26,8 @@ public class NotificationController {
     @Operation(summary = "알림 목록 조회", description = "알림 리스트를 15개씩 무한 스크롤")
     public ResponseEntity<ApiResponse<?>> getNotificationList(
             @RequestParam(required = false) Long lastNotificationId,
-            @RequestParam(defaultValue = "15") int size) {
-
-
+            @RequestParam(defaultValue = "15") int size
+    ) {
         Long userId = jwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(notificationService.getNotificationList(userId, lastNotificationId, size), "알림 목록을 성공적으로 조회하였습니다."));
@@ -44,7 +43,10 @@ public class NotificationController {
             @RequestBody SelectedNotificationRequestDto selectedNotificationRequestDto
     ) {
         Long userId = jwtTokenExtractor.getUserId();
+
+        // 선택한 알림 삭제
         notificationService.deleteSelectedNotification(userId, selectedNotificationRequestDto);
+
         return ResponseEntity.ok(ApiResponse.ok("선택한 알림 삭제하였습니다."));
     }
 

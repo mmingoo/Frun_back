@@ -15,13 +15,12 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
 
     private final JPAQueryFactory jpaQueryFactory;
     private final QComment comment = QComment.comment;
-    private final QComment reply = new QComment("reply"); // 답글 수 서브쿼리용
 
     //TODO: 최상위 댓글 커서 기반 조회
     @Override
     public List<Comment> findTopLevelComments(Long runningLogId, Long cursorId, int size){
         // 댓글 조회
-        List<Comment> comments = jpaQueryFactory
+        return jpaQueryFactory
                 .selectFrom(comment)
                 .join(comment.user).fetchJoin()
                 .where(
@@ -32,7 +31,6 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 .orderBy(comment.commentId.asc())
                 .limit(size + 1)
                 .fetch();
-        return comments;
     }
 
     //TODO: 여러 부모 댓글의 답글 수 일괄 집계
@@ -41,13 +39,13 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
         return jpaQueryFactory
                 .select(comment.parent.commentId, comment.count())
                 .from(comment)
-                .where(comment.parent.commentId.in(parentIds))
-                .groupBy(comment.parent.commentId)
+                .where(comment.parent.commentId.in(parentIds)) // 전달받은 부모 ID들에 속한 댓글만 필터링
+                .groupBy(comment.parent.commentId) // 부모 ID 별로 그룹화
                 .fetch()
                 .stream()
                 .collect(Collectors.toMap(
-                        tuple -> tuple.get(comment.parent.commentId),
-                        tuple -> tuple.get(comment.count())
+                        tuple -> tuple.get(comment.parent.commentId), // key : 부모 댓글 ID
+                        tuple -> tuple.get(comment.count()) // value : 답글 갯수
                 ));
     }
 

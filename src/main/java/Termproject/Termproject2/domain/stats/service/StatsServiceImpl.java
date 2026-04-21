@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.stats.service;
 
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
+import Termproject.Termproject2.domain.stats.converter.StatsConverter;
 import Termproject.Termproject2.domain.stats.dto.*;
 import Termproject.Termproject2.domain.stats.dto.response.MonthlyStatsResponse;
 import Termproject.Termproject2.domain.stats.dto.response.PeriodStatsResponse;
@@ -36,10 +37,8 @@ public class StatsServiceImpl implements StatsService {
         LocalDate weekEnd = weekStart.plusDays(6); // 주 종료 날짜
 
         // summary: RunningStats 테이블에서 조회
-        StatsSummaryDto summary = runningStatsRepository
-                .findByUserUserIdAndStatTypeAndStatKey(userId, RunningStats.StatType.WEEKLY, toWeekKey(date))
-                .map(this::toSummaryDto)
-                .orElseGet(this::emptySummary);
+        StatsSummaryDto summary = getSummary(userId, RunningStats.StatType.WEEKLY, toWeekKey(date));
+
 
         //주에 해당하는 러닝일지 조회
         List<RunningLog> logs = runningLogRepository
@@ -48,19 +47,8 @@ public class StatsServiceImpl implements StatsService {
         // 날짜별 거리 합산
         Map<LocalDate, Double> distMap = buildDistanceMap(logs);
 
-        List<DayDistanceDto> chart = new ArrayList<>();
-
-        // 7일 동안
-        for (int i = 0; i < 7; i++) {
-            // 날짜 더하여 현재 날짜 구하기
-            LocalDate day = weekStart.plusDays(i);
-
-            // 거리를 소수점 첫째자리 까지 반올림
-            double dist = round1(distMap.getOrDefault(day, 0.0));
-
-            // (요일, 거리)에 대한 정보를 List에 추가
-            chart.add(new DayDistanceDto(dayLabel(day.getDayOfWeek()), dist));
-        }
+        // 차트 생성
+        List<DayDistanceDto> chart = buildWeekChart(weekStart, distMap);
 
         return new WeeklyStatsResponse(summary, chart, Collections.emptyList());
     }
@@ -78,10 +66,8 @@ public class StatsServiceImpl implements StatsService {
         LocalDate monthEnd = ym.atEndOfMonth();
 
         // summary: RunningStats 테이블에서 조회
-        StatsSummaryDto summary = runningStatsRepository
-                .findByUserUserIdAndStatTypeAndStatKey(userId, RunningStats.StatType.MONTHLY, toMonthKey(year, month))
-                .map(this::toSummaryDto)
-                .orElseGet(this::emptySummary);
+        StatsSummaryDto summary = getSummary(userId, RunningStats.StatType.MONTHLY, toMonthKey(year, month));
+
 
         // 월에 해당하는 러닝로그 조회(chart용 일별 분해)
         List<RunningLog> logs = runningLogRepository
@@ -100,18 +86,12 @@ public class StatsServiceImpl implements StatsService {
 
         // 월의 마지막 날까지 주 단위로 반복
         while (!weekStart.isAfter(monthEnd)) {
-            List<DayDistanceDto> days = new ArrayList<>();
-            double weekTotal = 0;
 
-            // 해당 주의 월~일 (7일) 순회
-            for (int i = 0; i < 7; i++) {
-                LocalDate day = weekStart.plusDays(i);
+            // 요일 차트 생성
+            List<DayDistanceDto> days = buildWeekChart(weekStart, distMap);
 
-                // 러닝 기록이 없는 날은 0.0으로 처리
-                double dist = round1(distMap.getOrDefault(day, 0.0));
-                days.add(new DayDistanceDto(dayLabel(day.getDayOfWeek()), dist));
-                weekTotal += dist;
-            }
+            // 주별 총합 거리 합산
+            double weekTotal = days.stream().mapToDouble(DayDistanceDto::getDistanceKm).sum();
 
             // 주차 데이터 (예: "1주", 18.5km, 요일별 거리) 차트에 추가
             chart.add(new MonthlyWeekDto(weekIndex + "주", round1(weekTotal), days));
@@ -158,37 +138,18 @@ public class StatsServiceImpl implements StatsService {
     public StatsSummaryResponseDto getStatSummary(Long userId, int year, int month, LocalDate date) {
 
         // 주 통계 요약본
-        StatsSummaryDto weeklySummary = runningStatsRepository
-                .findByUserUserIdAndStatTypeAndStatKey(userId, RunningStats.StatType.WEEKLY, toWeekKey(date))
-                .map(this::toSummaryDto)
-                .orElseGet(this::emptySummary);
-
+        StatsSummaryDto weeklySummary = getSummary(userId, RunningStats.StatType.WEEKLY, toWeekKey(date));
 
         // 월 통계 요약본
-        StatsSummaryDto monthlySummary = runningStatsRepository
-                .findByUserUserIdAndStatTypeAndStatKey(userId, RunningStats.StatType.MONTHLY, toMonthKey(year, month))
-                .map(this::toSummaryDto)
-                .orElseGet(this::emptySummary);
+        StatsSummaryDto monthlySummary = getSummary(userId, RunningStats.StatType.MONTHLY, toMonthKey(year, month));
 
-
-        StatsSummaryResponseDto statsSummaryDto = StatsSummaryResponseDto.builder()
-                .weeklyRunDistance(weeklySummary.getTotalDistanceKm())
-                .weeklyRunCnt(weeklySummary.getRunCount())
-                .weeklyPaceAvg(weeklySummary.getAvgPaceSec())
-                .weeklyTotalDurationSec(weeklySummary.getTotalDurationSec())
-                .monthlyRunDistance(monthlySummary.getTotalDistanceKm())
-                .monthlyRunCnt(monthlySummary.getRunCount())
-                .monthlyPaceAvg(monthlySummary.getAvgPaceSec())
-                .monthlyTotalDurationSec(monthlySummary.getTotalDurationSec())
-                .build();
-
-        return statsSummaryDto;
+        return StatsConverter.toStatsSummaryResponseDto(weeklySummary, monthlySummary);
     }
 
 
-    // ── 공통 헬퍼 ────────────────────────────────────────────────
+    // ──내부 메서드 ────────────────────────────────────────────────
 
-    //TODO: 요약본 생성 메서드
+    //요약본 생성 메서드
     private StatsSummaryDto buildSummary(List<RunningLog> logs) {
 
         // 로그가 없다면 0으로 값을 채워서 반환
@@ -214,7 +175,7 @@ public class StatsServiceImpl implements StatsService {
         return new StatsSummaryDto(round1(totalDistanceKm), logs.size(), avgPaceSec, totalDurationSec);
     }
 
-    //TODO: 날짜별로 거리 합산
+    //날짜별로 거리 합산
     private Map<LocalDate, Double> buildDistanceMap(List<RunningLog> logs) {
         Map<LocalDate, Double> map = new HashMap<>();
 
@@ -226,36 +187,49 @@ public class StatsServiceImpl implements StatsService {
         return map;
     }
 
-    //TODO: 소수점 첫째자리 반올림
+    //소수점 첫째자리 반올림
     private double round1(double value) {
         return Math.round(value * 10.0) / 10.0;
     }
 
-    //TODO: RunningStats → StatsSummaryDto 변환
+    //RunningStats → StatsSummaryDto 변환
     private StatsSummaryDto toSummaryDto(RunningStats stats) {
         double totalDistanceKm = round1(stats.getTotalDistM() / 1000.0); // M -> KM
         int avgPaceSec = (int) Math.round(stats.getAvgPaceSec()); // 평균 페이스 계산
         return new StatsSummaryDto(totalDistanceKm, stats.getRunCount(), avgPaceSec, stats.getTotalDurSec());
     }
 
-    // TODO: 빈 값 생성
+    // 값 생성
     private StatsSummaryDto emptySummary() {
         return new StatsSummaryDto(0.0, 0, 0, 0);
     }
 
-    //TODO: WeekKey 생성
+    //WeekKey 생성
     private String toWeekKey(LocalDate date) {
         int weekYear = date.get(IsoFields.WEEK_BASED_YEAR);
         int weekNum  = date.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
         return weekYear + "-W" + String.format("%02d", weekNum); // 2026-W14 형태로 변환(2026년 14주를 뜻함)
     }
 
-    //TODO: WeekKey 생성
+    //MonthKey 생성
     private String toMonthKey(int year, int month) {
         return String.format("%d-%02d", year, month);
     }
 
-    //TODO: 문자열로 변환
+    // 주어진 주의 시작일(weekStart)부터 7일간 요일별 거리 데이터 리스트 생성
+    // 러닝 기록이 없는 날은 0.0으로 처리
+    private List<DayDistanceDto> buildWeekChart(LocalDate weekStart, Map<LocalDate, Double> distMap) {
+        List<DayDistanceDto> days = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            LocalDate day = weekStart.plusDays(i); // 월~일 순서로 날짜 계산
+            double dist = round1(distMap.getOrDefault(day, 0.0)); // 해당 날짜 거리 조회, 없으면 0.0
+            days.add(new DayDistanceDto(dayLabel(day.getDayOfWeek()), dist));
+        }
+        return days;
+    }
+
+
+    //문자열로 변환
     private String dayLabel(DayOfWeek dow) {
         return switch (dow) {
             case MONDAY    -> "MON";
@@ -268,9 +242,11 @@ public class StatsServiceImpl implements StatsService {
         };
     }
 
-    // TODO: 페이스 구하기
-    public double getAvgPaceSec(double totalDistKm, int totalDurSec) {
-        if (totalDistKm == 0) return 0;
-        return totalDurSec / totalDistKm;
+
+    private StatsSummaryDto getSummary(Long userId, RunningStats.StatType type, String key) {
+        return runningStatsRepository
+                .findByUserUserIdAndStatTypeAndStatKey(userId, type, key)
+                .map(this::toSummaryDto)
+                .orElseGet(this::emptySummary);
     }
 }

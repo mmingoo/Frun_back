@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.running.service;
 
 import Termproject.Termproject2.domain.notification.service.NotificationService;
+import Termproject.Termproject2.domain.running.converter.RunningLogConverter;
 import Termproject.Termproject2.domain.running.entity.Like;
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.repository.LikeRepository;
@@ -39,15 +40,11 @@ public class LikeServiceImpl implements LikeService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         // 러닝로그 조회
-        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+        RunningLog runningLog = findRunningLogById(runningLogId);
+
 
         // 좋아요 생성 후 저장
-        likeRepository.save(
-                Like.builder()
-                        .user(user)
-                        .runningLog(runningLog)
-                        .build());
+        likeRepository.save(RunningLogConverter.toLike(user, runningLog));
 
 
         // 러닝일지에 좋아요 cnt + 1
@@ -76,11 +73,16 @@ public class LikeServiceImpl implements LikeService {
 
 
         // 러닝로그 조회
-        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+        RunningLog runningLog = findRunningLogById(runningLogId);
 
         // 러닝일지에 좋아요 cnt - 1
         runningLog.minusLikeCnt();
 
+    }
+
+    // runningLogId 로 러닝일지 찾기
+    private RunningLog findRunningLogById(Long runningLogId){
+        return runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
     }
 }

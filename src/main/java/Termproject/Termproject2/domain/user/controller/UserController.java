@@ -158,7 +158,7 @@ public class UserController {
         if (userId == null) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
-        User user = userService.findById(userId);
+        User user = userService.findUserById(userId);
         String tempToken = jwtUtil.createJwt("temp", userId, user.getUserName(), user.getRole().toString(), 5 * 60 * 1000L);
         return ResponseEntity.ok(ApiResponse.ok(tempToken, "임시 토큰이 발급되었습니다."));
     }
@@ -193,7 +193,7 @@ public class UserController {
         userService.userActivate(userId);
 
         // 유저 조회
-        User user = userService.findById(userId);
+        User user = userService.findUserById(userId);
 
         // refreshToken 생성
         String refreshToken = jwtUtil.createJwt("refresh", userId, user.getUserName(), user.getRole().toString(), 60 * 60 * 24 * 14 * 1000L);

@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.friend.service;
 
+import Termproject.Termproject2.domain.friend.converter.FriendConverter;
 import Termproject.Termproject2.domain.friend.dto.request.FriendRequestDto;
 import Termproject.Termproject2.domain.friend.dto.response.FriendListResponse;
 import Termproject.Termproject2.domain.friend.dto.response.FriendResponseDto;
@@ -69,15 +70,6 @@ public class FriendshipServiceImpl implements FriendShipService {
                 last != null ? last.getFriendName() : null);
     }
 
-    //TODO: 유저와 작성자가 친구인지 검증
-    @Override
-    public void isFriendWithAuthor(Long userId, Long authorId) {
-
-        Friendship friendship = friendshipRepository.findByUserIdAndAuthorId(userId, authorId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FRIEND_WITH_LOG_AUTHOR));
-
-    }
-
 
     //TODO: 친구 검색 시 나와의 관계 파악
     @Override
@@ -106,12 +98,10 @@ public class FriendshipServiceImpl implements FriendShipService {
 
                     // 모든 유저에 대해determineStatus -> n+1
                     FriendRequestStatus status = determineStatus(currentUserId, targetUser.getUserId());
-                    return UserSearchResponse.builder()
-                            .userId(targetUser.getUserId())
-                            .nickname(targetUser.getNickName())
-                            .profileImageUrl(imageService.getProfileImageUrl(targetUser.getImageUrl()))
-                            .friendStatus(status)
-                            .build();
+                    return FriendConverter.toUserSearchResponse(
+                            targetUser,
+                            imageService.getProfileImageUrl(targetUser.getImageUrl()),
+                            status);
                 })
                 .collect(Collectors.toList());
 
@@ -152,11 +142,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         User receiver = findUser(friendId);
 
         // 이미 요청이 존재하는지 체크하는 로직 추가 권장
-        FriendRequest request = FriendRequest.builder()
-                .sender(sender)
-                .receiver(receiver)
-                .status(FriendRequestStatus.SENDED)
-                .build();
+        FriendRequest request = FriendConverter.toFriendRequest(sender, receiver);
 
         // 친구 요청 전송
         friendRequestRepository.save(request);
@@ -182,10 +168,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         request.setStatus(FriendRequestStatus.FRIEND);
 
         // Friendship 테이블에 저장
-        Friendship friendship = Friendship.builder()
-                .senderUser(request.getSender())
-                .receiveUser(request.getReceiver())
-                .build();
+        Friendship friendship = FriendConverter.toFriendship(request.getSender(), request.getReceiver());
 
         friendshipRepository.save(friendship);
 
@@ -259,6 +242,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         return FriendRequestStatus.NONE;
     }
 
+    // 유저 찾기
     private User findUser(Long userId){
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));

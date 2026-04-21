@@ -3,6 +3,7 @@ package Termproject.Termproject2.domain.notification.service;
 
 import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
+import Termproject.Termproject2.domain.notification.converter.NotificationConverter;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto;
 import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDtos;
 import Termproject.Termproject2.domain.notification.dto.request.SelectedNotificationRequestDto;
@@ -42,34 +43,19 @@ public class NotificationServiceImpl implements NotificationService {
         boolean isReply = comment.getParent() != null;
         String message = comment.getUser().getNickName() + (isReply ? "님이 답글을 남겼습니다." : "님이 댓글을 남겼습니다.");
 
-        // 댓글/답글 알림 생성
-        Notification notification = Notification.builder()
-                .user(receiver)
-                .type(NotificationType.COMMENT)
-                .comment(comment)
-                .sender(comment.getUser())
-                .message(message)
-                .content(getPreview(comment.getContent()))
-                .runningLog(comment.getRunningLog())
-                .build();
-
-        // 알림 저장
-        notificationRepository.save(notification);
+        // 댓글/답글 알림 생성 및 저장
+        notificationRepository.save(NotificationConverter.toCommentNotification(
+                receiver, comment, message, getPreview(comment.getContent())));
     }
 
     //TODO: 친구 요청 알림 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyFriendRequest(User receiver, User sender, FriendRequestStatus friendRequestStatus) {
-        Notification notification = Notification.builder()
-                .user(receiver)
-                .type(NotificationType.FRIEND_REQUEST)
-                .sender(sender)
-                .message(sender.getNickName() + "님이 친구 요청을 보냈습니다.")
-                .friendRequestStatus(friendRequestStatus)
-                .build();
-
-        notificationRepository.save(notification);
+        notificationRepository.save(NotificationConverter.toFriendRequestNotification(
+                receiver, sender,
+                sender.getNickName() + "님이 친구 요청을 보냈습니다.",
+                friendRequestStatus));
     }
 
     //TODO: 좋아요 알림 생성 (중복 방지, 본인 글 제외)
@@ -82,16 +68,10 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        Notification notification = Notification.builder()
-                .user(receiver)
-                .sender(sender)
-                .runningLog(runningLog)
-                .type(NotificationType.LIKE)
-                .message(sender.getNickName() + "님이 러닝일지에 좋아요를 눌렀습니다.")
-                .runningLog(runningLog)
-                .build();
-
-        notificationRepository.save(notification);
+        // 알림 생성
+        notificationRepository.save(NotificationConverter.toLikeNotification(
+                receiver, sender, runningLog,
+                sender.getNickName() + "님이 러닝일지에 좋아요를 눌렀습니다."));
     }
 
     //TODO: 알림 갯수 반환
@@ -132,31 +112,6 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
 
-    // 다음 페이지 존재 여부 판단
-    private boolean hasNext(List<?> list, int size) {
-        return list.size() > size;
-    }
-
-    // size 기준으로 리스트 자르기
-    private <T> List<T> trimToSize(List<T> list, int size) {
-        return list.size() > size ? list.subList(0, size) : list;
-    }
-
-    // next cursor 계산 (제네릭)
-    private <T> Long getNextCursorId(List<T> result, boolean hasNext, Function<T, Long> idExtractor) {
-        if (!hasNext || result.isEmpty()) {
-            return null;
-        }
-        return idExtractor.apply(result.get(result.size() - 1));
-    }
-
-
-    //댓글용 미리보기, 10글자까지만 미리보기
-    public String getPreview(String content){
-        if(content.length() > 40) return content.substring(0, 40) + "...";
-        else return content;
-    }
-
     //TODO: 댓글 목록에 연관된 알림 삭제
     @Override
     @Transactional
@@ -171,26 +126,18 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyFriendRequestAccepted(User sender, User receiver) {
-        Notification notification = Notification.builder()
-                .user(sender)
-                .type(NotificationType.FRIEND_REQUEST_ACCEPTED)
-                .sender(receiver)
-                .message(receiver.getNickName() + "님이 친구 요청을 수락했습니다.")
-                .build();
-        notificationRepository.save(notification);
+        notificationRepository.save(NotificationConverter.toFriendRequestAcceptedNotification(
+                sender, receiver,
+                receiver.getNickName() + "님이 친구 요청을 수락했습니다."));
     }
 
     //TODO: 친구 요청 거절 알림 생성
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyFriendRequestRejected(User sender, User receiver) {
-        Notification notification = Notification.builder()
-                .user(sender)
-                .type(NotificationType.FRIEND_REQUEST_REJECTED)
-                .sender(receiver)
-                .message(receiver.getNickName() + "님이 친구 요청을 거절했습니다.")
-                .build();
-        notificationRepository.save(notification);
+        notificationRepository.save(NotificationConverter.toFriendRequestRejectedNotification(
+                sender, receiver,
+                receiver.getNickName() + "님이 친구 요청을 거절했습니다."));
     }
 
     //TODO: 선택 알림 삭제
@@ -215,8 +162,35 @@ public class NotificationServiceImpl implements NotificationService {
                 .ifPresent(notification -> notification.updateFriendRequestStatus(status));
     }
 
+
+    // 다음 페이지 존재 여부 판단
+    private boolean hasNext(List<?> list, int size) {
+        return list.size() > size;
+    }
+
+    // size 기준으로 리스트 자르기
+    private <T> List<T> trimToSize(List<T> list, int size) {
+        return list.size() > size ? list.subList(0, size) : list;
+    }
+
+    // next cursor 계산 (제네릭)
+    private <T> Long getNextCursorId(List<T> result, boolean hasNext, Function<T, Long> idExtractor) {
+        if (!hasNext || result.isEmpty()) {
+            return null;
+        }
+        return idExtractor.apply(result.get(result.size() - 1));
+    }
+
+
+    //댓글용 미리보기, 10글자까지만 미리보기
+    private String getPreview(String content){
+        if(content.length() > 40) return content.substring(0, 40) + "...";
+        else return content;
+    }
+
+
     // 프로필 이미지명 > full 이미지 url
-    public void toFullProfileImageUrl(List<NotificationDto> notificationDtoList){
+    private void toFullProfileImageUrl(List<NotificationDto> notificationDtoList){
         // 파일명 > 이미지 url 로 변환
         notificationDtoList.forEach(
                 dto -> {

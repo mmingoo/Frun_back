@@ -14,9 +14,11 @@ import java.io.Serializable;
 @EqualsAndHashCode
 public class FriendshipId implements Serializable {
 
+    // 받은 유저의 id
     @Column(name = "recieve_user_id", length = 20)
     private Long receiveUserId;
 
+    // 보낸 유저의 id
     @Column(name = "sender_user_id", length = 20)
     private Long senderUserId;
 

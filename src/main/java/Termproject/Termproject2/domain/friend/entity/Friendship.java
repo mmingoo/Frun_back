@@ -16,18 +16,21 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Friendship extends BaseTimeEntity {
 
+    // 복합키 (수신자ID, 발신자ID)
     @EmbeddedId
-    private FriendshipId id; // 복합키 (수신자ID, 발신자ID)
+    private FriendshipId id;
 
+    // 친구 요청 수락한 유저
     @MapsId("receiveUserId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recieve_user_id", referencedColumnName = "user_id")
-    private User receiveUser; // 친구 요청 수락한 유저
+    private User receiveUser;
 
+    // 친구 요청 보낸 유저
     @MapsId("senderUserId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user_id", referencedColumnName = "user_id")
-    private User senderUser; // 친구 요청 보낸 유저
+    private User senderUser;
 
     @Builder
     public Friendship(User receiveUser, User senderUser) {

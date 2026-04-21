@@ -1,13 +1,12 @@
 package Termproject.Termproject2.domain.notice.repository;
 
-import Termproject.Termproject2.domain.notice.Notice;
+import Termproject.Termproject2.domain.notice.entity.Notice;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-
 public interface NoticeRepository extends JpaRepository<Notice, Long> {
-    //TODO: 최신 공지사항 6개 조회 (첫 페이지)
-    List<Notice> findTop6ByOrderByNoticeIdDesc();
-    //TODO: 커서 이후 공지사항 6개 조회
-    List<Notice> findTop6ByNoticeIdLessThanOrderByNoticeIdDesc(Long cursorId);
+
+    //TODO: 내림차순 정렬 모든 공지사항 조회
+    Page<Notice> findAllByOrderByNoticeIdDesc(Pageable pageable);
 }

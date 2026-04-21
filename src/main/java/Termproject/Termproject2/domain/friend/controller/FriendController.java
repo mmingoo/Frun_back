@@ -44,7 +44,7 @@ public class FriendController {
             @Parameter(description = "검색 키워드") @RequestParam String keyword,
             @Parameter(description = "이전 페이지 마지막 유저 닉네임 (첫 요청 시 생략)") @RequestParam(required = false) String cursorName,
             @Parameter(description = "이전 페이지 마지막 userId (cursorName과 함께 사용)") @RequestParam(required = false) Long cursorId,
-            @Parameter(description = "한 번에 조회할 수 (기본값 20)") @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "한 번에 조회할 수 (기본값 100)") @RequestParam(defaultValue = "100") int size) {
 
         Long userId = jwtTokenExtractor.getUserId();
         return ResponseEntity.ok(ApiResponse.ok(

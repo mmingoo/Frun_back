@@ -11,9 +11,4 @@ import java.util.Optional;
 
 public interface UserSanctionHistoryRepository extends JpaRepository<UserSanctionHistory, Long> {
 
-    Optional<UserSanctionHistory> findTopByTargetUserOrderByCreatedAtDesc(User targetUser);
-
-    @Modifying
-    @Query("DELETE FROM UserSanctionHistory h WHERE h.targetUser.userId = :userId")
-    void deleteAllByTargetUserUserId(@Param("userId") Long userId);
 }

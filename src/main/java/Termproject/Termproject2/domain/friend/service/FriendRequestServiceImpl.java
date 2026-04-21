@@ -13,9 +13,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class FriendRequestServiceImpl implements FriendRequestService{
 
-
     private final FriendRequestRepository friendRequestRepository;
-
 
     //TODO: 수신자·발신자 ID로 친구 요청 조회
     @Override

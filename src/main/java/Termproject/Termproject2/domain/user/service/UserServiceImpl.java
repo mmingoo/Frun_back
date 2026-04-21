@@ -38,16 +38,23 @@ public class UserServiceImpl implements UserService {
     //TODO: 닉네임 중복 여부 확인
     @Override
     public NicknameCheckResponse nicknameDuplicateCheck(String checkNickname) {
+
+        // 닉네임 존재 여부
         boolean isExists = userRepository.existsByNickName(checkNickname);
+
         return new NicknameCheckResponse(isExists);
     }
 
     //TODO: 닉네임 설정 여부 조회
     @Override
     public NicknameStatusResponse getNicknameStatus(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+
+        // 유저 조회
+        User user = findUserById(userId);
+
+        // 닉네임 존재 여부
         boolean hasNickname = user.getNickName() != null && !user.getNickName().isBlank();
+
         return new NicknameStatusResponse(hasNickname);
     }
 
@@ -55,20 +62,20 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void setupProfile(Long userId, String nickname, String imageUrl) {
+
         // 닉네임 중복 검증 → 어떤 경로로 호출되든 보장됨
         if (userRepository.existsByNickName(nickname)) {
             throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = findUserById(userId);
 
         user.setUpProfile(nickname, imageUrl);
     }
 
     //TODO: userId로 유저 조회
     @Override
-    public User findById(Long userId) {
+    public User findUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
@@ -77,30 +84,40 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId) {
         FriendRequestStatus status = null;
-        User user = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
+        User user = findUserById(targetUserId);
+
+        // 친구 수 조회
         long friendCount = friendShipService.getFriendCount(targetUserId);
 
         boolean isOwner = viewerId.equals(targetUserId);
 
-        if (!isOwner && user.getUserStatus().isInactive()) {
+        // 주인도 아니고 비활성화인 경우 '비활성화 에러' 발생
+        if (user.getUserStatus().isInactive()) {
             throw new BusinessException(ErrorCode.USER_INACTIVE);
         }
 
+        // 자신의 페이지가 아닌 경우에만 해당 유저와 관계 반환
+        // FriendRequestStatus.FRIEND , FriendRequestStatus.SENDED, FriendRequestStatus.PENDING
         if(!isOwner){
             status =  friendShipService.getStatus(viewerId,targetUserId);
         }
 
+        // 러닝통계 집계
         Object[] stats = runningLogRepository.aggregateStatsByUserId(targetUserId).get(0);
 
-        long totalRunCount = ((Number) stats[0]).longValue();
-        double totalDistanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0;
-        long totalDurationSec = ((Number) stats[2]).longValue();
+
+        long totalRunCount = ((Number) stats[0]).longValue(); // 러닝 횟수
+        double totalDistanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0; // 러닝 총 거리(km)
+        long totalDurationSec = ((Number) stats[2]).longValue(); // 러닝 총 시간(초)
 
         String avgPace = null;
+
         if (totalDistanceKm > 0) {
+            // 총 시간(초)을 총 거리(km)로 나누어 km당 평균 페이스(초) 계산
             long avgPaceSeconds = Math.round(totalDurationSec / totalDistanceKm);
+
+            // 계산된 초를 문자열로 변환 (5'30")
             avgPace = String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
         }
 
@@ -122,8 +139,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserProfileInfoResponse getUserInfo(Long userId) {
         // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(()-> new BusinessException(ErrorCode.NOT_FOUND));
+        User user = findUserById(userId);
 
         // 이미지 경로 변환 후 조회
         String imageUrl = imageService.getProfileImageUrl(user.getImageUrl());
@@ -137,22 +153,29 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUserProfile(Long userId, UserProfileUpdateRequestDto request, MultipartFile profileImage) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        // 유저 조회
+        User user = findUserById(userId);
 
+        // 프로필 소개글
         String bio = request.getBio();
+
+        // 업데이트 항목 존재 여부 (소개글, 이미지)
         boolean hasBio = bio != null;
         boolean hasImage = profileImage != null && !profileImage.isEmpty();
 
+        // 변경사항이 없으면 종료
         if (!hasBio && !hasImage) return;
 
+        // 전달된 값이 없으면 기존 엔티티의 값을 유지, 있다면 업데이트
         String newBio = hasBio ? bio : user.getBio();
         String newImageUrl = user.getImageUrl();
 
+        // 새 이미지가 있다면 서버 저장 후 URL 갱신
         if (hasImage) {
             newImageUrl = imageService.saveProfileImage(userId, profileImage);
         }
 
+        // 변경값 업데이트(Dirty Checking)
         user.updateProfile(newBio, newImageUrl);
     }
 
@@ -183,6 +206,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public InactiveInfoResponse getInactiveInfo(Long userId) {
         User user = findUserById(userId);
+
         // INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 모두 비활성 정보 조회 허용
         // DIRECT_INACTIVE / REPORT_INACTIVE 는 기존 데이터에서 deactivatedAt 이 null 일 수 있으므로 상태만 체크
         if (!user.getUserStatus().isInactive()) {
@@ -240,11 +264,5 @@ public class UserServiceImpl implements UserService {
         User user = findUserById(userId);
         refreshTokenService.delete(userId);
         userRepository.delete(user);
-    }
-
-    //TODO: USER 반환 메서드, 에러 처리
-    private User findUserById(Long userId){
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }

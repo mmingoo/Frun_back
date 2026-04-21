@@ -26,7 +26,7 @@ public class RunningLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "running_log_id")
-    private Long runningLogId; // 러닝일지 ID
+    private Long runningLogId;
 
     @Column(name = "duration", nullable = false)
     private LocalTime duration; // 러닝 총 소요 시간

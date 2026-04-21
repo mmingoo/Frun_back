@@ -10,8 +10,8 @@ import lombok.Getter;
 @Builder
 // 유저 검색 결과 단건 응답
 public class UserSearchResponse {
-    private Long userId; // 유저 ID
-    private String nickname; // 닉네임
-    private String profileImageUrl; // 프로필 이미지 URL
+    private Long userId;
+    private String nickname;
+    private String profileImageUrl;
     private FriendRequestStatus friendStatus; // 친구 관계 상태
 }

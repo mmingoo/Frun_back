@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.comment.service;
 
 import Termproject.Termproject2.domain.comment.Comment;
+import Termproject.Termproject2.domain.comment.converter.CommentConverter;
 import Termproject.Termproject2.domain.comment.dto.request.CommentCreateRequest;
 import Termproject.Termproject2.domain.comment.dto.response.CommentResponse;
 import Termproject.Termproject2.domain.comment.dto.response.CursorSliceResponse;
@@ -100,6 +101,7 @@ public class CommentServiceImpl implements CommentService{
         // size + 1 개 댓글을 불러왔고, 이 중 가장 마지막 댓글의 Id가 cursorId
         Long nextCursorId = getNextCursorId(replies, hasNext);
 
+        // 답글마다 프로필 사진 가져오기
         contents.forEach(
                 comment -> {
                     String fullUrl = imageService.getProfileImageUrl(comment.getProfileImageUrl());
@@ -118,23 +120,25 @@ public class CommentServiceImpl implements CommentService{
     @Override
     public Long createComment(Long runningLogId, Long userId, CommentCreateRequest request) {
 
-        RunningLog runningLog = findRunningLogById(runningLogId); //러닝로그 조회
-        User user = findUserById(userId); // 유저 조회
+        //러닝로그 조회
+        RunningLog runningLog = findRunningLogById(runningLogId);
 
-        Comment comment = Comment.builder() // 댓글 생성
-                .runningLog(runningLog)
-                .user(user)
-                .content(request.getContent())
-                .build();
+        // 유저 조회
+        User user = findUserById(userId);
 
-        Comment saved = commentRepository.save(comment); // 댓글 저장
+        // 댓글 생성
+        Comment comment = CommentConverter.toComment(runningLog, user, request.getContent());
 
+        // 댓글 저장
+        Comment saved = commentRepository.save(comment);
 
-        User logAuthor = runningLog.getUser(); // 작성자
-        notificationService.notifyComment(logAuthor, saved); // 댓글과 작성자에 대한 알림 생성
+        // 작성자 가져오기
+        User logAuthor = runningLog.getUser();
 
+        // 댓글과 작성자에 대한 알림 생성
+        notificationService.notifyComment(logAuthor, saved);
 
-        return saved.getCommentId(); // 댓글 저장
+        return saved.getCommentId();
 
     }
 
@@ -142,9 +146,15 @@ public class CommentServiceImpl implements CommentService{
     @Transactional
     @Override
     public Long createReply(Long runningLogId, Long userId, Long parentId, CommentCreateRequest request) {
-        RunningLog runningLog = findRunningLogById(runningLogId); // 러닝일지 조회
-        User user = findUserById(userId);  // 댓글 작성자 조회
-        Comment parent = findCommentById(parentId); // 부모 댓글 조회
+
+        // 러닝일지 조회
+        RunningLog runningLog = findRunningLogById(runningLogId);
+
+        // 댓글 작성자 조회
+        User user = findUserById(userId);
+
+        // 부모 댓글 조회
+        Comment parent = findCommentById(parentId);
 
 
         // depth 2 초과 방지 , 부모 댓글의 부모가 있으면 답글 불가
@@ -158,18 +168,15 @@ public class CommentServiceImpl implements CommentService{
         }
 
         // 답글 생성
-        Comment reply = Comment.builder()
-                .runningLog(runningLog)
-                .user(user)
-                .content(request.getContent())
-                .parent(parent)
-                .build();
+        Comment reply = CommentConverter.toReply(runningLog, user, request.getContent(), parent);
 
         // 답글 저장
         Comment saved = commentRepository.save(reply);
 
         // 부모 댓글 작성자에게 답글 알림 전송 (본인 댓글에 본인 답글이면 내부에서 필터링)
         User parentCommentAuthor = parent.getUser();
+
+        // 답글 알림 생성
         notificationService.notifyComment(parentCommentAuthor, saved);
 
         return saved.getCommentId();
@@ -179,8 +186,13 @@ public class CommentServiceImpl implements CommentService{
     @Transactional
     @Override
     public void updateComment(Long commentId, Long userId, CommentCreateRequest request) {
+        // 댓글 조회
         Comment comment = findCommentById(commentId);
+
+        // 댓글 작성자인지 검토
         validateOwner(comment, userId);
+
+        // 댓글 검토
         comment.update(request.getContent());
     }
 
@@ -188,8 +200,10 @@ public class CommentServiceImpl implements CommentService{
     @Transactional
     @Override
     public void deleteComment(Long commentId, Long userId) {
-        Comment comment = commentRepository.findByIdWithRunningLogOwner(commentId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
+        // 댓글 조회
+        Comment comment = findCommentById(commentId);
+
+        // 댓글 삭제할 권한있는지 검증
         validateDeletePermission(comment, userId);
 
         // 댓글(+자식 답글)을 참조하는 알림 먼저 삭제
@@ -197,54 +211,59 @@ public class CommentServiceImpl implements CommentService{
         toDelete.add(comment);
         notificationService.deleteByComments(toDelete);
 
-        commentRepository.delete(comment); // orphanRemoval = true로 자식(답글)도 같이 삭제
+        // orphanRemoval = true로 자식(답글)도 같이 삭제
+        commentRepository.delete(comment);
     }
 
-    //TODO: commentId로 댓글 조회
+
+    //commentId로 댓글 조회
     public Comment findCommentById(Long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
     }
 
-    //TODO: runningLogId로 러닝일지 조회
+    //runningLogId로 러닝일지 조회
     private RunningLog findRunningLogById(Long runningLogId) {
         return runningLogService.findById(runningLogId);
     }
 
-    //TODO: userId로 유저 조회
+    //userId로 유저 조회
     private User findUserById(Long userId) {
-        return userService.findById(userId);
+        return userService.findUserById(userId);
     }
 
-    //TODO: 러닝일지 존재 여부 검증
+    //러닝일지 존재 여부 검증
     private void validateRunningLogExists(Long runningLogId) {
         if (!runningLogService.existsById(runningLogId)) {
             throw new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND);
         }
     }
 
-    //TODO: 댓글 작성자 검증
+    //댓글 작성자 검증
     private void validateOwner(Comment comment, Long userId) {
         if (!comment.getUser().getUserId().equals(userId)) {
             throw new BusinessException( ErrorCode.NOT_COMMENT_OWNER);
         }
     }
 
-    // 댓글 작성자이거나 러닝일지 주인이면 삭제 가능
+
+    //댓글 삭제 권한 검증
     private void validateDeletePermission(Comment comment, Long userId) {
         boolean isCommentOwner = comment.getUser().getUserId().equals(userId);
         boolean isLogOwner = comment.getRunningLog().getUser().getUserId().equals(userId);
+
+        // 댓글 작성자 혹은 게시글 주인이 아니면 삭제 불가능
         if (!isCommentOwner && !isLogOwner) {
             throw new BusinessException(ErrorCode.NOT_COMMENT_OWNER);
         }
     }
 
-    //TODO: 다음 페이지 존재 여부 판단
+    //다음 페이지 존재 여부 판단
     private boolean getHasNext(List<Comment> comments, int size){
         return comments.size() > size;
     }
 
-    //TODO: 다음 커서 ID 계산
+    //다음 커서 ID 계산
     private Long getNextCursorId(List<Comment> contents, boolean hasNext) {
         return hasNext
                 ? contents.get(contents.size() -1).getCommentId() // hasNext 가 true인 경우
@@ -252,7 +271,7 @@ public class CommentServiceImpl implements CommentService{
 
     }
 
-    //TODO: 프로필 이미지를 풀 url 로 변환하는 내부 메서드
+    //프로필 이미지를 풀 url 로 변환하는 내부 메서드
     private void toFullProfileUrl(List<CommentResponse> contents) {
         contents.forEach(
                 comment -> {

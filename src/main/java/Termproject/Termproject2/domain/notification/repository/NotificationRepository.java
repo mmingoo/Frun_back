@@ -20,7 +20,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     boolean existsBySenderUserIdAndRunningLogRunningLogIdAndType(
             Long senderId, Long runningLogId, NotificationType type);
 
-    //TODO: 유저의 알림 목록 커서 기반 조회 → NotificationRepositoryImpl (QueryDSL)
 
     //TODO: 특정 발신자·수신자·유형 조합의 최신 알림 조회 (친구 요청 상태 업데이트용)
     @Query("select n from Notification n where n.sender.userId = :senderUserId and n.user.userId = :userUserId and n.type = :type order by n.notificationId desc limit 1")
