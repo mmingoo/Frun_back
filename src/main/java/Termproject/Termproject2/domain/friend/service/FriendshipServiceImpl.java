@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -92,12 +93,13 @@ public class FriendshipServiceImpl implements FriendShipService {
         if (hasNext) filtered = filtered.subList(0, size);
 
 
-        // 친구 검색 결과를 바탕으로 현재 자신과의 친구 관계도 추가하여 표시(요청 보낸 상태, 현재 친구, 아무런 상태도 아닌 경우)
+        // 대상 유저 ID 목록으로 친구 요청 일괄 조회 (N+1 방지)
+        List<Long> targetIds = filtered.stream().map(User::getUserId).collect(Collectors.toList());
+        Map<Long, FriendRequestStatus> statusMap = buildStatusMap(currentUserId, targetIds);
+
         List<UserSearchResponse> result = filtered.stream()
                 .map(targetUser -> {
-
-                    // 모든 유저에 대해determineStatus -> n+1
-                    FriendRequestStatus status = determineStatus(currentUserId, targetUser.getUserId());
+                    FriendRequestStatus status = statusMap.getOrDefault(targetUser.getUserId(), FriendRequestStatus.NONE);
                     return FriendConverter.toUserSearchResponse(
                             targetUser,
                             imageService.getProfileImageUrl(targetUser.getImageUrl()),
@@ -240,6 +242,42 @@ public class FriendshipServiceImpl implements FriendShipService {
         if (receivedStatus == FriendRequestStatus.SENDED) return FriendRequestStatus.PENDING;
 
         return FriendRequestStatus.NONE;
+    }
+
+    // 대상 유저 목록에 대한 친구 상태를 한 번에 조회해 Map으로 반환
+    private Map<Long, FriendRequestStatus> buildStatusMap(Long me, List<Long> targetIds) {
+        List<FriendRequest> requests = friendRequestRepository.findAllByMeAndTargetIds(me, targetIds);
+        Map<Long, FriendRequestStatus> result = new java.util.HashMap<>();
+        for (FriendRequest fr : requests) {
+            Long otherId = fr.getSender().getUserId().equals(me)
+                    ? fr.getReceiver().getUserId()
+                    : fr.getSender().getUserId();
+            FriendRequestStatus existing = result.get(otherId);
+            FriendRequestStatus current = resolveStatus(me, fr);
+            if (existing == null || hasPriority(current, existing)) {
+                result.put(otherId, current);
+            }
+        }
+        return result;
+    }
+
+    // FriendRequest 하나로부터 me 기준 상태 결정
+    private FriendRequestStatus resolveStatus(Long me, FriendRequest fr) {
+        if (fr.getStatus() == FriendRequestStatus.FRIEND) return FriendRequestStatus.FRIEND;
+        if (fr.getStatus() == FriendRequestStatus.SENDED) {
+            return fr.getSender().getUserId().equals(me)
+                    ? FriendRequestStatus.SENDED
+                    : FriendRequestStatus.PENDING;
+        }
+        return FriendRequestStatus.NONE;
+    }
+
+    // 상태 우선순위: FRIEND > SENDED > PENDING > NONE
+    private boolean hasPriority(FriendRequestStatus a, FriendRequestStatus b) {
+        List<FriendRequestStatus> order = List.of(
+                FriendRequestStatus.FRIEND, FriendRequestStatus.SENDED,
+                FriendRequestStatus.PENDING, FriendRequestStatus.NONE);
+        return order.indexOf(a) < order.indexOf(b);
     }
 
     // 유저 찾기

@@ -16,7 +16,7 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
 
     //TODO: 유저의 알림 목록 커서 기반 조회 (발신자, 러닝일지, 댓글 정보 포함)
     @Override
-    public List<NotificationDto> findByUserUserId(Long userId, Long lastId, Pageable pageable) {
+    public List<NotificationDto> findNotificationByUserUserId(Long userId, Long cursorId, Pageable pageable) {
         QNotification n = QNotification.notification;
 
         return queryFactory
@@ -41,7 +41,7 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
                 .where(
                         n.user.userId.eq(userId),
                         // 커서 기반 페이지네이션: lastId 이전 항목만 조회
-                        lastId != null ? n.notificationId.lt(lastId) : null
+                        cursorId != null ? n.notificationId.lt(cursorId) : null
                 )
                 .orderBy(n.notificationId.desc()) // 최신 알림 우선 정렬
                 .limit(pageable.getPageSize())    // 한 페이지 사이즈만큼 제한

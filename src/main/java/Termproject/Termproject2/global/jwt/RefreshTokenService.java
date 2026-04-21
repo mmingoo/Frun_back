@@ -44,7 +44,7 @@ public class RefreshTokenService {
 
     // 블랙리스트 여부 확인
     public boolean isBlacklisted(Long userId) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey("blacklist:" + userId));
+        return redisTemplate.hasKey("blacklist:" + userId);
     }
 
     // 비활성화 코드 저장 (UUID → userId, TTL 5분)

@@ -85,7 +85,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public NotificationDtos getNotificationList(Long userId, Long lastNotificationId, int size) {
         // 1. 알림 목록 조회
-        List<NotificationDto> result = notificationRepository.findByUserUserId(userId, lastNotificationId, PageRequest.of(0, size + 1));
+        List<NotificationDto> result = notificationRepository.findNotificationByUserUserId(userId, lastNotificationId, PageRequest.of(0, size + 1));
 
         // 파일명 > 이미지 url 로 변환
         toFullProfileImageUrl(result);
@@ -199,15 +199,24 @@ public class NotificationServiceImpl implements NotificationService {
         );
     }
 
+    // 비활성화 계정 마스킹 처리
     private void maskInactiveSenders(List<NotificationDto> notificationDtoList) {
         notificationDtoList.forEach(dto -> {
+            // 유저 정보가 없거나 활성화이면 건너띔
             if (dto.getSenderStatus() == null || !dto.getSenderStatus().isInactive()) return;
+
+            // 신고 수락 or 거절인 경우에도 건너띔
             if (dto.getType() == NotificationType.REPORT_ACCEPTED || dto.getType() == NotificationType.REPORT_REJECTED) return;
+
+            // 프로필 사진 null 처리
             dto.setProfileImageUrl(null);
+
+            // 마스킹 메세지 처리
             dto.setMessage(buildMaskedMessage(dto.getType()));
         });
     }
 
+    // 마스크 메시지 생성
     private String buildMaskedMessage(NotificationType type) {
         return switch (type) {
             case COMMENT                  -> "비활성화 계정님이 댓글을 남겼습니다.";

@@ -26,14 +26,18 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
+        // 로그인 성공한 유저 정보 가져오기
         CustomOAuth2User customUserDetails = (CustomOAuth2User) authentication.getPrincipal();
         String username = customUserDetails.getUsername();
         Long userId = customUserDetails.getUserId();
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
-        // 비활성화 계정인 경우 UUID 코드를 Redis에 저장 후 전달
+        // 비활성화 계정인 경우 UUID 코드를 Redis에 저장 후 전달, 종료
         if (customUserDetails.isInactive()) {
+            //UUID 발급
             String code = UUID.randomUUID().toString();
+
+            // redis에 UUID 발급 내역 저장
             refreshTokenService.saveInactiveCode(code, userId);
 
             getRedirectStrategy().sendRedirect(request, response, "http://localhost:5173/inactive?code=" + code);

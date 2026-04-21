@@ -9,6 +9,12 @@ public enum ErrorCode {
     // 공통
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력값입니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
+
+    // 토큰
+    REFRESH_TOKEN_MISSING(HttpStatus.UNAUTHORIZED, "refresh token이 없습니다."),
+    REFRESH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "refresh token이 만료되었습니다."),
+    INVALID_TOKEN_CATEGORY(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+    INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 refresh token입니다."),
     FORBIDDEN(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "리소스를 찾을 수 없습니다."),
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버 오류가 발생했습니다."),
@@ -64,7 +70,8 @@ public enum ErrorCode {
     REPORT_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 신고 유형입니다."),
     DUPLICATE_REPORT(HttpStatus.CONFLICT, "이미 신고한 러닝일지입니다."),
     REPORT_SELF_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "본인을 신고할 수 없습니다."),
-    REPORT_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "이미 처리된 신고입니다.");
+    REPORT_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "이미 처리된 신고입니다."),
+    USER_CANNOT_ACTIVATE(HttpStatus.BAD_REQUEST,"비활성화로 인해 계정 활성화가 불가합니다." );
 
 
     private final HttpStatus status;

@@ -28,6 +28,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
         // 1. 소셜 제공자로부터 사용자 정보 가져오기
+        // 즉 AccessToken 으로 인증서버에 사용자 정보를 가져오는 코드
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         // 2. 어떤 소셜 제공자인지 확인 (naver, google 등)
@@ -50,10 +51,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         // 5. username으로 기존 회원 조회
         User existMember = userRepository.findByUserName(username);
 
+        // 6-1. 신규 회원 → DB에 회원 정보 저장
         if (existMember == null) {
-            // 6-1. 신규 회원 → DB에 회원 정보 저장
-
-
             User memberEntity = User.builder()
                     .userName(username)
                     .name(oAuth2Response.getName())
@@ -85,10 +84,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userDTO.setName(oAuth2Response.getName());
             userDTO.setRole(existMember.getRole());
             userDTO.setNewUser(false);
+
             // INACTIVE / DIRECT_INACTIVE / REPORT_INACTIVE 모두 비활성화로 처리
             userDTO.setInactive(existMember.getUserStatus().isInactive());
-            System.out.println("[OAuth2Login] userId=" + existMember.getUserId()
-                    + ", status=" + existMember.getUserStatus());
+
             return new CustomOAuth2User(userDTO);
         }
     }

@@ -25,7 +25,6 @@ public class FriendFeedResponseDto {
     private LocalTime duration; // 소요 시간
     private String memo; // 메모
     private LocalDateTime createdAt; // 작성일시
-    private int commentCtn; // 댓글 수
     private int likeCtn; // 좋아요 수
     private boolean liked; // 내 좋아요 여부
     private List<String> logImages; // 러닝일지 이미지 URL 목록
@@ -34,7 +33,7 @@ public class FriendFeedResponseDto {
     // QueryDSL Projections 용 (이미지 제외, liked는 서비스 레이어에서 설정)
     public FriendFeedResponseDto(Long runningLogId, Long userId, String nickName, String imageUrl,
                                   LocalDate runDate, LocalTime runTime, BigDecimal distance, String pace, LocalTime duration,
-                                  String memo, LocalDateTime createdAt, int commentCtn, int likeCtn) {
+                                  String memo, LocalDateTime createdAt, int likeCtn) {
         this.runningLogId = runningLogId;
         this.userId = userId;
         this.nickName = nickName;
@@ -46,7 +45,6 @@ public class FriendFeedResponseDto {
         this.duration = duration;
         this.memo = memo;
         this.createdAt = createdAt;
-        this.commentCtn = commentCtn;
         this.likeCtn = likeCtn;
         this.logImages = Collections.emptyList();
     }
@@ -67,7 +65,6 @@ public class FriendFeedResponseDto {
         this.duration = duration;
         this.memo = memo;
         this.createdAt = createdAt;
-        this.commentCtn = commentCtn;
         this.likeCtn = likeCtn;
         this.liked = liked;
         this.logImages = logImages;

@@ -225,6 +225,11 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ErrorCode.USER_ALREADY_ACTIVE);
         }
 
+        // REPORT_INACTIVE, DIRECT_INACTIVE는 활성화 불가
+        if (user.getUserStatus() == UserStatus.REPORT_INACTIVE ||
+                user.getUserStatus() == UserStatus.DIRECT_INACTIVE) {
+            throw new BusinessException(ErrorCode.USER_CANNOT_ACTIVATE);
+        }
         user.setActive();
     }
 
