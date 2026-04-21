@@ -2,7 +2,6 @@ package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.user.dto.response.UserTermsAgreementResponseDto;
 import Termproject.Termproject2.domain.user.repository.UserTermsAgreementRepository;
-import Termproject.Termproject2.domain.user.repository.UserTermsAgreementService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

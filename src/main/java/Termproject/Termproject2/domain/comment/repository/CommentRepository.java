@@ -18,6 +18,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> , Commen
     Optional<Comment> findByIdWithRunningLogOwner(@Param("commentId") Long commentId);
 
     //TODO: 유저 댓글에 달린 다른 유저의 답글 삭제 (parent 삭제 전 먼저 처리)
+    // Native 사용 이유: JPQL은 자기 참조 테이블에 대한 DELETE 문법을 지원하지 않음
     @Modifying
     @Query(value = "DELETE c1 FROM COMMENT c1 INNER JOIN COMMENT c2 ON c1.parent_id = c2.comment_id WHERE c2.user_id = :userId", nativeQuery = true)
     void deleteRepliesOfUserComments(@Param("userId") Long userId);
@@ -26,4 +27,12 @@ public interface CommentRepository extends JpaRepository<Comment, Long> , Commen
     @Modifying
     @Query("DELETE FROM Comment c WHERE c.user.userId = :userId OR c.runningLog.user.userId = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    //TODO: 댓글 수 카운트
+    long countByRunningLogRunningLogIdAndParentIsNull(Long runningLogId);
+
+    //TODO: 답글 수 카운트
+    long countByParentCommentId(Long parentId);
+
+
 }

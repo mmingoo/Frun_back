@@ -1,4 +1,4 @@
-package Termproject.Termproject2.domain.user.repository;
+package Termproject.Termproject2.domain.user.service;
 
 import Termproject.Termproject2.domain.user.dto.response.UserTermsAgreementResponseDto;
 

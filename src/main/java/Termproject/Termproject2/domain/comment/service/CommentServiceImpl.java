@@ -74,7 +74,7 @@ public class CommentServiceImpl implements CommentService{
         Long nextCursorId = getNextCursorId(comments, hasNext);
 
         // 해당 러닝일지의 전체 최상위 댓글 수
-        long totalCount = commentRepository.countTopLevelComments(runningLogId);
+        long totalCount = commentRepository.countByRunningLogRunningLogIdAndParentIsNull(runningLogId);
 
         return new CursorSliceResponse<>(contents, hasNext, nextCursorId, totalCount);
     }
@@ -108,7 +108,7 @@ public class CommentServiceImpl implements CommentService{
         );
 
         // 해당 댓글의 전체 답글 수
-        long totalCount = commentRepository.countReplies(parentId);
+        long totalCount = commentRepository.countByParentCommentId(parentId);
 
         return new CursorSliceResponse<>(contents, hasNext, nextCursorId, totalCount);
     }

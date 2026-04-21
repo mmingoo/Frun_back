@@ -18,9 +18,5 @@ public interface CommentRepositoryCustom {
     //TODO: 특정 댓글의 답글 커서 기반 조회
     List<Comment> findReplies(Long parentId, Long cursorId, int size);
 
-    //TODO: 특정 러닝일지의 최상위 댓글 수 조회
-    long countTopLevelComments(Long runningLogId);
 
-    //TODO: 특정 댓글의 답글 수 조회
-    long countReplies(Long parentId);
 }

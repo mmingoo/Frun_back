@@ -20,6 +20,7 @@ public interface RunningLogRepository extends JpaRepository<RunningLog, Long>, R
     Optional<RunningLog> findByRunningLogIdAndIsDeletedFalse(Long runningLogId);
 
     //TODO: 유저 페이지용 러닝 통계 집계 (게시물 수, 총 거리, 총 시간)
+    // Native 사용 이유: TIME_TO_SEC()은 MySQL 전용 함수로 JPQL에서 지원하지 않음
     @Query(value = "SELECT COUNT(*), COALESCE(SUM(distance), 0.0), COALESCE(SUM(TIME_TO_SEC(duration)), 0) " +
                    "FROM RUNNING_LOG WHERE user_id = :userId AND is_deleted = false AND  is_public = true",
            nativeQuery = true)

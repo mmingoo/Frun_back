@@ -26,8 +26,6 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
     @Override
     public List<FriendResponseDto> getFriendList(Long userId, String cursorName, Long cursorId, int size) {
 
-
-
         return queryFactory
                 .select(Projections.constructor(FriendResponseDto.class,
                         friend.userId,
@@ -56,31 +54,6 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
                 .fetch();
     }
 
-    //TODO: 유저와 작성자로 친구 관계 찾기
-    @Override
-    public Optional<Friendship> findByUserIdAndAuthorId(Long userId, Long authorId) {
-        QFriendship friendship = QFriendship.friendship;
-        return Optional.ofNullable(queryFactory
-                .select(friendship)
-                .from(friendship)
-                .where(friendship.receiveUser.userId.eq(userId)
-                        .and(friendship.senderUser.userId.eq(authorId))
-                        .or(friendship.senderUser.userId.eq(userId)
-                                .and(friendship.receiveUser.userId.eq(authorId)))
-                ).fetchOne());
-    }
-
-    //TODO: 친구 관계 삭제
-    @Override
-    public long deleteFriendship(Long myId, Long friendId) {
-        return queryFactory
-                .delete(friendship)
-                .where(
-                        (friendship.id.receiveUserId.eq(myId).and(friendship.id.senderUserId.eq(friendId))) // 보낸 사람이 나고, 받은 사람이 상대방
-                                .or(friendship.id.receiveUserId.eq(friendId).and(friendship.id.senderUserId.eq(myId))) // 보낸 사람이 상대방이고 받은 사람이 나
-                )
-                .execute(); // 연산이 실행된 데이터 행의 수를 반환
-    }
 
 }
 

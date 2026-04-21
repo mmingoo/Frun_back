@@ -2,9 +2,6 @@ package Termproject.Termproject2.domain.comment.repository;
 
 import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.comment.QComment;
-import Termproject.Termproject2.domain.comment.dto.response.CommentResponse;
-import Termproject.Termproject2.domain.comment.dto.response.CursorSliceResponse;
-import Termproject.Termproject2.domain.comment.dto.response.ReplyResponse;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -69,31 +66,6 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 .fetch();
     }
 
-
-    //TODO: 특정 러닝일지의 최상위 댓글 수 조회
-    @Override
-    public long countTopLevelComments(Long runningLogId) {
-        Long count = jpaQueryFactory
-                .select(comment.count())
-                .from(comment)
-                .where(
-                        comment.runningLog.runningLogId.eq(runningLogId),
-                        comment.parent.isNull()
-                )
-                .fetchOne();
-        return count != null ? count : 0L;
-    }
-
-    //TODO: 특정 댓글의 답글 수 조회
-    @Override
-    public long countReplies(Long parentId) {
-        Long count = jpaQueryFactory
-                .select(comment.count())
-                .from(comment)
-                .where(comment.parent.commentId.eq(parentId))
-                .fetchOne();
-        return count != null ? count : 0L;
-    }
 
     // cursor 조건 (null이면 첫 페이지)
     private BooleanExpression cursorCondition(Long cursorId) {

@@ -3,7 +3,7 @@ package Termproject.Termproject2.domain.user.controller;
 import Termproject.Termproject2.domain.user.dto.request.TermsAgreementRequest;
 import Termproject.Termproject2.domain.user.dto.request.TermsUpdateRequest;
 import Termproject.Termproject2.domain.user.dto.response.UserTermsAgreementResponseDto;
-import Termproject.Termproject2.domain.user.repository.UserTermsAgreementService;
+import Termproject.Termproject2.domain.user.service.UserTermsAgreementService;
 import Termproject.Termproject2.domain.user.service.TermsService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;

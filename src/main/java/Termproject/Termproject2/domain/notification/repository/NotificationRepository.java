@@ -1,11 +1,8 @@
 package Termproject.Termproject2.domain.notification.repository;
 
 import Termproject.Termproject2.domain.comment.Comment;
-import Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto;
-import Termproject.Termproject2.domain.notification.dto.request.SelectedNotificationRequestDto;
 import Termproject.Termproject2.domain.notification.entity.Notification;
 import Termproject.Termproject2.domain.notification.entity.NotificationType;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +12,7 @@ import java.util.Optional;
 
 import java.util.List;
 
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends JpaRepository<Notification, Long>, NotificationRepositoryCustom {
     //TODO: 미읽음 알림 수 조회
     long countByUserUserIdAndIsReadFalse(Long userId);
 
@@ -23,20 +20,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     boolean existsBySenderUserIdAndRunningLogRunningLogIdAndType(
             Long senderId, Long runningLogId, NotificationType type);
 
-    //TODO: 유저의 알림 목록 커서 기반 조회 (발신자, 러닝일지, 댓글 정보 포함)
-    @Query("select new Termproject.Termproject2.domain.notification.dto.reponse.NotificationDto(" +
-        "n.message, n.isRead, n.notificationId, n.content, " +
-            "s.imageUrl, s.userId, rl.runningLogId, " +
-            "rl.user.userId, " +
-            "c.commentId, n.friendRequestStatus, s.userStatus, n.type) " +
-        "from Notification n " +
-        "left join n.sender s " +
-        "left join n.runningLog rl " +
-        "left join n.comment c " +
-        "where n.user.userId = :userId " +
-        "and (:lastId is null or n.notificationId < :lastId) " +
-        "order by n.notificationId desc")
-    List<NotificationDto> findByUserUserId(@Param("userId") Long userId, @Param("lastId") Long lastId, Pageable pageable);
+    //TODO: 유저의 알림 목록 커서 기반 조회 → NotificationRepositoryImpl (QueryDSL)
 
     //TODO: 특정 발신자·수신자·유형 조합의 최신 알림 조회 (친구 요청 상태 업데이트용)
     @Query("select n from Notification n where n.sender.userId = :senderUserId and n.user.userId = :userUserId and n.type = :type order by n.notificationId desc limit 1")
@@ -53,6 +37,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     void updateIsReadToTrue(@Param("notificationIds") List<Long> notificationIds);
 
     //TODO: 유저와 관련된 모든 알림 삭제 (회원 탈퇴 시)
+    // Native 사용 이유: JPQL은 multi-table DELETE 및 DELETE 절 내 LEFT JOIN을 지원하지 않음
     @Modifying
     @Query(value = """
             DELETE n FROM NOTIFICATION n
