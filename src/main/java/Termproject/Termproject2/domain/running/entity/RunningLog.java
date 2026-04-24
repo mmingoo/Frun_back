@@ -4,6 +4,7 @@ import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.notification.entity.Notification;
 import Termproject.Termproject2.domain.report.entity.Report;
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.global.common.basedTime.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -21,7 +22,7 @@ import java.util.List;
 @Table(name = "RUNNING_LOG")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RunningLog {
+public class RunningLog extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,23 +47,14 @@ public class RunningLog {
     @Column(name = "is_public", nullable = false)
     private boolean isPublic; // 공개 여부
 
-    @Column(name = "comment_ctn")
-    private int commentCtn; // 댓글 수
-
     @Column(name = "like_ctn")
     private int likeCtn; // 좋아요 수
 
     @Column(name = "memo", length = 500)
     private String memo; // 메모 (최대 500자)
 
-    @Column(name = "delete_reason", length = 500)
+    @Column(name = "delete_reason", length = 1000)
     private String deleteReason; // 삭제 사유
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt; // 생성일시
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt; // 수정일시
 
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false; // soft 삭제 여부
@@ -90,19 +82,9 @@ public class RunningLog {
     @OneToMany(mappedBy = "runningLog", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RunningLogImage> images = new ArrayList<>();
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
-
     @Builder
     public RunningLog(User user, LocalTime duration, LocalDate runDate,
-                      BigDecimal distance, String pace, boolean isPublic, String memo) {
+                      BigDecimal distance, String pace, boolean isPublic, String memo, LocalTime runTime) {
         this.user = user;
         this.duration = duration;
         this.runDate = runDate;
@@ -110,6 +92,7 @@ public class RunningLog {
         this.pace = pace;
         this.isPublic = isPublic;
         this.memo = memo;
+        this.runTime = runTime;
     }
 
     public void update(LocalTime duration, LocalDate runDate, BigDecimal distance,
@@ -137,9 +120,6 @@ public class RunningLog {
         }
     }
 
-    public void addLikeCnt(){
-        this.likeCtn += 1;
-    }
 
     public void minusLikeCnt(){
         this.likeCtn -= 1;

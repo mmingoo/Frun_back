@@ -28,25 +28,25 @@ public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id", length = 20, nullable = false)
+    @Column(name = "user_id")
     private Long userId; // 유저 ID
 
     @Column(name = "name", length = 20, nullable = false)
     private String name; // 실명
 
-    @Column(name = "user_name", length = 200, nullable = false)
+    @Column(name = "user_name", length = 100, nullable = false)
     private String userName; // 소셜 로그인 식별자 (socialType + providerId 조합)
 
-    @Column(name = "user_email", length = 50, nullable = false)
+    @Column(name = "user_email", length = 50, nullable = false, unique = true)
     private String userEmail; // 이메일
 
     @Column(name = "user_phone", length = 15, nullable = false)
     private String userPhone; // 전화번호
 
-    @Column(name = "provider_id", length = 255)
+    @Column(name = "provider_id", length = 100, nullable = false)
     private String providerId; // 소셜 제공자 ID
 
-    @Column(name = "nick_name", length = 20)
+    @Column(name = "nick_name", length = 20,unique = true)
     private String nickName; // 닉네임 (5~20자, 최초 설정 전 null)
 
     @Enumerated(EnumType.STRING)
@@ -66,8 +66,8 @@ public class User extends BaseTimeEntity {
     @Column(name = "deletion_scheduled_at")
     private LocalDateTime deletionScheduledAt; // 물리 삭제 예정일 (비활성화 후 3개월)
 
-    @Column(name = "bio", length = 50)
-    private String bio; // 프로필 소개글 (최대 50자)
+    @Column(name = "bio", length = 200)
+    private String bio; // 프로필 소개글 (최대 200자)
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "social_type_id")

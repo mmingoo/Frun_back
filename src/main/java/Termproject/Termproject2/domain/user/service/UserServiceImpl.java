@@ -257,8 +257,15 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void updateUserNickname(Long userId, UserUpdateNicknameDto request) {
+
+        // 닉네임 존재 여부 검증
+        if (userRepository.existsByNickName(request.getNickname())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_NICKNAME);
+        }
         User user = findUserById(userId);
-        user.updateUserNickname(request.getNickname()) ;
+
+        // 닉네임 업데이트
+        user.updateUserNickname(request.getNickname());
     }
 
 
@@ -267,6 +274,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long userId) {
         User user = findUserById(userId);
+
+        //refreshToken 삭제
         refreshTokenService.delete(userId);
         userRepository.delete(user);
     }

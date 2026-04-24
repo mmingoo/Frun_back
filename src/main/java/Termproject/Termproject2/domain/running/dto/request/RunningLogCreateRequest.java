@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 // 러닝일지 생성 요청 DTO
 @Getter
@@ -14,6 +15,9 @@ public class RunningLogCreateRequest {
 
     @NotNull
     private LocalDate runDate; // 러닝 날짜
+
+    @NotNull
+    private LocalTime runTime; // 러닝 시각
 
     @NotNull
     @DecimalMin(value = "0.01", message = "거리는 0보다 커야 합니다.")

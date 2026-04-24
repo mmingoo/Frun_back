@@ -11,6 +11,7 @@ import Termproject.Termproject2.domain.user.repository.UserRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,11 +45,17 @@ public class LikeServiceImpl implements LikeService {
 
 
         // 좋아요 생성 후 저장
-        likeRepository.save(RunningLogConverter.toLike(user, runningLog));
+        // 동시에 좋아요 누르는 경우 두 번째 좋아요 시 터지는 500 에러를 처리하기 위함
+        try {
+            likeRepository.save(RunningLogConverter.toLike(user, runningLog));
+        } catch (DataIntegrityViolationException e) {
+            // 동시 요청으로 유니크 제약 위반 시
+            throw new BusinessException(ErrorCode.ALREADY_LIKED);
+        }
 
 
         // 러닝일지에 좋아요 cnt + 1
-        runningLog.addLikeCnt();
+        likeRepository.incrementLikeCnt(runningLogId);
 
         // 본인 글에 본인이 좋아요 하는 경우 알림 생성 X
         User logAuthor = runningLog.getUser();

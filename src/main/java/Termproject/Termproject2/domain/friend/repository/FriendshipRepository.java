@@ -40,5 +40,5 @@ public interface FriendshipRepository extends JpaRepository<Friendship, Long>, F
     @Query("DELETE FROM Friendship f " +
             "WHERE (f.id.receiveUserId = :myId AND f.id.senderUserId = :friendId) " +
             "OR (f.id.receiveUserId = :friendId AND f.id.senderUserId = :myId)")
-    long deleteFriendship(@Param("myId") Long myId, @Param("friendId") Long friendId);
+    int deleteFriendship(@Param("myId") Long myId, @Param("friendId") Long friendId);
 }

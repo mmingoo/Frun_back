@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.IsoFields;
 import java.util.List;
@@ -55,6 +56,10 @@ public class RunningLogServiceImpl implements RunningLogService {
     public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
         int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
         User user = userService.findUserById(userId);
+
+        // 날짜 , 시간 검증
+        validateRunDateTime(request.getRunDate(), request.getRunTime());
+
 
         // 컨버터로 러닝로그 생성
         RunningLog runningLog = RunningLogConverter.toRunningLog(
@@ -186,6 +191,21 @@ public class RunningLogServiceImpl implements RunningLogService {
 
 
     // ===================== private 메서드 =====================\
+
+    // runDate + runTime 미래 입력 및 최소 날짜(2026-02-01) 이전 입력 검증
+    private void validateRunDateTime(LocalDate runDate, LocalTime runTime) {
+        LocalDateTime runDateTime = LocalDateTime.of(runDate, runTime);
+
+        // 현재 시간보다 더 먼 미래면
+        if (runDateTime.isAfter(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.FUTURE_RUN_DATETIME);
+        }
+
+        // 2026-02-01 00:00 보다 더 과거면
+        if (runDateTime.isBefore(LocalDateTime.of(2026, 2, 1, 0, 0))) {
+            throw new BusinessException(ErrorCode.TOO_OLD_RUN_DATETIME);
+        }
+    }
 
     // 러닝 로그 설정
     private void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request) {

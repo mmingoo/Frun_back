@@ -120,7 +120,7 @@ public class FriendshipServiceImpl implements FriendShipService {
     @Transactional
     public void unfriend(Long myId, Long friendId) {
         // Friendship 테이블에서 관계 삭제
-        long deletedCount = friendshipRepository.deleteFriendship(myId, friendId);
+        int deletedCount = friendshipRepository.deleteFriendship(myId, friendId);
 
         // deletedCount > 0 : 친구 관계가 끊어진 상태
         // deletedCount == 0 : 애초에 친구관계가 아니거나 삭제된 상태
@@ -139,11 +139,25 @@ public class FriendshipServiceImpl implements FriendShipService {
 
     //TODO: 친구 요청
     @Transactional
-    public void sendFriendRequest(Long userId, Long friendId ) {
+    public void sendFriendRequest(Long userId, Long friendId) {
         User sender = findUser(userId);
         User receiver = findUser(friendId);
 
-        // 이미 요청이 존재하는지 체크하는 로직 추가 권장
+        // 이미 내가 보낸 요청이 있는지 (중복 요청 방지)
+        if (friendRequestRepository.findByReceiver_UserIdAndSender_UserId(friendId, userId).isPresent()) {
+            throw new BusinessException(ErrorCode.ALREADY_FRIEND_REQUESTED);
+        }
+
+        // 상대가 나에게 이미 요청을 보낸 상태인지 (양방향 요청 방지)
+        if (friendRequestRepository.findByReceiver_UserIdAndSender_UserId(userId, friendId).isPresent()) {
+            throw new BusinessException(ErrorCode.ALREADY_RECEIVED_REQUEST);
+        }
+
+        // 이미 친구인지
+        if (friendshipRepository.findByUserIdAndAuthorId(userId, friendId).isPresent()) {
+            throw new BusinessException(ErrorCode.ALREADY_FRIEND);
+        }
+
         FriendRequest request = FriendConverter.toFriendRequest(sender, receiver);
 
         // 친구 요청 전송

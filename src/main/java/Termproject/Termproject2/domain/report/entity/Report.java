@@ -39,7 +39,7 @@ public class Report extends BaseTimeEntity {
     private ReportStatus status; // 처리 상태 (PENDING / COMPLETED)
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "running_log_id")
+    @JoinColumn(name = "running_log_id", nullable = false)
     private RunningLog runningLog; // 신고된 러닝일지
 
     @ManyToOne(fetch = FetchType.LAZY)

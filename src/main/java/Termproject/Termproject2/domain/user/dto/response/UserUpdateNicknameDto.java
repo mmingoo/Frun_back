@@ -1,6 +1,7 @@
 package Termproject.Termproject2.domain.user.dto.response;
 
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -8,7 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor
 // 닉네임 변경 요청
 public class UserUpdateNicknameDto {
-    @Size(max = 20, message = "닉네임 20글자까지만 사용하실 수 있습니다.")
-    private String nickname; // 변경할 닉네임 (최대 20자)
+    @NotBlank(message = "닉네임은 필수입니다.")
+    @Pattern(regexp = "^[가-힣a-zA-Z0-9]{5,20}$", message = "닉네임은 5~20자의 한글, 영문 대/소문자, 숫자만 사용 가능하며 공백은 허용되지 않습니다.")
+    private String nickname; // 변경할 닉네임 (5~20자)
 
 }

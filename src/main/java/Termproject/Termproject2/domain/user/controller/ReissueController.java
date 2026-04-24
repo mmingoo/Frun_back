@@ -46,6 +46,7 @@ public class ReissueController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
+        System.out.println("토큰 재발급 성공");
         // 3. accessToken → JSON body 반환
         return ResponseEntity.ok(ApiResponse.ok(
                 Map.of("accessToken", tokenPair.accessToken()),

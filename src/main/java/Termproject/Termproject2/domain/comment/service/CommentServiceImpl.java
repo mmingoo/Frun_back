@@ -19,7 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -200,19 +199,28 @@ public class CommentServiceImpl implements CommentService{
     @Transactional
     @Override
     public void deleteComment(Long commentId, Long userId) {
-        // 댓글 조회
         Comment comment = findCommentById(commentId);
-
-        // 댓글 삭제할 권한있는지 검증
         validateDeletePermission(comment, userId);
 
-        // 댓글(+자식 답글)을 참조하는 알림 먼저 삭제
-        List<Comment> toDelete = new ArrayList<>(comment.getChildren());
-        toDelete.add(comment);
-        notificationService.deleteByComments(toDelete);
+        notificationService.deleteByComments(List.of(comment));
 
-        // orphanRemoval = true로 자식(답글)도 같이 삭제
-        commentRepository.delete(comment);
+        boolean hasChildren = commentRepository.countByParentCommentId(commentId) > 0;
+
+        if (hasChildren) {
+            // 답글이 달린 부모 댓글: 소프트 삭제 (답글은 유지)
+            comment.softDelete();
+        } else {
+            // 답글 없는 댓글 또는 답글 자체: 실제 삭제
+            Comment parent = comment.getParent();
+            commentRepository.delete(comment);
+            commentRepository.flush();
+
+            // 답글 삭제 후 부모가 소프트 삭제 상태이고 자식이 없으면 부모도 실제 삭제
+            if (parent != null && parent.isDeleted()
+                    && commentRepository.countByParentCommentId(parent.getCommentId()) == 0) {
+                commentRepository.delete(parent);
+            }
+        }
     }
 
 

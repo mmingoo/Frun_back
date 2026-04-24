@@ -21,7 +21,7 @@ public enum ErrorCode {
 
     // 회원
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 회원입니다."),
-    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "닉네임 중복확인 재시도 후에 변경해주세요."),
     USER_NOT_AUTHORIZATION(HttpStatus.UNAUTHORIZED, "작성자가 아닙니다." ),
     USER_ALREADY_INACTIVE(HttpStatus.BAD_REQUEST, "이미 비활성화된 계정입니다." ),
     USER_ALREADY_ACTIVE(HttpStatus.BAD_REQUEST, "이미 활성화된 계정입니다." ),
@@ -38,10 +38,14 @@ public enum ErrorCode {
     LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "좋아요를 누르지 않은 게시물입니다."),
     INVALID_DISTANCE(HttpStatus.BAD_REQUEST, "거리를 0km 이상으로 설정해주세요" ),
     INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." ),
+    FUTURE_RUN_DATETIME(HttpStatus.BAD_REQUEST, "현재 시간보다 더 늦은 시간은 입력할 수 없습니다."),
+    TOO_OLD_RUN_DATETIME(HttpStatus.BAD_REQUEST, "2026-02-01 00:00 보다 과거는 입력할 수 없습니다."),
 
     // 친구
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 친구 요청입니다."),
     ALREADY_FRIEND(HttpStatus.CONFLICT, "이미 친구 관계입니다."),
+    ALREADY_FRIEND_REQUESTED(HttpStatus.CONFLICT, "이미 친구 요청을 보낸 상태입니다."),
+    ALREADY_RECEIVED_REQUEST(HttpStatus.CONFLICT, "상대방이 이미 친구 요청을 보낸 상태입니다."),
     USER_NOT_FRIEND_WITH_LOG_AUTHOR(HttpStatus.NOT_FOUND, "유저와 러닝일지 작성자는 친구가 아닙니다."),
     RUNNING_LOG_AUTHOR_MISMATCH(HttpStatus.FORBIDDEN, "해당 러닝 일지의 작성자가 아닙니다."),
     PRIVATE_RUNNING_LOG(HttpStatus.FORBIDDEN, "비공개 러닝 일지입니다."),

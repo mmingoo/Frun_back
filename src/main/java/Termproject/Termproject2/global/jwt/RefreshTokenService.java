@@ -42,9 +42,22 @@ public class RefreshTokenService {
                 .set("blacklist:" + userId, "inactive", 15, TimeUnit.MINUTES);
     }
 
-    // 블랙리스트 여부 확인
+    // 블랙리스트 여부 확인 (계정 비활성화 전용)
     public boolean isBlacklisted(Long userId) {
-        return redisTemplate.hasKey("blacklist:" + userId);
+        return Boolean.TRUE.equals(redisTemplate.hasKey("blacklist:" + userId));
+    }
+
+    // 로그아웃 블랙리스트 등록 (액세스 토큰 잔여 TTL만큼만 유지)
+    public void addToLogoutBlacklist(String accessToken, long remainingTtlMillis) {
+        if (remainingTtlMillis > 0) {
+            redisTemplate.opsForValue()
+                    .set("logout:" + accessToken, "logout", remainingTtlMillis, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    // 로그아웃된 토큰인지 확인
+    public boolean isLoggedOut(String accessToken) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey("logout:" + accessToken));
     }
 
     // 비활성화 코드 저장 (UUID → userId, TTL 5분)

@@ -39,9 +39,8 @@ public class NotificationServiceImpl implements NotificationService {
             return;
         }
 
-        // 답글이면 "답글", 아니면 "댓글"
         boolean isReply = comment.getParent() != null;
-        String message = comment.getUser().getNickName() + (isReply ? "님이 답글을 남겼습니다." : "님이 댓글을 남겼습니다.");
+        String message = isReply ? "님이 답글을 남겼습니다." : "님이 댓글을 남겼습니다.";
 
         // 댓글/답글 알림 생성 및 저장
         notificationRepository.save(NotificationConverter.toCommentNotification(
@@ -54,7 +53,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyFriendRequest(User receiver, User sender, FriendRequestStatus friendRequestStatus) {
         notificationRepository.save(NotificationConverter.toFriendRequestNotification(
                 receiver, sender,
-                sender.getNickName() + "님이 친구 요청을 보냈습니다.",
+                "님이 친구 요청을 보냈습니다.",
                 friendRequestStatus));
     }
 
@@ -71,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
         // 알림 생성
         notificationRepository.save(NotificationConverter.toLikeNotification(
                 receiver, sender, runningLog,
-                sender.getNickName() + "님이 러닝일지에 좋아요를 눌렀습니다."));
+                "님이 러닝일지에 좋아요를 눌렀습니다."));
     }
 
     //TODO: 알림 갯수 반환
@@ -89,6 +88,9 @@ public class NotificationServiceImpl implements NotificationService {
 
         // 파일명 > 이미지 url 로 변환
         toFullProfileImageUrl(result);
+
+        // 현재 닉네임으로 메시지 동적 조립
+        rebuildMessagesWithCurrentNickname(result);
 
         // 비활성화 계정 발신자 마스킹
         maskInactiveSenders(result);
@@ -128,7 +130,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyFriendRequestAccepted(User sender, User receiver) {
         notificationRepository.save(NotificationConverter.toFriendRequestAcceptedNotification(
                 sender, receiver,
-                receiver.getNickName() + "님이 친구 요청을 수락했습니다."));
+                "님이 친구 요청을 수락했습니다."));
     }
 
     //TODO: 친구 요청 거절 알림 생성
@@ -137,7 +139,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyFriendRequestRejected(User sender, User receiver) {
         notificationRepository.save(NotificationConverter.toFriendRequestRejectedNotification(
                 sender, receiver,
-                receiver.getNickName() + "님이 친구 요청을 거절했습니다."));
+                "님이 친구 요청을 거절했습니다."));
     }
 
     //TODO: 선택 알림 삭제
@@ -188,6 +190,20 @@ public class NotificationServiceImpl implements NotificationService {
         else return content;
     }
 
+
+    // 현재 sender 닉네임을 앞에 붙여 메시지 완성
+    // 구 형식("닉네임님이 ...") 과 신 형식("님이 ...") 모두 처리
+    private void rebuildMessagesWithCurrentNickname(List<NotificationDto> notificationDtoList) {
+        notificationDtoList.forEach(dto -> {
+            if (dto.getSenderNickname() == null || dto.getMessage() == null) return;
+            String msg = dto.getMessage();
+            int nimIndex = msg.indexOf("님이");
+            if (nimIndex > 0) {
+                msg = msg.substring(nimIndex);
+            }
+            dto.setMessage(dto.getSenderNickname() + msg);
+        });
+    }
 
     // 프로필 이미지명 > full 이미지 url
     private void toFullProfileImageUrl(List<NotificationDto> notificationDtoList){

@@ -18,7 +18,7 @@ public class Notice extends BaseTimeEntity {
     @Column(name = "notice_id")
     private Long noticeId; // 공지사항 ID
 
-    @Column(name = "title", length = 300, nullable = false)
+    @Column(name = "title", length = 100, nullable = false)
     private String title; // 제목
 
     @Column(name = "content", length = 2000, nullable = false)

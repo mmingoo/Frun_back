@@ -75,7 +75,7 @@ public class SecurityConfig {
                         .requestMatchers("/oauth2/**", "/login/**").permitAll()
 
                         // 토큰 재발급, 로그아웃은 별도 처리
-                        .requestMatchers("/api/v1/auth/reissue").permitAll() // refreshToken 쿠키로 처리하므로 허용
+                        .requestMatchers("/api/v1/auth/reissue", "/api/v1/auth/logout").permitAll() // refreshToken 쿠키로 처리하므로 허용
 
                         // 정적 이미지 파일 공개 접근 허용
                         .requestMatchers("/images/**").permitAll()

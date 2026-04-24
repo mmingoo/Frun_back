@@ -38,8 +38,16 @@ public class ReissueServiceImpl implements ReissueService {
         String username = jwtUtil.getUsername(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
 
-        // 4. Redis에 저장된 refreshToken과 비교
-        if (!refreshTokenService.isValid(userId, refreshToken)) {
+        // 4. Redis에 저장된 refreshToken과 비교 (get 1회만 호출 — TOCTOU 방지)
+        String savedToken = refreshTokenService.get(userId);
+        System.out.println("▶ [Reissue] userId      : " + userId);
+        System.out.println("▶ [Reissue] cookie token: " + refreshToken);
+        System.out.println("▶ [Reissue] redis token : " + savedToken);
+        System.out.println("▶ [Reissue] match       : " + refreshToken.equals(savedToken != null ? savedToken : ""));
+        System.out.println("▶ [Reissue] redis null  : " + (savedToken == null));
+
+        if (savedToken == null || !savedToken.equals(refreshToken)) {
+            System.out.println("▶ [Reissue] FAIL reason : " + (savedToken == null ? "Redis에 토큰 없음" : "토큰 불일치"));
             throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
@@ -47,8 +55,7 @@ public class ReissueServiceImpl implements ReissueService {
         String newAccessToken = jwtUtil.createJwt("access", userId, username, role, 60 * 15 * 1000L);
         String newRefreshToken = jwtUtil.createJwt("refresh", userId, username, role, 60 * 60 * 24 * 14 * 1000L);
 
-        // 6. Redis 갱신
-        refreshTokenService.delete(userId);
+        // 6. Redis 갱신 (save는 원자적 덮어쓰기 — delete 불필요)
         refreshTokenService.save(userId, newRefreshToken);
 
         return new TokenPairDto(newAccessToken, newRefreshToken);

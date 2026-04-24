@@ -15,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "FRIEND_REQUEST")
+@Table(name = "FRIEND_REQUEST",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"sender_id", "receiver_id"}))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FriendRequest extends BaseTimeEntity {

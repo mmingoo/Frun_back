@@ -27,6 +27,7 @@ public class NotificationRepositoryImpl implements NotificationRepositoryCustom 
                         n.content,
                         n.sender.imageUrl,
                         n.sender.userId,
+                        n.sender.nickName,
                         n.runningLog.runningLogId,
                         n.runningLog.user.userId,
                         n.comment.commentId,

@@ -49,7 +49,7 @@ public class Notification extends BaseCreatedEntity {
     @Column(name = "friend_request_status", length = 20)
     private FriendRequestStatus friendRequestStatus; // 친구 요청 상태 (친구 요청 알림 시)
 
-    @Column(name = "message", length = 100)
+    @Column(name = "message", length = 100, nullable = false)
     private String message; // 알림 메시지
 
     @Column(name = "content", length = 200)

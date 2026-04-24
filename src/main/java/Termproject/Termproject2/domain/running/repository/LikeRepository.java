@@ -19,4 +19,10 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     @Query("select l.runningLog.runningLogId from Like l where l.user.userId = :userId and l.runningLog.runningLogId In :logIds")
     Set<Long> findLikedLogIds(@Param("userId") Long userId , @Param("logIds") List<Long> logIds);
 
+    //TODO: 원자적 방식으로 업데이트 하기
+    @Modifying
+    @Query("update RunningLog r " +
+            "set r.likeCtn = r.likeCtn + 1 " +
+            "where r.runningLogId = :runningLogId")
+    void incrementLikeCnt(@Param("runningLogId") Long runningLogId);
 }

@@ -20,6 +20,7 @@ public class RunningLogConverter {
                 .runDate(request.getRunDate())
                 .duration(duration)
                 .distance(request.getDistance())
+                .runTime(request.getRunTime())
                 .memo(request.getMemo())
                 .isPublic(request.isPublic())
                 .pace(pace)

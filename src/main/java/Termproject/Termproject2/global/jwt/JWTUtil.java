@@ -58,4 +58,10 @@ public class JWTUtil {
                 .parseSignedClaims(token).getPayload()
                 .get("category", String.class);
     }
+
+    public long getRemainingTtlMillis(String token) {
+        Date expiration = Jwts.parser().verifyWith(secretKey).build()
+                .parseSignedClaims(token).getPayload().getExpiration();
+        return expiration.getTime() - System.currentTimeMillis();
+    }
 }

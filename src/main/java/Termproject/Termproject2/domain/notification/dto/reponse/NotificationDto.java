@@ -16,6 +16,7 @@ public class NotificationDto {
     private String content; // 댓글 내용 미리보기 (댓글 알림 시)
     private String userProfileImageUrl; // 발신자 프로필 이미지 URL
     private Long senderId; // 발신자 ID
+    private String senderNickname; // 발신자 현재 닉네임
     private Long runningLogId; // 관련 러닝일지 ID
     private Long authorId; // 러닝일지 작성자 ID
     private Long commentId; // 관련 댓글 ID

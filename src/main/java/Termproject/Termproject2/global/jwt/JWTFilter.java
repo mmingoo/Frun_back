@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -40,7 +41,13 @@ public class JWTFilter extends OncePerRequestFilter {
         }
 
         // 토큰이 만료됐으면 인증 처리 없이 다음 필터로 통과
-        if (jwtUtil.isExpired(token)) {
+        // isExpired()는 만료 시 true가 아닌 ExpiredJwtException을 던지므로 catch 필요
+        try {
+            if (jwtUtil.isExpired(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+        } catch (ExpiredJwtException e) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,11 +63,19 @@ public class JWTFilter extends OncePerRequestFilter {
         String username = jwtUtil.getUsername(token);
         String role = jwtUtil.getRole(token);
 
-        // 블랙리스트 확인 (계정 비활성화된 경우 즉시 차단)
+        // 계정 비활성화 확인
         if (refreshTokenService.isBlacklisted(userId)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"code\":\"ACCOUNT_INACTIVE\",\"message\":\"비활성화된 계정입니다.\"}");
+            return;
+        }
+
+        // 로그아웃된 토큰 확인
+        if (refreshTokenService.isLoggedOut(token)) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":\"LOGGED_OUT\",\"message\":\"로그아웃된 토큰입니다.\"}");
             return;
         }
 
