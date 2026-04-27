@@ -4,17 +4,23 @@ import Termproject.Termproject2.domain.comment.QComment;
 import Termproject.Termproject2.domain.friend.entity.QFriendship;
 import Termproject.Termproject2.domain.report.entity.QReport;
 import Termproject.Termproject2.domain.report.entity.ReportStatus;
+import Termproject.Termproject2.domain.running.dto.request.FeedSortType;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
 import Termproject.Termproject2.domain.running.entity.QRunningLog;
 import Termproject.Termproject2.domain.running.entity.QRunningLogImage;
 import Termproject.Termproject2.domain.user.entity.UserStatus;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -79,9 +85,9 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                 .fetch();
     }
 
-    //TODO: 마이페이지·유저페이지 피드 커서 기반 조회 (본인이면 비공개 포함)
+    //TODO: 마이페이지·유저페이지 피드 커서 기반 조회 (본인이면 비공개 포함, 정렬 지원)
     @Override
-    public List<MyPageFeedResponseDto> findUserPageFeeds(Long userId, Long cursorId, int size, boolean isOwner) {
+    public List<MyPageFeedResponseDto> findUserPageFeeds(Long userId, Long cursorId, String cursorValue, int size, boolean isOwner, FeedSortType sortType) {
         QRunningLog runningLog = QRunningLog.runningLog;
         QComment comment = QComment.comment;
 
@@ -94,29 +100,91 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.pace,
                         runningLog.duration,
                         runningLog.likeCtn,
+
                         // 서브쿼리: 해당 로그의 댓글 개수 조회
                         JPAExpressions.select(comment.count().intValue())
                                 .from(comment)
                                 .where(comment.runningLog.runningLogId.eq(runningLog.runningLogId)),
-                        runningLog.memo))
+                        runningLog.memo,
+                        runningLog.runTime,
+                        runningLog.paceSeconds))
                 .from(runningLog)
                 .where(
                         runningLog.user.userId.eq(userId),
                         runningLog.isDeleted.isFalse(),
-                        // 소유자 여부에 따른 조건부 필터링
                         isOwner ? null : runningLog.isPublic.isTrue(),
                         isOwner ? null : runningLog.user.userStatus.eq(UserStatus.ACTIVE),
-                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null
+                        buildCursorCondition(runningLog, sortType, cursorId, cursorValue)
                 )
-                .orderBy(runningLog.createdAt.desc())
+                .orderBy(buildOrderSpecifier(runningLog, sortType), runningLog.runningLogId.desc())
                 .limit(size + 1)
                 .fetch();
+    }
+
+    // 정렬 기준에 따른 OrderSpecifier 반환
+    private OrderSpecifier<?> buildOrderSpecifier(QRunningLog log, FeedSortType sortType) {
+        return switch (sortType) {
+            case RUN_DATE  -> log.runDate.desc();
+            case RUN_TIME  -> log.duration.desc().nullsLast();
+            case DISTANCE  -> log.distance.desc();
+            case PACE      -> log.paceSeconds.asc().nullsLast();
+            default        -> log.createdAt.desc(); // CREATED_AT
+        };
+    }
+
+    // 정렬 기준과 커서 값에 따른 커서 조건 반환 (복합 커서: 정렬값 + ID 타이브레이킹)
+    private BooleanExpression buildCursorCondition(QRunningLog log, FeedSortType sortType, Long cursorId, String cursorValue) {
+        if (cursorId == null) return null;
+
+        // where runningLogId < cursorId
+        BooleanExpression idLt = log.runningLogId.lt(cursorId);
+
+        if (cursorValue == null) return idLt;
+
+        return switch (sortType) {
+            // sortType 이 CREATED_AT 인 경우
+            // WHERE runningLogId < cursorId
+            case CREATED_AT -> idLt;
+
+            // sortType 이 CREATED_AT 인 경우
+            //WHERE run_date < :date OR (run_date = :date AND running_log_id < :cursorId)
+            case RUN_DATE -> {
+                LocalDate date = LocalDate.parse(cursorValue);
+                yield log.runDate.lt(date)
+                        .or(log.runDate.eq(date).and(idLt));
+            }
+            // sortType 이 CREATED_AT 인 경우
+            // WHERE run_time > :time OR (run_time = :time AND running_log_id < :cursorId)
+            case RUN_TIME -> {
+                LocalTime time = LocalTime.parse(cursorValue);
+                // ASC 정렬: 커서보다 늦은 시간 OR 같은 시간에서 ID 타이브레이킹
+                yield log.runTime.gt(time)
+                        .or(log.runTime.eq(time).and(idLt));
+            }
+            // sortType 이 CREATED_AT 인 경우
+            // WHERE distance < :dist OR (distance = :dist AND running_log_id < :cursorId)
+            case DISTANCE -> {
+                BigDecimal dist = new BigDecimal(cursorValue);
+                // DESC 정렬: 커서보다 짧은 거리 OR 같은 거리에서 ID 타이브레이킹
+                yield log.distance.lt(dist)
+                        .or(log.distance.eq(dist).and(idLt));
+            }
+
+            // sortType 이 CREATED_AT 인 경우
+            // WHERE pace_seconds > :ps OR (pace_seconds = :ps AND running_log_id < :cursorId)
+            case PACE -> {
+                int ps = Integer.parseInt(cursorValue);
+                // ASC 정렬: 커서보다 느린 페이스(초 큰 값) OR 같은 페이스에서 ID 타이브레이킹
+                yield log.paceSeconds.gt(ps)
+                        .or(log.paceSeconds.eq(ps).and(idLt));
+            }
+        };
     }
 
     //TODO: 러닝일지 ID 목록으로 전체 이미지 URL 조회 (Map<logId, List<url>>)
     @Override
     public Map<Long, List<String>> findImagesByRunningLogIds(List<Long> runningLogIds) {
-        // 파라미터 유효성 검사
+        // runningLogIds 유효성 검사
         if (runningLogIds == null || runningLogIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -124,15 +192,15 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
         QRunningLogImage image = QRunningLogImage.runningLogImage;
 
         List<Tuple> tuples = queryFactory
-                .select(image.runningLog.runningLogId, image.imageUrl)
+                .select(image.runningLog.runningLogId, image.imageUrl) // runningLog 별 image 조회
                 .from(image)
-                .where(image.runningLog.runningLogId.in(runningLogIds))
+                .where(image.runningLog.runningLogId.in(runningLogIds)) // 러닝일지에 해당하는 이미지 조회 조건
                 .fetch();
 
         // 조회된 튜플 리스트를 RunningLogId 기준으로 그룹화하여 Map으로 변환
         return tuples.stream()
                 .collect(Collectors.groupingBy(
-                        t -> t.get(image.runningLog.runningLogId),
+                        t -> t.get(image.runningLog.runningLogId), // runningLogId 별 이미지 맵핑
                         Collectors.mapping(t -> t.get(image.imageUrl), Collectors.toList())
                 ));
     }
@@ -150,18 +218,19 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
         List<Tuple> tuples = queryFactory
                 .select(image.runningLog.runningLogId, image.imageUrl)
                 .from(image)
+                // 러닝로그에 해당 하는 이미지일 것
                 .where(image.runningLog.runningLogId.in(runningLogIds))
                 // 생성일 순으로 정렬하여 첫 번째 이미지를 결정할 기준 마련
                 .orderBy(image.runningLog.runningLogId.asc(), image.createdAt.asc())
                 .fetch();
 
-        // 로그 ID당 하나의 대표 이미지만 매핑 (중복 발생 시 기존 값 유지)
+        // 로그 ID당 하나의 대표 이미지만 매핑(썸네일 결정) (중복 발생 시 기존 값 유지)
         return tuples.stream()
                 .filter(t -> t.get(image.runningLog.runningLogId) != null)
                 .collect(Collectors.toMap(
                         t -> t.get(image.runningLog.runningLogId),
                         t -> t.get(image.imageUrl),
                         (existing, replacement) -> existing
-                ));
+                )); // imageUrl 중복될 시 기존 거 선택
     }
 }

@@ -10,6 +10,14 @@ import java.nio.file.Paths;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    /**
+     * 서버 내부 경로가 그대로 외부에 노출하는 것을 방지해
+     * 매핑 방식으로 이미지를 가져오는 방식
+     *
+     * 프로필 이미지: /images/profile/** → /uploads/profile/
+     * 러닝일지 이미지 : /images/running-log/** → /uploads/running-log/
+     * */
+
     @Value("${file.upload.profile.dir}")
     private String profileDir;
 
@@ -21,6 +29,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Value("${file.upload.running-log.url-prefix}")
     private String runningLogUrlPrefix;
+
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

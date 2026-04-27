@@ -9,7 +9,8 @@ import java.util.List;
 @AllArgsConstructor
 // 내 마이페이지 피드 무한 스크롤 응답
 public class MyPageFeedScrollResponseDto {
-    private List<MyPageFeedResponseDto> feeds; // 피드 목록
-    private boolean hasNext; // 다음 페이지 존재 여부
-    private Long nextCursorId; // 다음 커서 ID
+    private List<MyPageFeedResponseDto> feeds;
+    private boolean hasNext;
+    private Long nextCursorId;
+    private String nextCursorValue; // CREATED_AT 정렬 시 null, 나머지 정렬 시 마지막 항목의 정렬 기준 값
 }

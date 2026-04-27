@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.service;
 
+import Termproject.Termproject2.domain.running.dto.request.FeedSortType;
 import Termproject.Termproject2.domain.running.dto.response.FeedScrollResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
 import Termproject.Termproject2.domain.running.dto.response.MyPageFeedResponseDto;
@@ -33,18 +34,23 @@ public class FeedServiceImpl implements FeedService {
         // 커서 기반으로 친구 피드 조회
         List<FriendFeedResponseDto> result = runningLogRepository.findFriendFeeds(userId, cursorId, size);
 
-        boolean hasNext = hasNext(result, size); // size + 1 조회 결과를 기반으로 다음 페이지 존재 여부(hasNext) 판단
-        result = trimToSize(result, size); // 일부러 hasNext 판단하기 위해 size + 1 개수만큼 불러왔으므로 size 만큼 자름
+        // size + 1 조회 결과를 기반으로 다음 페이지 존재 여부(hasNext) 판단
+        boolean hasNext = hasNext(result, size);
 
-        List<Long> logIds = extractLogIds(result); // 조회된 피드에서 러닝로그 ID 목록 추출
+        // 일부러 hasNext 판단하기 위해 size + 1 개수만큼 불러왔으므로 size 만큼 자름
+        result = trimToSize(result, size);
+
+        // 조회된 피드에서 러닝로그 ID 목록 추출
+        List<Long> logIds = extractLogIds(result);
 
         // 러닝로그 ID 기준으로 이미지 목록을 한 번에 조회 (N+1 방지)
         Map<Long, List<String>> imagesMap = runningLogRepository.findImagesByRunningLogIds(logIds);
 
-        result = attachFriendImages(result, imagesMap); // 각 피드 DTO에 이미지 URL 및 프로필 이미지 URL을 설정
+        // 각 피드 DTO에 이미지 URL 및 프로필 이미지 URL을 설정
+        result = attachFriendImages(result, imagesMap);
 
-        applyLikedStatus(result, userId, logIds); // 내가 좋아요 한 피드에 좋아요 표시
-
+        // 내가 좋아요 한 피드에 좋아요 표시
+        applyLikedStatus(result, userId, logIds);
 
         // 다음 페이지가 존재하면 마지막 러닝로그 ID를 next cursor로 설정
         Long nextCursorId = getNextCursorId(result, hasNext, FriendFeedResponseDto::getRunningLogId);
@@ -54,33 +60,42 @@ public class FeedServiceImpl implements FeedService {
 
 
 
-    //TODO: 유저 페이지 피드 커서 기반 조회 (본인이면 비공개 포함)
+    //TODO: 유저 페이지 피드 커서 기반 조회 (본인이면 비공개 포함, 정렬 지원)
     @Override
-    public MyPageFeedScrollResponseDto getUserPageFeeds(Long viewerId, Long targetUserId, Long cursorId, int size) {
-        // 조회하려는 사람이 작성자인지 확인
+    public MyPageFeedScrollResponseDto getUserPageFeeds(Long viewerId, Long targetUserId, Long cursorId, String cursorValue, int size, FeedSortType sortType) {
+        // 본인의 마이페이지인지
         boolean isOwner = viewerId.equals(targetUserId);
 
-        // 마이페이지 피드 목록 조회
-        List<MyPageFeedResponseDto> feeds = runningLogRepository.findUserPageFeeds(targetUserId, cursorId, size, isOwner);
+        // 피드 조회
+        List<MyPageFeedResponseDto> feeds = runningLogRepository.findUserPageFeeds(targetUserId, cursorId, cursorValue, size, isOwner, sortType);
 
-        // 커서 기반 페이징
+        // 커서로 불러올 다음 페이지가 있는지 여부
         boolean hasNext = hasNext(feeds, size);
+
+        // 데이터를 size + 1 개 만큼 조회했으므로 size 만큼 데이터를 자름
         feeds = trimToSize(feeds, size);
 
-        // 러닝일지의 id 들 (이미지 일괄 조회를 위함)
+        // logId 목록들 추출
         List<Long> logIds = feeds.stream().map(MyPageFeedResponseDto::getRunningLogId).toList();
 
+        // 썸네일 이미지 목록들을 key : value 형식으로 조회
         Map<Long, String> imagesMap = runningLogRepository.findImageByRunningLogIds(logIds)
-                .entrySet().stream() // key 와 value 를 쌍으로 처리하기 위함
+                .entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         e -> imageService.getRunningLogImageUrl(e.getValue())
                 ));
 
-        List<MyPageFeedResponseDto> result = attachMyPageImages(feeds, imagesMap);
+        // 각 게시물에 썸네일 이미지 부착
+        attachMyPageImages(feeds, imagesMap);
 
-        Long nextCursorId = getNextCursorId(result, hasNext, MyPageFeedResponseDto::getRunningLogId);
-        return new MyPageFeedScrollResponseDto(result, hasNext, nextCursorId);
+        // 다음 cursorId 구하기
+        Long nextCursorId = getNextCursorId(feeds, hasNext, MyPageFeedResponseDto::getRunningLogId);
+
+        // 다음 페이지의 CurosrValue 구하기
+        String nextCursorValue = extractNextCursorValue(feeds, hasNext, sortType);
+
+        return new MyPageFeedScrollResponseDto(feeds, hasNext, nextCursorId, nextCursorValue);
     }
 
 
@@ -124,6 +139,7 @@ public class FeedServiceImpl implements FeedService {
             Map<Long, List<String>> imagesMap
     ) {
         return feeds.stream()
+                // 러닝로그 이미지는 URL 변환 후 리스트로 매핑
                 .map(dto -> {
                     List<String> images = imagesMap.getOrDefault(dto.getRunningLogId(), List.of())
                             .stream()
@@ -154,35 +170,30 @@ public class FeedServiceImpl implements FeedService {
 
     // ===================== MyPage 전용 =====================
 
-    private List<MyPageFeedResponseDto> attachMyPageImages(
-            List<MyPageFeedResponseDto> feeds,
-            Map<Long, String> imagesMap
-    ) {
-        return feeds.stream()
-                .map(dto -> {
-                    String thumbnail = imagesMap.get(dto.getRunningLogId());
+    // 피드 목록에 썸네일 이미지를 직접 세팅 (in-place)
+    private void attachMyPageImages(List<MyPageFeedResponseDto> feeds, Map<Long, String> imagesMap) {
+        feeds.forEach(dto -> dto.setThumbnailImage(imagesMap.get(dto.getRunningLogId())));
+    }
 
-                    return new MyPageFeedResponseDto(
-                            dto.getAuthorId(),
-                            dto.getRunningLogId(),
-                            dto.getRunDate(),
-                            dto.getDistance(),
-                            dto.getPace(),
-                            dto.getDuration(),
-                            dto.getLikeCtn(),
-                            dto.getCommentCtn(),
-                            dto.getMemo(),
-                            thumbnail
-                    );
-                })
-                .toList();
+    // 다음 페이지의 cursorValue 추출 (CREATED_AT은 ID만으로 충분하므로 null)
+    private String extractNextCursorValue(List<MyPageFeedResponseDto> result, boolean hasNext, FeedSortType sortType) {
+        if (!hasNext || result.isEmpty() || sortType == FeedSortType.CREATED_AT) return null;
+        MyPageFeedResponseDto last = result.get(result.size() - 1);
+        return switch (sortType) {
+            case RUN_DATE  -> last.getRunDate().toString();
+            case RUN_TIME  -> last.getRunTime() != null ? last.getRunTime().toString() : null;
+            case DISTANCE  -> last.getDistance().toPlainString();
+            case PACE      -> last.getPaceSeconds() != null ? String.valueOf(last.getPaceSeconds()) : null;
+            default        -> null;
+        };
     }
 
     private void applyLikedStatus(List<FriendFeedResponseDto> result, Long userId, List<Long> logIds) {
-        // 내가 좋아요 한 러닝일지 목록, 메인 피드 목록 중에 내가 좋아요 한 로그ID 들의 List
+
+        // 내가 좋아요 한 runningLogId 목록, 메인 피드 목록 중에 내가 좋아요 한 로그ID 들의 List
         Set<Long> likedLogIds = likeRepository.findLikedLogIds(userId, logIds);
 
-        // 각 dto 를 순회하면서, 내가 좋아요한 로그ID List 중 dto의 로그ID 가 있다면 true 처리
+        // 각 dto 를 순회하면서, 내가 좋아요한 로그ID List 중 dto의 로그 ID가 있다면 true 처리
         result.forEach(dto -> dto.setLiked(likedLogIds.contains(dto.getRunningLogId())));
     }
 }

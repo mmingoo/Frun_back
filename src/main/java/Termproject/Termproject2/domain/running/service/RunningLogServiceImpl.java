@@ -54,31 +54,30 @@ public class RunningLogServiceImpl implements RunningLogService {
     @Override
     @Transactional
     public RunningLogCreateResponse createRunningLog(Long userId, RunningLogCreateRequest request, List<MultipartFile> images) {
+        // 분 초 파싱 , {분, 초}
         int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
         User user = userService.findUserById(userId);
 
         // 날짜 , 시간 검증
         validateRunDateTime(request.getRunDate(), request.getRunTime());
 
-
         // 컨버터로 러닝로그 생성
+        String pace = calculatePace(duration[0], duration[1], request.getDistance());
+        int paceSeconds = calculatePaceSeconds(duration[0], duration[1], request.getDistance());
         RunningLog runningLog = RunningLogConverter.toRunningLog(
                 user, request,
                 toLocalTime(duration[0], duration[1]),
-                calculatePace(duration[0], duration[1], request.getDistance())
+                pace,
+                paceSeconds
         );
 
         // 러닝 로그 저장
         runningLogRepository.save(runningLog);
 
         // 공개 일지일 때만 통계 누적
-        if (request.isPublic()) {
-            int distM = (int) (request.getDistance().doubleValue() * 1000);
-            int durSec = runningLog.getDuration().toSecondOfDay();
-            accumulateStats(user, request.getRunDate(), distM, durSec);
-        }
+        updateAccumulateStats(request, runningLog, user);
 
-        // 러닝 로그 이미지들 저장
+        // 러닝로그 이미지들 저장
         saveRunningLogImages(runningLog, userId, images);
 
         return new RunningLogCreateResponse(runningLog.getRunningLogId());
@@ -86,14 +85,13 @@ public class RunningLogServiceImpl implements RunningLogService {
 
     //TODO: 피드 상세 조회
     @Override
-    public FriendFeedResponseDto getFeed(Long runningLogId, Long authorId, Long userId) {
+    public FriendFeedResponseDto getFeed(Long runningLogId, Long userId) {
 
         // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
-        RunningLog runningLog = findRunningLogById(runningLogId);
+        RunningLog runningLog = findById(runningLogId);
 
-
-        // 러닝 로그의 실제 작성자가 authorId와 일치하지 않으면 404
-        isRunningLogAuthor(runningLog, authorId);
+        //작성자의 userId 추출
+        Long authorId = runningLog.getUser().getUserId();
 
         // 비활성화된 계정의 러닝일지면 400
         isActiveUser(runningLog);
@@ -159,9 +157,10 @@ public class RunningLogServiceImpl implements RunningLogService {
     @Override
     @Transactional
     public void softDeleteRunningLog(Long runningLogId, Long userId) {
-        RunningLog runningLog = runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+        // 러닝일지 조회
+        RunningLog runningLog = findById(runningLogId);
 
+        // 러닝일지 삭제 권한 여부 검증
         validateAuthor(userId, runningLog);
 
         //  공개 일지일 때만 통계 차감
@@ -171,6 +170,7 @@ public class RunningLogServiceImpl implements RunningLogService {
             subtractStats(runningLog.getUser(), runningLog.getRunDate(), distM, durSec);
         }
 
+        // 러닝로그 삭제 처리
         runningLog.delete();
     }
 
@@ -189,8 +189,16 @@ public class RunningLogServiceImpl implements RunningLogService {
 
 
 
+    @Override
+    public RunningLog findByNotDeletedAndPublicRunningLog (Long runningLogId){
+        runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+    }
 
-    // ===================== private 메서드 =====================\
+
+
+
+    // ===================== 내부 메서드 =====================
 
     // runDate + runTime 미래 입력 및 최소 날짜(2026-02-01) 이전 입력 검증
     private void validateRunDateTime(LocalDate runDate, LocalTime runTime) {
@@ -211,15 +219,18 @@ public class RunningLogServiceImpl implements RunningLogService {
     private void setupRunningLog(RunningLog runningLog, RunningLogUpdateRequest request) {
         // 분, 초 파싱 및 유효성 검사
         int[] duration = parseDuration(request.getDurationMin(), request.getDurationSec());
+        String pace = calculatePace(duration[0], duration[1], request.getDistance());
+        int paceSeconds = calculatePaceSeconds(duration[0], duration[1], request.getDistance());
 
         runningLog.update(
                 toLocalTime(duration[0], duration[1]),
                 request.getRunDate(),
                 request.getDistance(),
-                calculatePace(duration[0], duration[1], request.getDistance()),
+                pace,
                 request.isPublic(),
                 request.getMemo(),
-                request.getRunTime()
+                request.getRunTime(),
+                paceSeconds
         );
     }
 
@@ -273,17 +284,24 @@ public class RunningLogServiceImpl implements RunningLogService {
 
     // 이미지 파일 저장 (개수 제한 포함)
     private void saveRunningLogImages(RunningLog runningLog, Long userId, List<MultipartFile> images) {
+        // iamges 유효성 검사
         if (images == null || images.isEmpty()) return;
 
+        // image 수가 5개 초과되면 에러 발생
         if (images.size() > 5) {
             throw new BusinessException(ErrorCode.TOO_MANY_IMAGES);
         }
 
-        // 각 이미지 저장
-        for (MultipartFile image : images) {
-            String fileName = imageService.saveRunningLogImage(userId, image);
-            runningLogImageRepository.save(RunningLogConverter.toRunningLogImage(runningLog, fileName));
-        }
+        // 이미지 배치처리
+        List<RunningLogImage> imageEntities = images.stream()
+                .map(image -> {
+                    String fileName = imageService.saveRunningLogImage(userId, image); // 이미지별로 전체 파일명 생성
+                    return RunningLogConverter.toRunningLogImage(runningLog, fileName); // runningLogImage 리스트 생성
+                })
+                .toList();
+
+        //배치 저장
+        runningLogImageRepository.saveAll(imageEntities);
     }
 
     // 파일명을 바탕으로 imageUrl 반환
@@ -303,9 +321,14 @@ public class RunningLogServiceImpl implements RunningLogService {
         if (distance.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BusinessException(ErrorCode.INVALID_DISTANCE);
         }
+        int ps = calculatePaceSeconds(durationMin, durationSec, distance);
+        return String.format("%d'%02d\"", ps / 60, ps % 60);
+    }
+
+    // 페이스 초 단위 계산 (정렬용)
+    private int calculatePaceSeconds(int durationMin, int durationSec, BigDecimal distance) {
         long totalSeconds = (long) durationMin * 60 + durationSec;
-        long paceSeconds = Math.round(totalSeconds / distance.doubleValue());
-        return String.format("%d'%02d\"", paceSeconds / 60, paceSeconds % 60);
+        return (int) Math.round(totalSeconds / distance.doubleValue());
     }
 
     // 분, 초를 LocalTime으로 변환
@@ -330,14 +353,19 @@ public class RunningLogServiceImpl implements RunningLogService {
         }
 
     }
-    private RunningLog findRunningLogById(Long runningLogId) {
-        return runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
-    }
+
 
 
     // ===================== RunningStats 유지 메서드 =====================
 
+    // 유효성 검사 후 통계 업데이트(데이터 더하기)
+    private void updateAccumulateStats(RunningLogCreateRequest request , RunningLog runningLog, User user){
+        if (request.isPublic()) {
+            int distM = (int) (request.getDistance().doubleValue() * 1000);
+            int durSec = runningLog.getDuration().toSecondOfDay();
+            accumulateStats(user, request.getRunDate(), distM, durSec);
+        }
+    }
     //통계 업데이트(데이터 더하기)
     private void accumulateStats(User user, LocalDate runDate, int distM, int durSec) {
         // 기존 통계값이 있으면 값을 업데이트, 없다면 새로운 통계 데이터 생성

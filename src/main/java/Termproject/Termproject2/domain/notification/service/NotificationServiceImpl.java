@@ -34,11 +34,13 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void notifyComment(User receiver, Comment comment) {
+
         // 댓글 작성자와 게시글 작성자가 동일한 경우 알림 생성 X
         if (receiver.getUserId().equals(comment.getUser().getUserId())) {
             return;
         }
 
+        // 댓글의 부모가 있는지 없는지(댓글인지, 답글인지 구분) 하여 알림 message 생성
         boolean isReply = comment.getParent() != null;
         String message = isReply ? "님이 답글을 남겼습니다." : "님이 댓글을 남겼습니다.";
 
@@ -86,7 +88,7 @@ public class NotificationServiceImpl implements NotificationService {
         // 1. 알림 목록 조회
         List<NotificationDto> result = notificationRepository.findNotificationByUserUserId(userId, lastNotificationId, PageRequest.of(0, size + 1));
 
-        // 파일명 > 이미지 url 로 변환
+        // 파일명 > 프로필 이미지 url 로 변환
         toFullProfileImageUrl(result);
 
         // 현재 닉네임으로 메시지 동적 조립
@@ -193,14 +195,22 @@ public class NotificationServiceImpl implements NotificationService {
 
     // 현재 sender 닉네임을 앞에 붙여 메시지 완성
     // 구 형식("닉네임님이 ...") 과 신 형식("님이 ...") 모두 처리
+    // 알림 메시지의 발신자 닉네임을 현재 닉네임으로 재조합
     private void rebuildMessagesWithCurrentNickname(List<NotificationDto> notificationDtoList) {
         notificationDtoList.forEach(dto -> {
+
+            // 발신자 닉네임 또는 메시지가 없으면 재조합 불가 → 건너뜀
             if (dto.getSenderNickname() == null || dto.getMessage() == null) return;
+
             String msg = dto.getMessage();
+
+            // "님이" 앞의 구닉네임 제거 ("홍길동님이 댓글을..." → "님이 댓글을...")
             int nimIndex = msg.indexOf("님이");
             if (nimIndex > 0) {
                 msg = msg.substring(nimIndex);
             }
+
+            // 현재 닉네임 + 잘라낸 메시지로 재조합 ("김철수님이 댓글을...")
             dto.setMessage(dto.getSenderNickname() + msg);
         });
     }

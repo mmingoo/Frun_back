@@ -1,5 +1,6 @@
 package Termproject.Termproject2.domain.running.controller;
 
+import Termproject.Termproject2.domain.running.dto.request.FeedSortType;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
 import Termproject.Termproject2.domain.running.dto.response.FriendFeedResponseDto;
@@ -29,17 +30,23 @@ public class RunningLogController {
 
     /**
      * [GET] /api/v1/running-logs/users/{userId}/feeds
-     * 유저 페이지 피드 목록 조회 - 본인이면 비공개 포함, 최신순 무한 스크롤
+     * 유저 페이지 피드 목록 조회 - 본인이면 비공개 포함, 정렬 지원 무한 스크롤
+     * sortType: CREATED_AT(기본) | RUN_DATE | RUN_TIME | DISTANCE | PACE
+     * cursorValue: CREATED_AT 제외 시 이전 응답의 nextCursorValue 값 전달
      */
     @GetMapping("/users/{userId}/feeds")
-    @Operation(summary = "유저 페이지 피드 목록 조회", description = "유저의 러닝 피드를 최신순으로 조회 (무한스크롤). 본인이면 비공개 피드도 포함.")
+    @Operation(summary = "유저 페이지 피드 목록 조회", description = "유저의 러닝 피드를 조회 (무한스크롤). 본인이면 비공개 피드도 포함. sortType: CREATED_AT(기본) | RUN_DATE | RUN_TIME | DISTANCE | PACE")
     public ApiResponse<?> getUserPageFeeds(
             @PathVariable Long userId,
             @RequestParam(required = false) Long cursorId,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(required = false) String cursorValue,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "CREATED_AT") FeedSortType sortType
     ) {
+        System.out.println(" 정렬기준 : " + sortType);
         Long viewerId = jwtTokenExtractor.getUserId();
-        return ApiResponse.ok(feedService.getUserPageFeeds(viewerId, userId, cursorId, size), "유저 페이지 피드 조회 성공");
+
+        return ApiResponse.ok(feedService.getUserPageFeeds(viewerId, userId, cursorId, cursorValue, size, sortType), "유저 페이지 피드 조회 성공");
     }
 
     /**
@@ -79,16 +86,15 @@ public class RunningLogController {
      * [GET] /api/v1/running-logs/{runningLogId}/{authorId}
      * 러닝로그 상세 조회 - 본인 또는 친구의 공개 일지만 조회 가능
      */
-    @GetMapping("/{runningLogId}/{authorId}")
+    @GetMapping("/{runningLogId}")
     @Operation(summary = "러닝로그 상세 조회")
     public ApiResponse<?> getRunningLogDetail(
-            @PathVariable Long runningLogId,
-            @PathVariable Long authorId
+            @PathVariable Long runningLogId
     ){
         Long userId = jwtTokenExtractor.getUserId();
 
         // 러닝 일지 조회
-        FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, authorId, userId);
+        FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, userId);
 
         return ApiResponse.ok(friendFeedResponseDto, "성공적으로 피드를 조회하였습니다.");
     }
@@ -147,15 +153,9 @@ public class RunningLogController {
     @Operation(summary = "러닝일지 좋아요 취소")
     public ApiResponse<?> unlikeRunningLog(
             @PathVariable Long runningLogId
-    ){
+    ) {
         Long userId = jwtTokenExtractor.getUserId();
         likeService.removeLike(userId, runningLogId);
         return ApiResponse.ok("좋아요가 취소되었습니다.");
     }
-
-
-
-
-
-
 }

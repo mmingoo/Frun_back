@@ -8,6 +8,7 @@ import Termproject.Termproject2.domain.running.repository.LikeRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
+import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class LikeServiceImpl implements LikeService {
 
     private final LikeRepository likeRepository;
-    private final UserRepository userRepository;
-    private final RunningLogRepository runningLogRepository;
+    private final UserService userService;
+    private final RunningLogService runningLogService;
     private final NotificationService notificationService;
 
 
@@ -37,22 +38,13 @@ public class LikeServiceImpl implements LikeService {
         }
 
         // 유저 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User user = userService.findUserById(userId);
 
-        // 러닝로그 조회
+        // 러닝일지(삭제 x, 공개) 조회
         RunningLog runningLog = findRunningLogById(runningLogId);
 
-
         // 좋아요 생성 후 저장
-        // 동시에 좋아요 누르는 경우 두 번째 좋아요 시 터지는 500 에러를 처리하기 위함
-        try {
-            likeRepository.save(RunningLogConverter.toLike(user, runningLog));
-        } catch (DataIntegrityViolationException e) {
-            // 동시 요청으로 유니크 제약 위반 시
-            throw new BusinessException(ErrorCode.ALREADY_LIKED);
-        }
-
+        likeRepository.save(RunningLogConverter.toLike(user, runningLog));
 
         // 러닝일지에 좋아요 cnt + 1
         likeRepository.incrementLikeCnt(runningLogId);
@@ -78,7 +70,6 @@ public class LikeServiceImpl implements LikeService {
         // 좋아요 데이터 삭제
         likeRepository.deleteByUserUserIdAndRunningLogRunningLogId(userId, runningLogId);
 
-
         // 러닝로그 조회
         RunningLog runningLog = findRunningLogById(runningLogId);
 
@@ -89,7 +80,6 @@ public class LikeServiceImpl implements LikeService {
 
     // runningLogId 로 러닝일지 찾기
     private RunningLog findRunningLogById(Long runningLogId){
-        return runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
+        return runningLogService.findByNotDeletedAndPublicRunningLog(runningLogId);
     }
 }

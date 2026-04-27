@@ -11,6 +11,7 @@ import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
+import Termproject.Termproject2.domain.user.service.UserService;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
     private final ReportTypeRepository reportTypeRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final RunningLogRepository runningLogRepository;
 
     //TODO: 러닝일지 신고 접수
@@ -32,9 +33,7 @@ public class ReportServiceImpl implements ReportService {
     @Transactional
     public void submitRunningLogReport(Long reporterId, Long runningLogId, ReportRequestDto dto) {
         // 신고자 조회
-        User reporter = userRepository.findById(reporterId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-
+        User reporter = userService.findUserById(reporterId);
         // 러닝 로그 조회
         RunningLog runningLog = runningLogRepository.findById(runningLogId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
@@ -43,8 +42,7 @@ public class ReportServiceImpl implements ReportService {
         Long reportedUserId =  runningLog.getUser().getUserId();
 
         // 신고 대상 사용자 조회
-        User reportedUser = userRepository.findById(reportedUserId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+        User reportedUser = userService.findUserById(reporterId);
 
         // 본인 신고 불가
         if (reporterId.equals(reportedUserId) ){

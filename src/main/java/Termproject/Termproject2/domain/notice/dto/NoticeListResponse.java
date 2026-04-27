@@ -12,5 +12,5 @@ public class NoticeListResponse {
     private int currentPage; // 현재 페이지
     private int totalPages; // 전체 페이지
     private long totalElements; // 총 개수
-    private boolean hasNext;
+    private boolean hasNext; // 페이징 다음 존재 여부
 }

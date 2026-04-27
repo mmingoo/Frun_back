@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,13 +56,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         }
 
         // 프로필 이미지 경로 → 완전한 URL로 변환 (BASE_URL + 저장 경로)
-        results = results.stream()
-                .map(dto -> new FriendResponseDto(
-                        dto.getFriendId(),
-                        dto.getFriendName(),
-                        imageService.getProfileImageUrl(dto.getFriendProfileImage())
-                ))
-                .collect(Collectors.toList());
+        toFullProfileUrl(results);
 
         // 다음 페이지 조회 시작점(커서)으로 현재 목록의 마지막 항목 사용
         // hasNext가 false면 커서 불필요하므로 null 처리
@@ -75,40 +70,22 @@ public class FriendshipServiceImpl implements FriendShipService {
     //TODO: 친구 검색 시 나와의 관계 파악
     @Override
     public UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size) {
-        // size+1 개 친구 조회하
+        // size+1 개 조회 - 실제 필요한 것보다 1개 더 가져와서 다음 페이지 존재 여부 확인
         Pageable pageable = PageRequest.of(0, size + 1);
-        List<User> searchedUsers = (cursorName == null || cursorId == null)
-                ? userRepository.findByNickNameContainingNoCursor(keyword, pageable)
-                : userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
+        List<User> searchedUsers = fetchSearchedUsers(keyword, cursorName, cursorId, pageable);
 
-        // 자신 제외 + 비활성화 계정 제외
-        List<User> filtered = searchedUsers.stream()
-                .filter(user -> !user.getUserId().equals(currentUserId))
-                .filter(user -> user.getUserStatus() == UserStatus.ACTIVE)
-                .collect(Collectors.toList());
+        // 자신과 비활성 계정 제외
+        List<User> filtered = filterSearchedUsers(searchedUsers, currentUserId);
 
-
-        // 검색 결과 size 로 다음 친구목록 존재하는지 여부 판단
+        // 조회 결과가 size+1 개면 다음 페이지 존재, size 개만 남기고 마지막 1개 제거
         boolean hasNext = filtered.size() > size;
         if (hasNext) filtered = filtered.subList(0, size);
 
+        // 대상 유저 ID 목록으로 친구 요청 일괄 조회 후 응답 변환 (N+1 방지)
+        List<UserSearchResponse> result = toUserSearchResponseList(filtered, currentUserId);
 
-        // 대상 유저 ID 목록으로 친구 요청 일괄 조회 (N+1 방지)
-        List<Long> targetIds = filtered.stream().map(User::getUserId).collect(Collectors.toList());
-        Map<Long, FriendRequestStatus> statusMap = buildStatusMap(currentUserId, targetIds);
-
-        List<UserSearchResponse> result = filtered.stream()
-                .map(targetUser -> {
-                    FriendRequestStatus status = statusMap.getOrDefault(targetUser.getUserId(), FriendRequestStatus.NONE);
-                    return FriendConverter.toUserSearchResponse(
-                            targetUser,
-                            imageService.getProfileImageUrl(targetUser.getImageUrl()),
-                            status);
-                })
-                .collect(Collectors.toList());
-
-
-        // 다음 결과가 존재할 때, 다음 검색할 때 기준이 되는 user
+        // 다음 페이지 조회 시작점(커서)으로 현재 목록의 마지막 항목 사용
+        // hasNext가 false면 커서 불필요하므로 null 처리
         User last = hasNext ? filtered.get(filtered.size() - 1) : null;
         return new UserSearchListResponse(result, hasNext,
                 last != null ? last.getUserId() : null,
@@ -162,8 +139,10 @@ public class FriendshipServiceImpl implements FriendShipService {
 
         // 친구 요청 전송
         friendRequestRepository.save(request);
+
         // receiver 입장에서의 상태 계산 (receiver가 me, sender가 other → PENDING)
         FriendRequestStatus statusForReceiver = getStatus(receiver.getUserId(), sender.getUserId());
+
         // 요청을 받는 상대방에게 친구 요청 알림 전송
         notificationService.notifyFriendRequest(receiver, sender, statusForReceiver);
     }
@@ -258,26 +237,72 @@ public class FriendshipServiceImpl implements FriendShipService {
         return FriendRequestStatus.NONE;
     }
 
+    // 커서 기반으로 키워드에 해당하는 유저 목록 조회
+    private List<User> fetchSearchedUsers(String keyword, String cursorName, Long cursorId, Pageable pageable) {
+        return (cursorName == null || cursorId == null)
+                ? userRepository.findByNickNameContainingNoCursor(keyword, pageable)
+                : userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
+    }
+
+    // 검색 결과에서 자신과 비활성 계정 제외
+    private List<User> filterSearchedUsers(List<User> users, Long currentUserId) {
+        return users.stream()
+                .filter(user -> !user.getUserId().equals(currentUserId))
+                .filter(user -> user.getUserStatus() == UserStatus.ACTIVE)
+                .collect(Collectors.toList());
+    }
+
+    // 유저 목록과 친구 상태 맵을 기반으로 검색 응답 목록 변환
+    private List<UserSearchResponse> toUserSearchResponseList(List<User> users, Long currentUserId) {
+        // 검색된 유저들의 유저 ID 목록 추출
+        List<Long> targetIds = users.stream().map(User::getUserId).collect(Collectors.toList());
+
+        // 대상 유저 전체의 친구 상태를 한 번에 조회해서 Map<userId, status>에 저장 (N+1 방지)
+        Map<Long, FriendRequestStatus> statusMap = buildStatusMap(currentUserId, targetIds);
+
+        // 각 유저를 응답 DTO로 변환 - 상태 맵에 없으면 NONE(관계 없음)으로 기본값 처리
+        return users.stream()
+                .map(targetUser -> {
+                    FriendRequestStatus status = statusMap.getOrDefault(targetUser.getUserId(), FriendRequestStatus.NONE);
+                    return FriendConverter.toUserSearchResponse(
+                            targetUser,
+                            imageService.getProfileImageUrl(targetUser.getImageUrl()),
+                            status);
+                })
+                .collect(Collectors.toList());
+    }
+
     // 대상 유저 목록에 대한 친구 상태를 한 번에 조회해 Map으로 반환
     private Map<Long, FriendRequestStatus> buildStatusMap(Long me, List<Long> targetIds) {
+        // 나와 관련된 친구 요청 일괄 조회
         List<FriendRequest> requests = friendRequestRepository.findAllByMeAndTargetIds(me, targetIds);
-        Map<Long, FriendRequestStatus> result = new java.util.HashMap<>();
+
+        //Map 생성
+        Map<Long, FriendRequestStatus> result = new HashMap<>();
+
+        // FriendRequest 당
         for (FriendRequest fr : requests) {
+            // 친구 요청의 상대방 결정 : 요청을 받은 사람
+            // 내가 보낸 친구요청이라면 otherId는 상대방
+            // 내가 받은 친구요청이라면 otherId는 자신
             Long otherId = fr.getSender().getUserId().equals(me)
                     ? fr.getReceiver().getUserId()
                     : fr.getSender().getUserId();
-            FriendRequestStatus existing = result.get(otherId);
-            FriendRequestStatus current = resolveStatus(me, fr);
-            if (existing == null || hasPriority(current, existing)) {
-                result.put(otherId, current);
-            }
+
+            // unfriend 시 FriendRequest 레코드도 삭제되므로 상대방당 레코드는 항상 1개
+            result.put(otherId, resolveStatus(me, fr));
         }
         return result;
     }
 
     // FriendRequest 하나로부터 me 기준 상태 결정
     private FriendRequestStatus resolveStatus(Long me, FriendRequest fr) {
+        // 친구면 FriendRequestStatus.FRIEND 반환
         if (fr.getStatus() == FriendRequestStatus.FRIEND) return FriendRequestStatus.FRIEND;
+
+        // 친구 요청 상태에서
+        // sender 가 나일 경우 sended
+        // sender 가 내가 아닐 경우 pending
         if (fr.getStatus() == FriendRequestStatus.SENDED) {
             return fr.getSender().getUserId().equals(me)
                     ? FriendRequestStatus.SENDED
@@ -286,18 +311,21 @@ public class FriendshipServiceImpl implements FriendShipService {
         return FriendRequestStatus.NONE;
     }
 
-    // 상태 우선순위: FRIEND > SENDED > PENDING > NONE
-    private boolean hasPriority(FriendRequestStatus a, FriendRequestStatus b) {
-        List<FriendRequestStatus> order = List.of(
-                FriendRequestStatus.FRIEND, FriendRequestStatus.SENDED,
-                FriendRequestStatus.PENDING, FriendRequestStatus.NONE);
-        return order.indexOf(a) < order.indexOf(b);
-    }
-
     // 유저 찾기
     private User findUser(Long userId){
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // 프로필 full 이미지로 변환
+    private void toFullProfileUrl(List<FriendResponseDto> results){
+        results.replaceAll(
+                dto -> new FriendResponseDto(
+                        dto.getFriendId(),
+                        dto.getFriendName(),
+                        imageService.getProfileImageUrl(dto.getFriendProfileImage())
+                ));
+
     }
 
 }

@@ -42,7 +42,7 @@ public class CommentServiceImpl implements CommentService{
         validateRunningLogExists(runningLogId);
         List<Comment> comments =  commentRepository.findTopLevelComments(runningLogId, cursorId, size);
 
-        // 무한스크롤할 다음이 있는지 판단
+        // 무한스크롤 할 다음이 있는지 판단
         boolean hasNext = getHasNext(comments, size);
 
         // 마지막 댓글 제거 (불러올 때 size + 1 개 만큼 데이터를 가져왔으므로 마지막 데이터 삭제)
@@ -63,12 +63,7 @@ public class CommentServiceImpl implements CommentService{
                 .toList();
 
         // 프로필 이미지명을 full url 로 변환
-        contents.forEach(
-                comment -> {
-                    String fullUrl = imageService.getProfileImageUrl(comment.getProfileImageUrl());
-                    comment.updateProfileImageUrl(fullUrl);
-                }
-        );
+        toCommentFullCProfileImageUrls(contents);
 
         // size + 1 개 댓글을 불러왔고, 이 중 가장 마지막 댓글의 Id가 cursorId
         Long nextCursorId = getNextCursorId(comments, hasNext);
@@ -101,12 +96,7 @@ public class CommentServiceImpl implements CommentService{
         Long nextCursorId = getNextCursorId(replies, hasNext);
 
         // 답글마다 프로필 사진 가져오기
-        contents.forEach(
-                comment -> {
-                    String fullUrl = imageService.getProfileImageUrl(comment.getProfileImageUrl());
-                    comment.updateProfileImageUrl(fullUrl);
-                }
-        );
+        toReplyFullProfileImageUrls(contents);
 
         // 해당 댓글의 전체 답글 수
         long totalCount = commentRepository.countByParentCommentId(parentId);
@@ -279,13 +269,14 @@ public class CommentServiceImpl implements CommentService{
 
     }
 
-    //프로필 이미지를 풀 url 로 변환하는 내부 메서드
-    private void toFullProfileUrl(List<CommentResponse> contents) {
-        contents.forEach(
-                comment -> {
-                    String fullUrl = imageService.getProfileImageUrl(comment.getProfileImageUrl());
-                    comment.updateProfileImageUrl(fullUrl);
-                }
-        );
+    private void toCommentFullCProfileImageUrls(List<CommentResponse> contents) {
+        contents.forEach(c -> c.updateProfileImageUrl(
+                imageService.getProfileImageUrl(c.getProfileImageUrl())));
     }
+
+    private void toReplyFullProfileImageUrls(List<ReplyResponse> contents) {
+        contents.forEach(c -> c.updateProfileImageUrl(
+                imageService.getProfileImageUrl(c.getProfileImageUrl())));
+    }
+
 }

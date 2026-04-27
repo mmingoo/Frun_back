@@ -44,6 +44,9 @@ public class RunningLog extends BaseTimeEntity {
     @Column(name = "pace", length = 10, nullable = false)
     private String pace; // 평균 페이스 (분'초" 형식)
 
+    @Column(name = "pace_seconds")
+    private Integer paceSeconds; // 정렬용 페이스 초 단위 (pace 저장 시 함께 계산)
+
     @Column(name = "is_public", nullable = false)
     private boolean isPublic; // 공개 여부
 
@@ -84,7 +87,7 @@ public class RunningLog extends BaseTimeEntity {
 
     @Builder
     public RunningLog(User user, LocalTime duration, LocalDate runDate,
-                      BigDecimal distance, String pace, boolean isPublic, String memo, LocalTime runTime) {
+                      BigDecimal distance, String pace, boolean isPublic, String memo, LocalTime runTime, Integer paceSeconds) {
         this.user = user;
         this.duration = duration;
         this.runDate = runDate;
@@ -93,10 +96,11 @@ public class RunningLog extends BaseTimeEntity {
         this.isPublic = isPublic;
         this.memo = memo;
         this.runTime = runTime;
+        this.paceSeconds = paceSeconds;
     }
 
     public void update(LocalTime duration, LocalDate runDate, BigDecimal distance,
-                       String pace, boolean isPublic, String memo , LocalTime runTime) {
+                       String pace, boolean isPublic, String memo, LocalTime runTime, Integer paceSeconds) {
         this.duration = duration;
         this.runDate = runDate;
         this.distance = distance;
@@ -104,7 +108,7 @@ public class RunningLog extends BaseTimeEntity {
         this.isPublic = isPublic;
         this.pace = pace;
         this.runTime = runTime;
-
+        this.paceSeconds = paceSeconds;
     }
 
     public void delete() {

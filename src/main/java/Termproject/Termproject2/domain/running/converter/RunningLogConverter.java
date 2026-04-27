@@ -14,7 +14,7 @@ public class RunningLogConverter {
 
     // TODO: 러닝 로그 엔티티 변환 메서드
     public static RunningLog toRunningLog(User user, RunningLogCreateRequest request,
-                                          LocalTime duration, String pace) {
+                                          LocalTime duration, String pace, Integer paceSeconds) {
         return RunningLog.builder()
                 .user(user)
                 .runDate(request.getRunDate())
@@ -24,6 +24,7 @@ public class RunningLogConverter {
                 .memo(request.getMemo())
                 .isPublic(request.isPublic())
                 .pace(pace)
+                .paceSeconds(paceSeconds)
                 .build();
     }
 
