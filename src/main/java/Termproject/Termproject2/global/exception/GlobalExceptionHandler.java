@@ -2,6 +2,7 @@ package Termproject.Termproject2.global.exception;
 
 import Termproject.Termproject2.global.common.response.ApiResponse;
 import Termproject.Termproject2.global.common.response.ErrorCode;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -47,7 +48,7 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(errorCode.getMessage()));
     }
 
-    // @Valid 검증 실패 — 첫 번째 필드 에러 메시지만 반환
+    // @Valid + @RequestBody 검증 실패 — 첫 번째 필드 에러 메시지만 반환
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationException(
             MethodArgumentNotValidException e) {
@@ -56,6 +57,20 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse(ErrorCode.INVALID_INPUT.getMessage());
         log.warn("[ValidationException] {}", message);
+        return ResponseEntity
+                .status(ErrorCode.INVALID_INPUT.getStatus())
+                .body(ApiResponse.fail(message));
+    }
+
+    // @Pattern, @NotBlank 등 @RequestParam 검증 실패 — 첫 번째 위반 메시지 반환
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolation(
+            ConstraintViolationException e) {
+        String message = e.getConstraintViolations().stream()
+                .map(v -> v.getMessage())
+                .findFirst()
+                .orElse(ErrorCode.INVALID_INPUT.getMessage());
+        log.warn("[ConstraintViolationException] {}", message);
         return ResponseEntity
                 .status(ErrorCode.INVALID_INPUT.getStatus())
                 .body(ApiResponse.fail(message));

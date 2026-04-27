@@ -43,12 +43,6 @@ public class RunningStats extends BaseTimeEntity {
         WEEKLY, MONTHLY
     }
 
-    @Builder
-    public RunningStats(User user, StatType statType, String statKey) {
-        this.user = user;
-        this.statType = statType;
-        this.statKey = statKey;
-    }
 
     // 통계 누적 (로그 저장 시)
     public void accumulate(int distM, int durSec) {

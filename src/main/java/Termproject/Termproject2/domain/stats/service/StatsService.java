@@ -10,7 +10,7 @@ import java.time.LocalDate;
 
 public interface StatsService {
     //TODO: 주별 통계 조회
-    WeeklyStatsResponse getWeeklyStats(Long userId, LocalDate date);
+    WeeklyStatsResponse getWeeklyStats(Long userId);
 
     //TODO: 월별 통계 조회
     MonthlyStatsResponse getMonthlyStats(Long userId, int year, int month);

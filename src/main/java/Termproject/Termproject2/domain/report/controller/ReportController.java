@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class ReportController {
 
     private final ReportService reportService;
-    private final JwtTokenExtractor jwtTokenExtractor;
 
     /**
      * [POST] /api/v1/reports
@@ -30,7 +29,7 @@ public class ReportController {
             @PathVariable Long runningLogId
     ) {
 
-        Long reporterId = jwtTokenExtractor.getUserId();
+        Long reporterId = JwtTokenExtractor.getUserId();
         reportService.submitRunningLogReport(reporterId,runningLogId, dto);
 
         return ResponseEntity.ok(ApiResponse.ok("신고가 접수되었습니다."));

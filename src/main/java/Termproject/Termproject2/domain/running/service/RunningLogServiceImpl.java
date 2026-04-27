@@ -189,13 +189,18 @@ public class RunningLogServiceImpl implements RunningLogService {
 
 
 
+    // TODO: 삭제되지 않은 공개 러닝일지 찾기
     @Override
     public RunningLog findByNotDeletedAndPublicRunningLog (Long runningLogId){
-        runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
+        return runningLogRepository.findByRunningLogIdAndIsDeletedFalse(runningLogId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
     }
 
-
+    // TODO: 특정 범위에 해당하는 삭제되지 않은 공개 러닝일지 찾기
+    public List<RunningLog> findRunningLofBetweenDate(Long userId, LocalDate weekStart, LocalDate weekEnd){
+        return runningLogRepository
+                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, weekStart, weekEnd);
+    }
 
 
     // ===================== 내부 메서드 =====================

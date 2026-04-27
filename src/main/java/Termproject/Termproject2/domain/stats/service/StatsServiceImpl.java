@@ -2,6 +2,7 @@ package Termproject.Termproject2.domain.stats.service;
 
 import Termproject.Termproject2.domain.running.entity.RunningLog;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
+import Termproject.Termproject2.domain.running.service.RunningLogService;
 import Termproject.Termproject2.domain.stats.converter.StatsConverter;
 import Termproject.Termproject2.domain.stats.dto.*;
 import Termproject.Termproject2.domain.stats.dto.response.MonthlyStatsResponse;
@@ -26,23 +27,23 @@ import java.util.*;
 @Transactional(readOnly = true)
 public class StatsServiceImpl implements StatsService {
 
-    private final RunningLogRepository runningLogRepository;
+    private final RunningLogService runningLogService;
     private final RunningStatsRepository runningStatsRepository;
 
     //TODO: 주별 통계 조회
     @Override
-    public WeeklyStatsResponse getWeeklyStats(Long userId, LocalDate date) {
+    public WeeklyStatsResponse getWeeklyStats(Long userId) {
 
+        LocalDate date = LocalDate.now(); // 현재 날짜
         LocalDate weekStart = date.with(DayOfWeek.MONDAY); // 주 시작 날짜
         LocalDate weekEnd = weekStart.plusDays(6); // 주 종료 날짜
 
-        // summary: RunningStats 테이블에서 조회
+        // RunningStats 테이블에서 weekKey 를 활용해서 요약 stats 조회
         StatsSummaryDto summary = getSummary(userId, RunningStats.StatType.WEEKLY, toWeekKey(date));
 
 
-        //주에 해당하는 러닝일지 조회
-        List<RunningLog> logs = runningLogRepository
-                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, weekStart, weekEnd);
+        //주에 해당하는 러닝일지(삭제 x , 공개) 조회
+        List<RunningLog> logs = runningLogService.findRunningLofBetweenDate(userId, weekStart, weekEnd);
 
         // 날짜별 거리 합산
         Map<LocalDate, Double> distMap = buildDistanceMap(logs);
@@ -65,13 +66,12 @@ public class StatsServiceImpl implements StatsService {
         //월 종료 날짜 반환
         LocalDate monthEnd = ym.atEndOfMonth();
 
-        // summary: RunningStats 테이블에서 조회
+        // RunningStats 테이블에서 monthKey 를 활용해서 요약 stats 조회
         StatsSummaryDto summary = getSummary(userId, RunningStats.StatType.MONTHLY, toMonthKey(year, month));
 
 
         // 월에 해당하는 러닝로그 조회(chart용 일별 분해)
-        List<RunningLog> logs = runningLogRepository
-                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, monthStart, monthEnd);
+        List<RunningLog> logs = runningLogService.findRunningLofBetweenDate(userId, monthStart, monthEnd);
 
         // 날짜별 거리 합산
         Map<LocalDate, Double> distMap = buildDistanceMap(logs);
@@ -112,8 +112,7 @@ public class StatsServiceImpl implements StatsService {
         LocalDate cur = from;
 
         //기간에 해당하는 러닝일지 조회
-        List<RunningLog> logs = runningLogRepository
-                .findByUserUserIdAndIsDeletedFalseAndIsPublicTrueAndRunDateBetween(userId, from, to);
+        List<RunningLog> logs = runningLogService.findRunningLofBetweenDate(userId, from, to);
 
         // 요약본 생성
         StatsSummaryDto summary = buildSummary(logs);
@@ -181,6 +180,8 @@ public class StatsServiceImpl implements StatsService {
 
         // 반복문 돌면서 거리 합산
         for (RunningLog log : logs) {
+
+            // 같은 날짜에 여러 러닝 로그가 있을 때 거리를 합산
             map.merge(log.getRunDate(), log.getDistance().doubleValue(), Double::sum);
         }
 
@@ -217,12 +218,18 @@ public class StatsServiceImpl implements StatsService {
     }
 
     // 주어진 주의 시작일(weekStart)부터 7일간 요일별 거리 데이터 리스트 생성
-    // 러닝 기록이 없는 날은 0.0으로 처리
+    // 러닝 기록이 없는 날은 0으로 처리
     private List<DayDistanceDto> buildWeekChart(LocalDate weekStart, Map<LocalDate, Double> distMap) {
         List<DayDistanceDto> days = new ArrayList<>();
+
         for (int i = 0; i < 7; i++) {
-            LocalDate day = weekStart.plusDays(i); // 월~일 순서로 날짜 계산
-            double dist = round1(distMap.getOrDefault(day, 0.0)); // 해당 날짜 거리 조회, 없으면 0.0
+            // 월~일 순서로 날짜 계산
+            LocalDate day = weekStart.plusDays(i);
+
+            // 해당 날짜 거리 조회, 없으면 0.0
+            double dist = round1(distMap.getOrDefault(day, 0.0));
+
+            // day 리스트에 DayDistanceDto(요일, 거리 km ) 추가
             days.add(new DayDistanceDto(dayLabel(day.getDayOfWeek()), dist));
         }
         return days;
@@ -243,6 +250,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
 
+    // 요약 통계 정보 조회
     private StatsSummaryDto getSummary(Long userId, RunningStats.StatType type, String key) {
         return runningStatsRepository
                 .findByUserUserIdAndStatTypeAndStatKey(userId, type, key)

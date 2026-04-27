@@ -6,7 +6,6 @@ import Termproject.Termproject2.domain.stats.dto.response.StatsSummaryResponseDt
 import Termproject.Termproject2.domain.stats.dto.response.WeeklyStatsResponse;
 import Termproject.Termproject2.domain.stats.service.StatsService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
-import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,9 +19,7 @@ import java.time.LocalDate;
 @RequestMapping("/api/v1/stats")
 public class StatsController {
 
-    private final JwtTokenExtractor jwtTokenExtractor;
     private final StatsService statsService;
-
 
     /**
      * [GET] /api/v1/stats/weekly/{userId}
@@ -33,8 +30,7 @@ public class StatsController {
     public ResponseEntity<ApiResponse<WeeklyStatsResponse>> getWeeklyStats(
             @PathVariable Long userId){
 
-        LocalDate date = LocalDate.now();
-        return ResponseEntity.ok(ApiResponse.ok(statsService.getWeeklyStats(userId, date)));
+        return ResponseEntity.ok(ApiResponse.ok(statsService.getWeeklyStats(userId)));
     }
 
 

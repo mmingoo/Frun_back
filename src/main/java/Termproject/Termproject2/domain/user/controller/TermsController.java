@@ -21,7 +21,6 @@ public class TermsController {
 
     private final TermsService termsService;
     private final UserTermsAgreementService userTermsAgreementService;
-    private final JwtTokenExtractor jwtTokenExtractor;
 
 
     /**
@@ -33,7 +32,7 @@ public class TermsController {
     public ResponseEntity<ApiResponse<?>> agreeTerms(
             @RequestBody TermsAgreementRequest request
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         termsService.saveAgreements(userId, request);
 
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 약관을 동의하였습니다."));
@@ -48,7 +47,7 @@ public class TermsController {
     public ResponseEntity<ApiResponse<?>> updateTerms(
             @RequestBody TermsUpdateRequest request
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         termsService.updateAgreements(userId, request);
         return ResponseEntity.ok(ApiResponse.ok("성공적으로 약관을 동의하였습니다."));
     }
@@ -70,7 +69,7 @@ public class TermsController {
     @GetMapping("/my")
     @Operation(summary = "유저가 현재 동의한 약관 내역 조회")
     public ResponseEntity<List<UserTermsAgreementResponseDto>> getMyTermsAgreements() {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         return ResponseEntity.ok(userTermsAgreementService.getMyTermsAgreements(userId));
     }
 }

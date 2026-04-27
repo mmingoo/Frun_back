@@ -8,6 +8,7 @@ import Termproject.Termproject2.domain.running.entity.RunningLog;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface RunningLogService {
@@ -31,4 +32,7 @@ public interface RunningLogService {
 
     //TODO: 삭제되지 않은 공개 러닝일지 조회
     RunningLog findByNotDeletedAndPublicRunningLog (Long runningLogId);
+
+    // TODO: 특정 범위에 해당하는 삭제되지 않은 공개 러닝일지 찾기
+    List<RunningLog> findRunningLofBetweenDate(Long userId, LocalDate weekStart, LocalDate weekEnd);
 }

@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final JwtTokenExtractor jwtTokenExtractor;
 
     /**
      * [GET] /api/v1/notification
@@ -28,7 +27,7 @@ public class NotificationController {
             @RequestParam(required = false) Long lastNotificationId,
             @RequestParam(defaultValue = "15") int size
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(notificationService.getNotificationList(userId, lastNotificationId, size), "알림 목록을 성공적으로 조회하였습니다."));
     }
@@ -42,7 +41,7 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<?>> deleteSelectedNotificationList(
             @RequestBody SelectedNotificationRequestDto selectedNotificationRequestDto
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
 
         // 선택한 알림 삭제
         notificationService.deleteSelectedNotification(userId, selectedNotificationRequestDto);
@@ -57,7 +56,7 @@ public class NotificationController {
     @DeleteMapping
     @Operation(summary = "알림 전체 삭제")
     public ResponseEntity<ApiResponse<?>> deleteAllNotification() {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         notificationService.deleteAllNotification(userId);
         return ResponseEntity.ok(ApiResponse.ok("모든 알림을 삭제하였습니다."));
     }

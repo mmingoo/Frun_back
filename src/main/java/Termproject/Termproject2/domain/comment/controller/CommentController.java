@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CommentController {
 
-    private final JwtTokenExtractor jwtTokenExtractor;
     private final CommentService commentService;
 
     /**
@@ -58,7 +57,7 @@ public class CommentController {
             @RequestBody @Valid CommentCreateRequest request
     ){
 
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(commentService.createComment(running_log_id, userId, request), "댓글을 성공적으로 생성하였습니다."));
     }
@@ -74,7 +73,7 @@ public class CommentController {
             @PathVariable(required = false) Long parentId,
             @RequestBody @Valid CommentCreateRequest request
     ){
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
 
         return ResponseEntity.ok(ApiResponse.ok(commentService.createReply(running_log_id, userId,parentId, request), "답글을 성공적으로 생성하였습니다."));
     }
@@ -90,7 +89,7 @@ public class CommentController {
             @RequestBody @Valid CommentCreateRequest request
     ){
 
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         commentService.updateComment(commentId, userId, request);
         return ResponseEntity.ok( ApiResponse.ok("댓글을 성공적으로 수정하였습니다."));
     }
@@ -105,7 +104,7 @@ public class CommentController {
             @PathVariable Long commentId
     ){
 
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         commentService.deleteComment(commentId, userId);
         return ResponseEntity.ok( ApiResponse.ok("댓글을 성공적으로 삭제하였습니다."));
     }

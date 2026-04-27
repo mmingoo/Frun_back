@@ -35,16 +35,16 @@ public class TermsServiceImpl implements TermsService {
     public void saveAgreements(Long userId, TermsAgreementRequest request) {
         User user = userService.findUserById(userId);
 
-        // 요청에서 동의한 약관 ID Set 추출 후 필수 약관 검증
+        // 1. 요청에서 동의한 약관 ID Set 추출
         Set<Long> agreedIds = request.getAgreements().stream()
                 .filter(TermsAgreementRequest.TermsAgreementItem::getIsAgreed) // 동의한 약관에 대해서
                 .map(TermsAgreementRequest.TermsAgreementItem::getTermsId) // 약관 ID만추출
-                .collect(Collectors.toSet()); // 중복 제거를 위해 Set 으로 데이터 저장
+                .collect(Collectors.toSet()); // validateRequiredAgreements 에서 contains() O(1) 조회를 위해 Set 사용
 
-        // 필수 약관 전체 동의 여부 검증
+        // 2. 필수 약관에 대해서 모두 동의했는지 여부 검증
         validateRequiredAgreements(agreedIds);
 
-        // 동의한 약관이 존재하는 약관
+        // 3. 동의한 약관이 존재하는 약관
         List<UserTermsAgreement> agreements = request.getAgreements().stream()
                 .map(item -> {
                     // 약관 ID로 약관 엔티티 조회
@@ -68,7 +68,7 @@ public class TermsServiceImpl implements TermsService {
         Set<Long> agreedIds = request.getAgreements().stream()
                 .filter(TermsUpdateRequest.TermsUpdateItem::getAgreed) // 동의한 약관에 대해서
                 .map(TermsUpdateRequest.TermsUpdateItem::getTermId)// 약관 ID 추출만 추출
-                .collect(Collectors.toSet()); // List todtjd
+                .collect(Collectors.toSet()); // validateRequiredAgreements 에서 contains() O(1) 조회를 위해 Set 으로 수집
 
         // 필수 약관 전체 동의 여부 검증
         validateRequiredAgreements(agreedIds);

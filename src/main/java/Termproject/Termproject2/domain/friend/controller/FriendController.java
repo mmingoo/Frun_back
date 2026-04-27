@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/friend")
 public class FriendController {
 
-    private final JwtTokenExtractor jwtTokenExtractor;
     private final FriendShipService friendShipService;
 
     /**
@@ -30,7 +29,7 @@ public class FriendController {
             @Parameter(description = "이전 페이지 마지막 친구 닉네임 (첫 요청 시 생략)") @RequestParam(required = false) String cursorName,
             @Parameter(description = "이전 페이지 마지막 friendId (cursorName과 함께 사용)") @RequestParam(required = false) Long cursorId,
             @Parameter(description = "한 번에 조회할 수 (기본값 20)") @RequestParam(defaultValue = "5") int size) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         return ResponseEntity.ok(ApiResponse.ok(friendShipService.getFriendList(userId, cursorName, cursorId, size), "성공적으로 친구 목록을 조회하였습니다."));
     }
 
@@ -46,7 +45,7 @@ public class FriendController {
             @Parameter(description = "이전 페이지 마지막 userId (cursorName과 함께 사용)") @RequestParam(required = false) Long cursorId,
             @Parameter(description = "한 번에 조회할 수 (기본값 100)") @RequestParam(defaultValue = "100") int size) {
 
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         return ResponseEntity.ok(ApiResponse.ok(
                 friendShipService.searchUsersWithDetailStatus(userId, keyword, cursorName, cursorId, size),
                 "성공적으로 유저를 검색하였습니다."
@@ -64,7 +63,7 @@ public class FriendController {
     public ResponseEntity<ApiResponse<?>> sendRequest(
             @PathVariable Long friendId
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         friendShipService.sendFriendRequest(userId, friendId);
         return ResponseEntity.ok(ApiResponse.ok("친구 요청을 보냈습니다."));
     }
@@ -77,7 +76,7 @@ public class FriendController {
     @PostMapping("/request/accept/{senderId}")
     @Operation(summary = "친구 요청 수락")
     public ResponseEntity<ApiResponse<?>> acceptRequest(@PathVariable Long senderId) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         friendShipService.acceptFriendRequest(senderId,userId);
         return ResponseEntity.ok(ApiResponse.ok("친구 요청을 수락했습니다."));
     }
@@ -89,7 +88,7 @@ public class FriendController {
     @DeleteMapping("/request/reject/{senderId}")
     @Operation(summary = "친구 요청 거절")
     public ResponseEntity<ApiResponse<?>> rejectRequest(@PathVariable Long senderId) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         friendShipService.rejectFriendRequest(senderId, userId);
         return ResponseEntity.ok(ApiResponse.ok("친구 요청을 거절했습니다."));
     }
@@ -103,7 +102,7 @@ public class FriendController {
     public ResponseEntity<ApiResponse<Void>> deleteFriend(
             @PathVariable Long friendId) {
 
-        Long myId = jwtTokenExtractor.getUserId();
+        Long myId = JwtTokenExtractor.getUserId();
 
         friendShipService.unfriend(myId, friendId);
 

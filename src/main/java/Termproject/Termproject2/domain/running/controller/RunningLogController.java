@@ -23,7 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RunningLogController {
 
-    private final JwtTokenExtractor jwtTokenExtractor;
     private final FeedService feedService;
     private final RunningLogService runningLogService;
     private final LikeService likeService;
@@ -44,7 +43,7 @@ public class RunningLogController {
             @RequestParam(defaultValue = "CREATED_AT") FeedSortType sortType
     ) {
         System.out.println(" 정렬기준 : " + sortType);
-        Long viewerId = jwtTokenExtractor.getUserId();
+        Long viewerId = JwtTokenExtractor.getUserId();
 
         return ApiResponse.ok(feedService.getUserPageFeeds(viewerId, userId, cursorId, cursorValue, size, sortType), "유저 페이지 피드 조회 성공");
     }
@@ -59,7 +58,7 @@ public class RunningLogController {
             @RequestParam(required = false) Long cursorId,
             @RequestParam(defaultValue = "10") int size
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         return ApiResponse.ok(feedService.getFriendFeeds(userId, cursorId, size), "친구 피드 조회 성공");
     }
 
@@ -73,7 +72,7 @@ public class RunningLogController {
             @Valid @ModelAttribute RunningLogCreateRequest request,
             @RequestPart(value = "images" , required = false) List<MultipartFile> images
             ){
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
 
         return ApiResponse.ok(
                 runningLogService.createRunningLog(userId, request, images),
@@ -91,7 +90,7 @@ public class RunningLogController {
     public ApiResponse<?> getRunningLogDetail(
             @PathVariable Long runningLogId
     ){
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
 
         // 러닝 일지 조회
         FriendFeedResponseDto friendFeedResponseDto = runningLogService.getFeed(runningLogId, userId);
@@ -111,7 +110,7 @@ public class RunningLogController {
             @RequestPart(value = "newImages", required = false) List<MultipartFile> newImages
     ){
 
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         runningLogService.updateRunningLog(runningLogId, userId, request, newImages);
         return ApiResponse.ok("러닝일지가 수정되었습니다.");
     }
@@ -125,7 +124,7 @@ public class RunningLogController {
     public ApiResponse<?> softDeleteRunningLog(
             @PathVariable Long runningLogId
     ){
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         runningLogService.softDeleteRunningLog(runningLogId, userId);
         return ApiResponse.ok( "러닝일지가 삭제되었습니다.");
 
@@ -140,7 +139,7 @@ public class RunningLogController {
     public ApiResponse<?> likeRunningLog(
             @PathVariable Long runningLogId
     ){
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         likeService.addLike(userId, runningLogId);
         return ApiResponse.ok("좋아요가 처리되었습니다.");
     }
@@ -154,7 +153,7 @@ public class RunningLogController {
     public ApiResponse<?> unlikeRunningLog(
             @PathVariable Long runningLogId
     ) {
-        Long userId = jwtTokenExtractor.getUserId();
+        Long userId = JwtTokenExtractor.getUserId();
         likeService.removeLike(userId, runningLogId);
         return ApiResponse.ok("좋아요가 취소되었습니다.");
     }

@@ -4,6 +4,7 @@ import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
+import Termproject.Termproject2.domain.stats.entity.RunningStats;
 import Termproject.Termproject2.domain.user.dto.response.*;
 import Termproject.Termproject2.domain.user.entity.User;
 import Termproject.Termproject2.domain.user.entity.UserStatus;
@@ -83,43 +84,27 @@ public class UserServiceImpl implements UserService {
     //TODO: 유저 페이지 정보 조회 (친구 관계·통계 포함)
     @Override
     public UserPageResponseDto getUserPageInfo(Long viewerId, Long targetUserId) {
-        FriendRequestStatus status = null;
-
+        // 유저 조회
         User user = findUserById(targetUserId);
 
-        // 친구 수 조회
-        long friendCount = friendShipService.getFriendCount(targetUserId);
+        long friendCount = friendShipService.getFriendCount(targetUserId); // 친구 수 조회
+        boolean isOwner = viewerId.equals(targetUserId); // 자신의 페이지인지 검증
 
-        boolean isOwner = viewerId.equals(targetUserId);
-
-        // 주인도 아니고 비활성화인 경우 '비활성화 에러' 발생
-        if (user.getUserStatus().isInactive()) {
-            throw new BusinessException(ErrorCode.USER_INACTIVE);
-        }
+        // 비활성화 계정인 경우 '비활성화 에러' 발생
+        validateActiveUser(user);
 
         // 자신의 페이지가 아닌 경우에만 해당 유저와 관계 반환
         // FriendRequestStatus.FRIEND , FriendRequestStatus.SENDED, FriendRequestStatus.PENDING
-        if(!isOwner){
-            status =  friendShipService.getStatus(viewerId,targetUserId);
-        }
+        FriendRequestStatus status = resolveFriendStatus(viewerId, targetUserId, isOwner);
 
         // 러닝통계 집계
         Object[] stats = runningLogRepository.aggregateStatsByUserId(targetUserId).get(0);
-
 
         long totalRunCount = ((Number) stats[0]).longValue(); // 러닝 횟수
         double totalDistanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0; // 러닝 총 거리(km)
         long totalDurationSec = ((Number) stats[2]).longValue(); // 러닝 총 시간(초)
 
-        String avgPace = null;
-
-        if (totalDistanceKm > 0) {
-            // 총 시간(초)을 총 거리(km)로 나누어 km당 평균 페이스(초) 계산
-            long avgPaceSeconds = Math.round(totalDurationSec / totalDistanceKm);
-
-            // 계산된 초를 문자열로 변환 (5'30")
-            avgPace = String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
-        }
+        String avgPace = formatAvgPace(totalDurationSec, totalDistanceKm);
 
         return new UserPageResponseDto(
                 user.getUserId(),
@@ -135,6 +120,28 @@ public class UserServiceImpl implements UserService {
         );
     }
 
+    // 비활성화 계정인 경우 '비활성화 에러' 발생
+    private void validateActiveUser(User user) {
+        if (user.getUserStatus().isInactive()) {
+            throw new BusinessException(ErrorCode.USER_INACTIVE);
+        }
+    }
+
+    // 자신의 페이지가 아닌 경우에만 해당 유저와 관계 반환
+    // FriendRequestStatus.FRIEND , FriendRequestStatus.SENDED, FriendRequestStatus.PENDING
+    private FriendRequestStatus resolveFriendStatus(Long viewerId, Long targetUserId, boolean isOwner) {
+        return !isOwner ? friendShipService.getStatus(viewerId, targetUserId) : null;
+    }
+
+    // 총 시간(초)을 총 거리(km)로 나누어 km당 평균 페이스(초) 계산 후 문자열로 변환 (5'30")
+    private String formatAvgPace(long totalDurationSec, double totalDistanceKm) {
+        if (totalDistanceKm <= 0) {
+            return null;
+        }
+        long avgPaceSeconds = Math.round(totalDurationSec / totalDistanceKm);
+        return String.format("%d'%02d\"", avgPaceSeconds / 60, avgPaceSeconds % 60);
+    }
+
     //TODO: 헤더용 유저 프로필 간략 정보 조회
     @Override
     public UserProfileInfoResponse getUserInfo(Long userId) {
@@ -146,6 +153,7 @@ public class UserServiceImpl implements UserService {
 
         // 알림 갯수 조회
         long notificationCnt = notificationService.countByUserUserIdAndIsReadFalse(userId);
+
         return new UserProfileInfoResponse(userId, imageUrl, user.getNickName(), notificationCnt);
     }
 
@@ -279,4 +287,5 @@ public class UserServiceImpl implements UserService {
         refreshTokenService.delete(userId);
         userRepository.delete(user);
     }
+
 }

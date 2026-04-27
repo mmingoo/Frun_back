@@ -25,7 +25,7 @@ public class ReissueController {
 
     /**
      * [POST] /api/v1/auth/reissue
-     * 토큰 재발급 - RTR 방식으로 accessToken 발급 및 refreshToken 갱신
+     * 토큰 재발급 - RTR 방식으로 accessToken 발급 시 refreshToken 도 갱신(재발급)
      */
     @PostMapping("/reissue")
     public ResponseEntity<?> reissue(
@@ -46,7 +46,6 @@ public class ReissueController {
 
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        System.out.println("토큰 재발급 성공");
         // 3. accessToken → JSON body 반환
         return ResponseEntity.ok(ApiResponse.ok(
                 Map.of("accessToken", tokenPair.accessToken()),
