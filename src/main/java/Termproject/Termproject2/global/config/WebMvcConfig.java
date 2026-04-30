@@ -30,6 +30,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Value("${file.upload.running-log.url-prefix}")
     private String runningLogUrlPrefix;
 
+    @Value("${file.upload.notice.dir}")
+    private String noticeDir;
+
+    @Value("${file.upload.notice.url-prefix}")
+    private String noticeUrlPrefix;
+
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -40,5 +46,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 러닝 로그 이미지: /images/running-log/** → uploads/running-log/
         registry.addResourceHandler(runningLogUrlPrefix + "/**")
                 .addResourceLocations("file:" + Paths.get(runningLogDir).toAbsolutePath() + "/");
+
+        // 공지 이미지: /images/notice/** → uploads/notice/
+        registry.addResourceHandler(noticeUrlPrefix + "/**")
+                .addResourceLocations("file:" + Paths.get(noticeDir).toAbsolutePath() + "/");
     }
 }

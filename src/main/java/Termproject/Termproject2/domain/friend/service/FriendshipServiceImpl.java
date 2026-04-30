@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -45,9 +46,9 @@ public class FriendshipServiceImpl implements FriendShipService {
 
     //TODO: 친구 목록 커서 기반 조회
     @Override
-    public FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size) {
+    public FriendListResponse getFriendList(Long userId, String cursorName, int size) {
         // size+1 개 조회 - 실제 필요한 것보다 1개 더 가져와서 다음 페이지 존재 여부 확인
-        List<FriendResponseDto> results = friendshipRepository.getFriendList(userId, cursorName, cursorId, size);
+        List<FriendResponseDto> results = friendshipRepository.getFriendList(userId, cursorName, size);
 
         // 조회 결과가 size+1 개면 다음 페이지 존재, size 개만 남기고 마지막 1개 제거
         boolean hasNext = results.size() > size;
@@ -62,17 +63,16 @@ public class FriendshipServiceImpl implements FriendShipService {
         // hasNext가 false면 커서 불필요하므로 null 처리
         FriendResponseDto last = hasNext ? results.get(results.size() - 1) : null;
         return new FriendListResponse(results, hasNext,
-                last != null ? last.getFriendId() : null,
                 last != null ? last.getFriendName() : null);
     }
 
 
     //TODO: 친구 검색 시 나와의 관계 파악
     @Override
-    public UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size) {
+    public UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, int size) {
         // size+1 개 조회 - 실제 필요한 것보다 1개 더 가져와서 다음 페이지 존재 여부 확인
         Pageable pageable = PageRequest.of(0, size + 1);
-        List<User> searchedUsers = fetchSearchedUsers(keyword, cursorName, cursorId, pageable);
+        List<User> searchedUsers = fetchSearchedUsers(keyword, cursorName, pageable);
 
         // 자신과 비활성 계정 제외
         List<User> filtered = filterSearchedUsers(searchedUsers, currentUserId);
@@ -88,7 +88,6 @@ public class FriendshipServiceImpl implements FriendShipService {
         // hasNext가 false면 커서 불필요하므로 null 처리
         User last = hasNext ? filtered.get(filtered.size() - 1) : null;
         return new UserSearchListResponse(result, hasNext,
-                last != null ? last.getUserId() : null,
                 last != null ? last.getNickName() : null);
     }
 
@@ -104,6 +103,7 @@ public class FriendshipServiceImpl implements FriendShipService {
         if (deletedCount == 0) {
             throw new BusinessException(ErrorCode.NOT_FRIEND); // 친구 상태가 아님
         }
+
         User sender = findUser(myId);
         User receiver = findUser(friendId);
 
@@ -135,6 +135,7 @@ public class FriendshipServiceImpl implements FriendShipService {
             throw new BusinessException(ErrorCode.ALREADY_FRIEND);
         }
 
+        // FriendRequest 생성
         FriendRequest request = FriendConverter.toFriendRequest(sender, receiver);
 
         // 친구 요청 전송
@@ -150,7 +151,7 @@ public class FriendshipServiceImpl implements FriendShipService {
     //TODO : 친구 요청 수락
     @Transactional
     public void acceptFriendRequest(Long senderId, Long userId) {
-        FriendRequest request = friendRequestService.findByReceiverIdAndSenderId(userId, senderId)
+        FriendRequest request = findFriendRequest(userId, senderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
 
 
@@ -178,7 +179,7 @@ public class FriendshipServiceImpl implements FriendShipService {
     //TODO: 친구 요청 거절
     @Transactional
     public void rejectFriendRequest(Long senderId, Long userId) {
-        FriendRequest request = friendRequestService.findByReceiverIdAndSenderId(userId, senderId)
+        FriendRequest request = findFriendRequest(userId, senderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FRIEND_REQUEST_NOT_FOUND));
 
         // SENDED 상태만 거절 가능
@@ -214,9 +215,9 @@ public class FriendshipServiceImpl implements FriendShipService {
     @Override
     public FriendRequestStatus getStatus(Long me, Long other) {
         // 1. 예외를 던지지 않고 null을 허용하도록 변경
-        FriendRequest sentReq = friendRequestService.findByReceiverIdAndSenderId(other, me)
+        FriendRequest sentReq = findFriendRequest(other, me)
                 .orElse(null);
-        FriendRequest receivedReq = friendRequestService.findByReceiverIdAndSenderId(me, other)
+        FriendRequest receivedReq = findFriendRequest(me, other)
                 .orElse(null);
 
         // 2. 상태 추출, 객체가 없으면 NONE으로 간주
@@ -238,10 +239,10 @@ public class FriendshipServiceImpl implements FriendShipService {
     }
 
     // 커서 기반으로 키워드에 해당하는 유저 목록 조회
-    private List<User> fetchSearchedUsers(String keyword, String cursorName, Long cursorId, Pageable pageable) {
-        return (cursorName == null || cursorId == null)
+    private List<User> fetchSearchedUsers(String keyword, String cursorName, Pageable pageable) {
+        return cursorName == null
                 ? userRepository.findByNickNameContainingNoCursor(keyword, pageable)
-                : userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
+                : userRepository.findByNickNameContainingWithCursor(keyword, cursorName, pageable);
     }
 
     // 검색 결과에서 자신과 비활성 계정 제외
@@ -310,6 +311,11 @@ public class FriendshipServiceImpl implements FriendShipService {
         }
         return FriendRequestStatus.NONE;
     }
+
+    private Optional<FriendRequest> findFriendRequest(Long receiverId, Long senderId) {
+        return friendRequestService.findByReceiverIdAndSenderId(receiverId, senderId);
+    }
+
 
     // 유저 찾기
     private User findUser(Long userId){

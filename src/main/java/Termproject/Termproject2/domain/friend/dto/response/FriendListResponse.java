@@ -11,6 +11,5 @@ import java.util.List;
 public class FriendListResponse {
     private List<FriendResponseDto> friends; // 친구 목록
     private boolean hasNext; // 다음 페이지 존재 여부
-    private Long nextCursorId; // 다음 커서 ID
     private String nextCursorName; // 다음 커서 닉네임
 }

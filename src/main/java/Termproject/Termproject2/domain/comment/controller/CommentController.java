@@ -105,8 +105,7 @@ public class CommentController {
     ){
 
         Long userId = JwtTokenExtractor.getUserId();
-        commentService.deleteComment(commentId, userId);
-        return ResponseEntity.ok( ApiResponse.ok("댓글을 성공적으로 삭제하였습니다."));
+        return ResponseEntity.ok(ApiResponse.ok(commentService.deleteComment(commentId, userId), "댓글을 성공적으로 삭제하였습니다."));
     }
 
 }

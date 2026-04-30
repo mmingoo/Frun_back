@@ -19,14 +19,14 @@ public class ReissueServiceImpl implements ReissueService {
     @Override
     public TokenPairDto reissue(String refreshToken) {
 
+        // 1. refreshToken 존재 여부 확인
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new BusinessException(ErrorCode.REFRESH_TOKEN_MISSING);
+        }
+
         Long userId = jwtUtil.getUserId(refreshToken);
         String username = jwtUtil.getUsername(refreshToken);
         String role = jwtUtil.getRole(refreshToken);
-
-        // 1. refreshToken 존재 여부 확인
-        if (refreshToken == null) {
-            throw new BusinessException(ErrorCode.REFRESH_TOKEN_MISSING);
-        }
 
         // 2. 만료 여부 확인
         if (jwtUtil.isExpired(refreshToken)) {

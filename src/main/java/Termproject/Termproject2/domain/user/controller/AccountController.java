@@ -7,17 +7,14 @@ import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.jwt.JWTUtil;
 import Termproject.Termproject2.global.jwt.JwtTokenExtractor;
+import Termproject.Termproject2.global.jwt.RefreshTokenCookieService;
 import Termproject.Termproject2.global.jwt.RefreshTokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Duration;
 
 @Tag(name = "Account", description = "계정 활성화/비활성화 관련 API")
 @RestController
@@ -28,6 +25,7 @@ public class AccountController {
     private final UserService userService;
     private final JWTUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenCookieService refreshTokenCookieService;
 
     /**
      * [POST] /api/v1/users/inactive/token
@@ -36,11 +34,13 @@ public class AccountController {
     @PostMapping("/inactive/token")
     @Operation(summary = "임시 토큰 발급", description = "비활성화 코드(UUID)를 임시 토큰으로 교환합니다. 코드는 일회성이며 5분간 유효합니다.")
     public ResponseEntity<ApiResponse<?>> exchangeInactiveToken(@RequestParam String code) {
+        // userId 조회
         Long userId = refreshTokenService.getAndDeleteInactiveCode(code);
-        if (userId == null) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED);
-        }
+
+        // user 조회
         User user = userService.findUserById(userId);
+
+        // 임시 토큰 생성
         String tempToken = jwtUtil.createJwt("temp", userId, user.getUserName(), user.getRole().toString(), 5 * 60 * 1000L);
         return ResponseEntity.ok(ApiResponse.ok(tempToken, "임시 토큰이 발급되었습니다."));
     }
@@ -66,25 +66,17 @@ public class AccountController {
             @RequestHeader("Authorization") String bearerToken,
             HttpServletResponse response) {
 
+        // 임시토큰으로 userId 추출
         Long userId = extractUserIdFromTempToken(bearerToken);
 
+        // 계정 활성화
         userService.userActivate(userId);
 
+        // user 조회
         User user = userService.findUserById(userId);
 
-        String refreshToken = jwtUtil.createJwt("refresh", userId, user.getUserName(), user.getRole().toString(), 60 * 60 * 24 * 14 * 1000L);
-
-        refreshTokenService.save(userId, refreshToken);
-
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(Duration.ofDays(14))
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        // refreshToken 발급 후 Redis + HttpOnly 쿠키에 저장
+        refreshTokenCookieService.issueRefreshTokenCookie(userId, user.getUserName(), user.getRole().toString(), response);
 
         return ResponseEntity.ok(ApiResponse.ok(userId, "성공적으로 계정을 활성화하였습니다."));
     }
@@ -95,11 +87,14 @@ public class AccountController {
      */
     @DeleteMapping("/deactivate")
     @Operation(summary = "유저 비활성화")
-    public ResponseEntity<ApiResponse<?>> userDeactivate() {
+    public ResponseEntity<ApiResponse<?>> userDeactivate(HttpServletResponse response) {
         Long userId = JwtTokenExtractor.getUserId();
-        return ResponseEntity.ok(ApiResponse.ok(userService.userDeactivate(userId), "성공적으로 계정을 비활성화하였습니다."));
+        Long result = userService.userDeactivate(userId);
+        refreshTokenCookieService.clearRefreshTokenCookie(response);
+        return ResponseEntity.ok(ApiResponse.ok(result, "성공적으로 계정을 비활성화하였습니다."));
     }
 
+    // 토큰에서 id 추출
     private Long extractUserIdFromTempToken(String bearerToken) {
         if (bearerToken == null || !bearerToken.startsWith("Bearer ")) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);

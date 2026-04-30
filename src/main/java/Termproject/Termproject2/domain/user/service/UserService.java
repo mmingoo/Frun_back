@@ -35,7 +35,7 @@ public interface UserService {
     Page<User> findByNicknameContaining(String keyword, Pageable pageable);
 
     //TODO: 닉네임 포함 유저 커서 기반 조회
-    List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size);
+    List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, int size);
 
     //TODO: 계정 비활성화
     Long userDeactivate(Long userId);

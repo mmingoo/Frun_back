@@ -28,11 +28,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByNickNameContaining(String nickName, Pageable page);
 
     //TODO: 닉네임 포함 유저 커서 기반 조회 (닉네임 오름차순)
-    @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% AND (u.nickName > :cursorName OR (u.nickName = :cursorName AND u.userId > :cursorId)) ORDER BY u.nickName ASC, u.userId ASC")
-    List<User> findByNickNameContainingWithCursor(@Param("keyword") String keyword, @Param("cursorName") String cursorName, @Param("cursorId") Long cursorId, Pageable pageable);
+    @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% AND u.nickName > :cursorName ORDER BY u.nickName ASC")
+    List<User> findByNickNameContainingWithCursor(@Param("keyword") String keyword, @Param("cursorName") String cursorName, Pageable pageable);
 
     //TODO: 닉네임 포함 유저 조회 (커서 없이 첫 페이지)
-    @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% ORDER BY u.nickName ASC, u.userId ASC")
+    @Query("SELECT u FROM User u WHERE u.nickName LIKE %:keyword% ORDER BY u.nickName ASC")
     List<User> findByNickNameContainingNoCursor(@Param("keyword") String keyword, Pageable pageable);
 
     //TODO: 상태·삭제 예정일로 유저 조회

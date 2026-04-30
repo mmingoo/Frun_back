@@ -7,10 +7,10 @@ import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 
 public interface FriendShipService {
     //TODO: 친구 목록 커서 기반 조회
-    FriendListResponse getFriendList(Long userId, String cursorName, Long cursorId, int size);
+    FriendListResponse getFriendList(Long userId, String cursorName, int size);
 
     //TODO: 닉네임 키워드로 유저 검색 (친구 상태 포함)
-    UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, Long cursorId, int size);
+    UserSearchListResponse searchUsersWithDetailStatus(Long currentUserId, String keyword, String cursorName, int size);
 
     //TODO: 친구 삭제
     void unfriend(Long myId, Long friendId);

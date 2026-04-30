@@ -11,6 +11,5 @@ import java.util.List;
 public class UserSearchListResponse {
     private List<UserSearchResponse> users; // 검색된 유저 목록
     private boolean hasNext; // 다음 페이지 존재 여부
-    private Long nextCursorId;
     private String nextCursorName;
 }

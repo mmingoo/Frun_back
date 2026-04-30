@@ -5,6 +5,7 @@ import Termproject.Termproject2.domain.comment.Comment;
 import Termproject.Termproject2.domain.comment.dto.request.CommentCreateRequest;
 import Termproject.Termproject2.domain.comment.dto.response.CommentResponse;
 import Termproject.Termproject2.domain.comment.dto.response.CursorSliceResponse;
+import Termproject.Termproject2.domain.comment.dto.response.DeleteCommentResponse;
 import Termproject.Termproject2.domain.comment.dto.response.ReplyResponse;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,7 @@ public interface CommentService {
 
     //TODO: 댓글/답글 삭제
     @Transactional
-    void deleteComment(Long commentId, Long userId);
+    DeleteCommentResponse deleteComment(Long commentId, Long userId);
 
 
 

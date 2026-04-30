@@ -44,7 +44,7 @@ public class RunningLog extends BaseTimeEntity {
     @Column(name = "pace", length = 10, nullable = false)
     private String pace; // 평균 페이스 (분'초" 형식)
 
-    @Column(name = "pace_seconds")
+    @Column(name = "pace_seconds", nullable = false)
     private Integer paceSeconds; // 정렬용 페이스 초 단위 (pace 저장 시 함께 계산)
 
     @Column(name = "is_public", nullable = false)

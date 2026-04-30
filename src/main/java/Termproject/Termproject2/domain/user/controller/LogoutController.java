@@ -2,10 +2,9 @@ package Termproject.Termproject2.domain.user.controller;
 
 import Termproject.Termproject2.domain.user.service.LogoutService;
 import Termproject.Termproject2.global.common.response.ApiResponse;
+import Termproject.Termproject2.global.jwt.RefreshTokenCookieService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class LogoutController {
 
     private final LogoutService logoutService;
+    private final RefreshTokenCookieService refreshTokenCookieService;
 
     /**
      * [POST] /api/v1/auth/logout
@@ -30,17 +30,7 @@ public class LogoutController {
             HttpServletResponse response) {
 
         logoutService.logout(bearerToken, refreshToken);
-
-        // HttpOnly 쿠키 만료 처리
-        ResponseCookie expiredCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        response.addHeader(HttpHeaders.SET_COOKIE, expiredCookie.toString());
+        refreshTokenCookieService.clearRefreshTokenCookie(response);
 
         return ApiResponse.ok("로그아웃 되었습니다.");
     }

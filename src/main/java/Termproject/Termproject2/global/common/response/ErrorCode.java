@@ -40,6 +40,8 @@ public enum ErrorCode {
     INVALID_DURATION(HttpStatus.BAD_REQUEST, "시간을 0초 이상으로 설정해주세요." ),
     FUTURE_RUN_DATETIME(HttpStatus.BAD_REQUEST, "현재 시간보다 더 늦은 시간은 입력할 수 없습니다."),
     TOO_OLD_RUN_DATETIME(HttpStatus.BAD_REQUEST, "2026-02-01 00:00 보다 과거는 입력할 수 없습니다."),
+    RUNNING_LOG_IS_DELETED(HttpStatus.NOT_FOUND, "삭제된 러닝일지입니다." ),
+    RUNNING_LOG_IS_REPORTED(HttpStatus.NOT_FOUND, "신고 처리된 러닝일지입니다." ),
 
     // 친구
     FRIEND_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 친구 요청입니다."),

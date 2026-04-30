@@ -41,7 +41,7 @@ public class CommentRepositoryCustomImpl implements CommentRepositoryCustom{
                 .from(comment)
                 .where(comment.parent.commentId.in(parentIds)) // 전달받은 부모 ID들에 속한 댓글만 필터링
                 .groupBy(comment.parent.commentId) // 부모 ID 별로 그룹화
-                .fetch()
+                .fetch() // 쿼리 결과를 List<Tuple> 로 반환
                 .stream()
                 .collect(Collectors.toMap(
                         tuple -> tuple.get(comment.parent.commentId), // key : 부모 댓글 ID

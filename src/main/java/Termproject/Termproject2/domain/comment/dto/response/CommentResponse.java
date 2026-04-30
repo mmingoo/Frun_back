@@ -39,7 +39,7 @@ public class CommentResponse {
                 .commentId(comment.getCommentId())
                 .content(comment.getContent())
                 .userId(comment.getUser().getUserId())
-                .nickname(isInactive ? "비활성화 계정" : comment.getUser().getNickName())
+                .nickname(isInactive ? "비활성화계정" : comment.getUser().getNickName())
                 .profileImageUrl(isInactive ? null : comment.getUser().getImageUrl())
                 .replyCount(replyCount)
                 .createdAt(comment.getCreatedAt())

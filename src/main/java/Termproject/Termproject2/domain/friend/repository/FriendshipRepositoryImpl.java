@@ -24,7 +24,7 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
 
     //TODO: 친구 목록 반환
     @Override
-    public List<FriendResponseDto> getFriendList(Long userId, String cursorName, Long cursorId, int size) {
+    public List<FriendResponseDto> getFriendList(Long userId, String cursorName, int size) {
 
         return queryFactory
                 .select(Projections.constructor(FriendResponseDto.class,
@@ -43,13 +43,10 @@ public class FriendshipRepositoryImpl implements FriendshipRepositoryCustom {
                                                 .and(friendship.id.senderUserId.eq(friend.userId)))
                 )
                 .where(
-                        friend.userStatus.eq(UserStatus.ACTIVE),  // 탈퇴 유저 제외
-                        cursorName != null
-                                ? friend.nickName.gt(cursorName)
-                                        .or(friend.nickName.eq(cursorName).and(friend.userId.gt(cursorId)))
-                                : null
+                        friend.userStatus.eq(UserStatus.ACTIVE),
+                        cursorName != null ? friend.nickName.gt(cursorName) : null
                 )
-                .orderBy(friend.nickName.asc(), friend.userId.asc())
+                .orderBy(friend.nickName.asc())
                 .limit(size + 1)
                 .fetch();
     }

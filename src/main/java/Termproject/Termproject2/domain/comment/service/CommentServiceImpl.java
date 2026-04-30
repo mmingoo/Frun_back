@@ -5,6 +5,7 @@ import Termproject.Termproject2.domain.comment.converter.CommentConverter;
 import Termproject.Termproject2.domain.comment.dto.request.CommentCreateRequest;
 import Termproject.Termproject2.domain.comment.dto.response.CommentResponse;
 import Termproject.Termproject2.domain.comment.dto.response.CursorSliceResponse;
+import Termproject.Termproject2.domain.comment.dto.response.DeleteCommentResponse;
 import Termproject.Termproject2.domain.comment.dto.response.ReplyResponse;
 import Termproject.Termproject2.domain.comment.repository.CommentRepository;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,12 +51,13 @@ public class CommentServiceImpl implements CommentService{
         if(hasNext) comments.remove(size);
 
 
-        // 조회된 댓글 ID 목록으로 답글 수 일괄 집계
+        // 답글 수 일괄 집계를 위한 댓글 ID 목록
         List<Long> commentIds = comments.stream()
                 .map(Comment::getCommentId)
                 .toList();
 
         // 각 댓글이 가지고 있는 답글의 개수 조회
+        //  <commentId, replyCount>
         Map<Long , Long> replyCount = commentRepository.countRepliesByParentIds(commentIds);
 
         // dto 에 댓글마다 답글 갯수를 세팅
@@ -145,7 +148,6 @@ public class CommentServiceImpl implements CommentService{
         // 부모 댓글 조회
         Comment parent = findCommentById(parentId);
 
-
         // depth 2 초과 방지 , 부모 댓글의 부모가 있으면 답글 불가
         if (parent.getParent() != null) {
             throw new BusinessException(ErrorCode.EXCEEDED_COMMENT_DEPTH);
@@ -188,17 +190,69 @@ public class CommentServiceImpl implements CommentService{
     //TODO: 댓글/답글 삭제
     @Transactional
     @Override
-    public void deleteComment(Long commentId, Long userId) {
+    public DeleteCommentResponse deleteComment(Long commentId, Long userId) {
+
         Comment comment = findCommentById(commentId);
+
+        // 댓글 삭제 권한 검증
         validateDeletePermission(comment, userId);
 
+        boolean isLogOwner = comment.getRunningLog().getUser().getUserId().equals(userId);
+
+        if (isLogOwner) {
+            // 러닝일지 주인이 삭제: 답글 포함 전체 실제 삭제
+            return deleteWithReplies(comment);
+        } else {
+            // 댓글 작성자가 삭제: 소프트 삭제 로직
+            return deleteAsCommentOwner(comment);
+        }
+    }
+
+    // 러닝일지 주인의 삭제: 답글 + 댓글 모두 실제 삭제
+    private DeleteCommentResponse deleteWithReplies(Comment comment) {
+        List<Comment> children = comment.getChildren();
+        int deletedReplyCount = children.size();
+
+        // 답글 알림 + 댓글 알림 일괄 삭제
+        List<Comment> all = new ArrayList<>(children);
+        all.add(comment);
+        notificationService.deleteByComments(all);
+
+        // 답글 먼저 삭제
+        if (!children.isEmpty()) {
+            commentRepository.deleteAll(children);
+            commentRepository.flush();
+        }
+
+        // 부모 댓글 참조는 삭제 전에 캡처
+        Comment parent = comment.getParent();
+
+        // 댓글(또는 답글) 삭제
+        commentRepository.delete(comment);
+        commentRepository.flush();
+
+        // 답글 삭제 후 부모가 소프트 삭제 상태이고 남은 자식이 없으면 부모도 영구 삭제
+        if (parent != null && parent.isDeleted()
+                && commentRepository.countByParentCommentId(parent.getCommentId()) == 0) {
+            commentRepository.delete(parent);
+            return DeleteCommentResponse.hardWithParent();
+        }
+
+        return deletedReplyCount > 0
+                ? DeleteCommentResponse.cascade(deletedReplyCount)
+                : DeleteCommentResponse.hard();
+    }
+
+    // 댓글 작성자의 삭제: 답글 유무에 따라 소프트/실제 삭제
+    private DeleteCommentResponse deleteAsCommentOwner(Comment comment) {
         notificationService.deleteByComments(List.of(comment));
 
-        boolean hasChildren = commentRepository.countByParentCommentId(commentId) > 0;
+        boolean hasChildren = commentRepository.countByParentCommentId(comment.getCommentId()) > 0;
 
         if (hasChildren) {
             // 답글이 달린 부모 댓글: 소프트 삭제 (답글은 유지)
             comment.softDelete();
+            return DeleteCommentResponse.soft();
         } else {
             // 답글 없는 댓글 또는 답글 자체: 실제 삭제
             Comment parent = comment.getParent();
@@ -209,13 +263,16 @@ public class CommentServiceImpl implements CommentService{
             if (parent != null && parent.isDeleted()
                     && commentRepository.countByParentCommentId(parent.getCommentId()) == 0) {
                 commentRepository.delete(parent);
+                return DeleteCommentResponse.hardWithParent();
             }
+
+            return DeleteCommentResponse.hard();
         }
     }
 
 
     //commentId로 댓글 조회
-    public Comment findCommentById(Long commentId) {
+    private Comment findCommentById(Long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(()-> new BusinessException(ErrorCode.COMMENT_NOT_FOUND));
     }
@@ -269,11 +326,13 @@ public class CommentServiceImpl implements CommentService{
 
     }
 
+    // 댓글마다 댓글 작성자 프로필 이미지 설정
     private void toCommentFullCProfileImageUrls(List<CommentResponse> contents) {
         contents.forEach(c -> c.updateProfileImageUrl(
                 imageService.getProfileImageUrl(c.getProfileImageUrl())));
     }
 
+    // 답글마다 프로필 이미지 설정
     private void toReplyFullProfileImageUrls(List<ReplyResponse> contents) {
         contents.forEach(c -> c.updateProfileImageUrl(
                 imageService.getProfileImageUrl(c.getProfileImageUrl())));

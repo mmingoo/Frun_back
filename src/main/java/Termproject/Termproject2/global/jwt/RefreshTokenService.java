@@ -47,6 +47,11 @@ public class RefreshTokenService {
         return Boolean.TRUE.equals(redisTemplate.hasKey("blacklist:" + userId));
     }
 
+    // 블랙리스트 삭제 (계정 활성화 시 차단 해제)
+    public void removeFromBlacklist(Long userId) {
+        redisTemplate.delete("blacklist:" + userId);
+    }
+
     // 로그아웃 블랙리스트 등록 (액세스 토큰 잔여 TTL만큼만 유지)
     public void addToLogoutBlacklist(String accessToken, long remainingTtlMillis) {
         if (remainingTtlMillis > 0) {
@@ -68,8 +73,9 @@ public class RefreshTokenService {
 
     // 비활성화 코드 조회 및 즉시 삭제 (일회성 보장)
     public Long getAndDeleteInactiveCode(String code) {
-        String key = "inactive:" + code;
-        String value = redisTemplate.opsForValue().get(key);
+        String key = "inactive:" + code; // 키 생성
+        String value = redisTemplate.opsForValue().get(key); // 키로 userId 반환
+
         if (value == null) return null;
         redisTemplate.delete(key);
         return Long.valueOf(value);

@@ -69,10 +69,10 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                                         .and(friendship.id.senderUserId.eq(runningLog.user.userId)))
                 )
                 .where(
-                        runningLog.isDeleted.isFalse(), // 삭제 여부 체크
-                        runningLog.isPublic.isTrue(),  // 공개 여부 체크
+                        runningLog.isDeleted.isFalse(), // 삭제되지 않았을 것
+                        runningLog.isPublic.isTrue(),  // 공개된 러닝일지일 것
                         runningLog.user.userStatus.eq(UserStatus.ACTIVE), // 사용자 활성화 상태 체크
-                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null, // 페이징 처리
+                        cursorId != null ? runningLog.runningLogId.lt(cursorId) : null, // 페이징 처리 , id 는 시간순으로 생성(가장 최근게 가장 큼. 다음 페이징땐 cursorId 보다 작은 Id)
                         // 서브쿼리: 신고 처리가 완료된 게시물인지 확인 (NOT EXISTS)
                         JPAExpressions.selectOne()
                                 .from(report)
@@ -110,11 +110,11 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
                         runningLog.paceSeconds))
                 .from(runningLog)
                 .where(
-                        runningLog.user.userId.eq(userId),
-                        runningLog.isDeleted.isFalse(),
-                        isOwner ? null : runningLog.isPublic.isTrue(),
-                        isOwner ? null : runningLog.user.userStatus.eq(UserStatus.ACTIVE),
-                        buildCursorCondition(runningLog, sortType, cursorId, cursorValue)
+                        runningLog.user.userId.eq(userId), // userId의 러닝일지일 것
+                        runningLog.isDeleted.isFalse(),  // 러닝일지가 삭제되지 않았을 것
+                        isOwner ? null : runningLog.isPublic.isTrue(), // 자신의 마이페이지가 아닐 경우, 공개된 러닝일지일 것
+                        isOwner ? null : runningLog.user.userStatus.eq(UserStatus.ACTIVE), // 자신의 마이페이지가 아닐 경우 게시물의 작성자가 활성화 상태일 것
+                        buildCursorCondition(runningLog, sortType, cursorId, cursorValue) // 정렬 조건에
                 )
                 .orderBy(buildOrderSpecifier(runningLog, sortType), runningLog.runningLogId.desc())
                 .limit(size + 1)
@@ -211,6 +211,7 @@ public class RunningLogRepositoryImpl implements RunningLogRepositoryCustom {
 
         QRunningLogImage image = QRunningLogImage.runningLogImage;
 
+        // runningLogIds 존재 여부 검증
         if (runningLogIds == null || runningLogIds.isEmpty()) {
             return Collections.emptyMap();
         }

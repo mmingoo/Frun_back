@@ -98,13 +98,11 @@ public class UserServiceImpl implements UserService {
         FriendRequestStatus status = resolveFriendStatus(viewerId, targetUserId, isOwner);
 
         // 러닝통계 집계
-        Object[] stats = runningLogRepository.aggregateStatsByUserId(targetUserId).get(0);
+        RunningStatsRaw statsRaw = aggregateRunningStats(targetUserId);
 
-        long totalRunCount = ((Number) stats[0]).longValue(); // 러닝 횟수
-        double totalDistanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0; // 러닝 총 거리(km)
-        long totalDurationSec = ((Number) stats[2]).longValue(); // 러닝 총 시간(초)
-
-        String avgPace = formatAvgPace(totalDurationSec, totalDistanceKm);
+        long totalRunCount = statsRaw.runCount();
+        double totalDistanceKm = statsRaw.distanceKm();
+        String avgPace = formatAvgPace(statsRaw.durationSec(), totalDistanceKm);
 
         return new UserPageResponseDto(
                 user.getUserId(),
@@ -132,6 +130,17 @@ public class UserServiceImpl implements UserService {
     private FriendRequestStatus resolveFriendStatus(Long viewerId, Long targetUserId, boolean isOwner) {
         return !isOwner ? friendShipService.getStatus(viewerId, targetUserId) : null;
     }
+
+    // 러닝 통계 원시값 집계 (횟수·거리·시간)
+    private RunningStatsRaw aggregateRunningStats(Long userId) {
+        Object[] stats = runningLogRepository.aggregateStatsByUserId(userId).get(0);
+        long runCount = ((Number) stats[0]).longValue();                                        // 러닝 횟수
+        double distanceKm = Math.round(((Number) stats[1]).doubleValue() * 10.0) / 10.0;       // 러닝 총 거리(km)
+        long durationSec = ((Number) stats[2]).longValue();                                     // 러닝 총 시간(초)
+        return new RunningStatsRaw(runCount, distanceKm, durationSec);
+    }
+
+    private record RunningStatsRaw(long runCount, double distanceKm, long durationSec) {}
 
     // 총 시간(초)을 총 거리(km)로 나누어 km당 평균 페이스(초) 계산 후 문자열로 변환 (5'30")
     private String formatAvgPace(long totalDurationSec, double totalDistanceKm) {
@@ -206,6 +215,9 @@ public class UserServiceImpl implements UserService {
         // 5. Redis의 refreshToken 즉시 무효화
         refreshTokenService.delete(userId);
 
+        // 6. 기존 accessToken 즉시 차단 (TTL 15분)
+        refreshTokenService.addToBlacklist(userId);
+
         // 6. 처리된 유저의 ID 반환
         return user.getUserId();
     }
@@ -227,18 +239,27 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void userActivate(Long userId) {
+        // 유저 조회
         User user = findUserById(userId);
 
+        // 활성화 가능 여부 검증
+        validateActivatable(user);
+
+        user.setActive();
+
+        // 비활성화 시 등록된 블랙리스트 해제
+        refreshTokenService.removeFromBlacklist(userId);
+    }
+
+    // 유저가 활성화된 유저가 아닐 것, REPORT_INACTIVE, DIRECT_INACTIVE는 활성화 불가
+    private void validateActivatable(User user) {
         if (user.getUserStatus() == UserStatus.ACTIVE) {
             throw new BusinessException(ErrorCode.USER_ALREADY_ACTIVE);
         }
-
-        // REPORT_INACTIVE, DIRECT_INACTIVE는 활성화 불가
         if (user.getUserStatus() == UserStatus.REPORT_INACTIVE ||
                 user.getUserStatus() == UserStatus.DIRECT_INACTIVE) {
             throw new BusinessException(ErrorCode.USER_CANNOT_ACTIVATE);
         }
-        user.setActive();
     }
 
     //TODO: 닉네임 포함 유저 페이지 조회
@@ -249,14 +270,14 @@ public class UserServiceImpl implements UserService {
 
     //TODO: 닉네임 포함 유저 커서 기반 조회
     @Override
-    public List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, Long cursorId, int size) {
+    public List<User> findByNicknameContainingWithCursor(String keyword, String cursorName, int size) {
         Pageable pageable = PageRequest.of(0, size);
 
-        if (cursorName == null || cursorId == null) {
+        if (cursorName == null) {
             return userRepository.findByNickNameContainingNoCursor(keyword, pageable);
         }
 
-        return userRepository.findByNickNameContainingWithCursor(keyword, cursorName, cursorId, pageable);
+        return userRepository.findByNickNameContainingWithCursor(keyword, cursorName, pageable);
     }
 
 

@@ -1,5 +1,7 @@
 package Termproject.Termproject2.domain.running.service;
 
+import Termproject.Termproject2.domain.report.entity.ReportStatus;
+import Termproject.Termproject2.domain.report.repository.ReportRepository;
 import Termproject.Termproject2.domain.running.converter.RunningLogConverter;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogCreateRequest;
 import Termproject.Termproject2.domain.running.dto.request.RunningLogUpdateRequest;
@@ -48,6 +50,7 @@ public class RunningLogServiceImpl implements RunningLogService {
     private final ImageService imageService;
     private final LikeRepository likeRepository;
     private final RunningStatsRepository runningStatsRepository;
+    private final ReportRepository reportRepository;
 
 
     //TODO: 러닝일지 생성
@@ -87,14 +90,20 @@ public class RunningLogServiceImpl implements RunningLogService {
     @Override
     public FriendFeedResponseDto getFeed(Long runningLogId, Long userId) {
 
-        // 러닝 로그 조회(삭제되지 않은 러닝일지에 한해서)
+        // 러닝 로그 조회
         RunningLog runningLog = findById(runningLogId);
-
-        //작성자의 userId 추출
-        Long authorId = runningLog.getUser().getUserId();
 
         // 비활성화된 계정의 러닝일지면 400
         isActiveUser(runningLog);
+
+        // 신고 처리 완료된 러닝일지라면 에러
+        isReported(runningLog);
+
+        // 삭제된 러닝일지라면 에러
+        isDeleted(runningLog);
+
+        //작성자의 userId 추출
+        Long authorId = runningLog.getUser().getUserId();
 
         // 작성자가 본인이 아닐 경우에 러닝일지 공개 여부 검증
         validatePublicAccess(userId, authorId, runningLog);
@@ -115,6 +124,20 @@ public class RunningLogServiceImpl implements RunningLogService {
         );
     }
 
+    // 러닝일지가 삭제됐는지 여부
+    private void isDeleted(RunningLog runningLog) {
+        if (runningLog.isDeleted()) {
+            throw new BusinessException(ErrorCode.RUNNING_LOG_IS_DELETED);
+        }
+    }
+
+    // 신고 처리 완료된 러닝일지인지 여부
+    private void isReported(RunningLog runningLog) {
+        if (reportRepository.existsByRunningLogRunningLogIdAndStatus(
+                runningLog.getRunningLogId(), ReportStatus.COMPLETED)) {
+            throw new BusinessException(ErrorCode.RUNNING_LOG_IS_REPORTED);
+        }
+    }
 
 
     //TODO: 러닝일지 수정 (공개 여부 변화에 따라 통계 처리 포함)
