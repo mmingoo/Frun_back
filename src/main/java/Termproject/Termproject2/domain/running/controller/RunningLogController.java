@@ -39,7 +39,7 @@ public class RunningLogController {
             @PathVariable Long userId,
             @RequestParam(required = false) Long cursorId,
             @RequestParam(required = false) String cursorValue,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "15") int size,
             @RequestParam(defaultValue = "CREATED_AT") FeedSortType sortType
     ) {
         System.out.println(" 정렬기준 : " + sortType);
@@ -56,7 +56,7 @@ public class RunningLogController {
     @Operation(summary = "메인 feed 목록(친구) 조회", description = "친구들의 feed를 최신순으로 조회 (무한스크롤)")
     public ApiResponse<?> getFriendsFeeds(
             @RequestParam(required = false) Long cursorId,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "15") int size
     ) {
         Long userId = JwtTokenExtractor.getUserId();
         return ApiResponse.ok(feedService.getFriendFeeds(userId, cursorId, size), "친구 피드 조회 성공");

@@ -17,11 +17,13 @@ public class RunningLogUpdateRequest {
     @NotNull
     private LocalDate runDate; // 러닝 날짜
 
+    @NotNull
     private LocalTime runTime; // 러닝 시작 시간
 
     @NotNull
     @DecimalMin(value = "0.01", message = "거리는 0보다 커야 합니다.")
     @DecimalMax(value = "100.00", message = "거리는 최대 100km입니다.")
+    @Digits(integer = 3, fraction = 2, message = "거리는 소수점 2자리까지만 입력할 수 있습니다.")
     private BigDecimal distance; // 러닝 거리 (km)
 
     @NotNull

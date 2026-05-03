@@ -25,7 +25,7 @@ public class NotificationController {
     @Operation(summary = "알림 목록 조회", description = "알림 리스트를 15개씩 무한 스크롤")
     public ResponseEntity<ApiResponse<?>> getNotificationList(
             @RequestParam(required = false) Long lastNotificationId,
-            @RequestParam(defaultValue = "15") int size
+            @RequestParam(defaultValue = "30") int size
     ) {
         Long userId = JwtTokenExtractor.getUserId();
 

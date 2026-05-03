@@ -3,12 +3,18 @@ package Termproject.Termproject2.domain.user.service;
 import Termproject.Termproject2.domain.friend.entity.FriendRequestStatus;
 import Termproject.Termproject2.domain.friend.service.FriendShipService;
 import Termproject.Termproject2.domain.notification.service.NotificationService;
+import Termproject.Termproject2.domain.report.entity.ReportStatus;
+import Termproject.Termproject2.domain.report.repository.ReportRepository;
 import Termproject.Termproject2.domain.running.repository.RunningLogRepository;
 import Termproject.Termproject2.domain.stats.entity.RunningStats;
 import Termproject.Termproject2.domain.user.dto.response.*;
+import Termproject.Termproject2.domain.user.dto.response.ReportReasonDto;
+import Termproject.Termproject2.domain.user.entity.SanctionType;
 import Termproject.Termproject2.domain.user.entity.User;
+import Termproject.Termproject2.domain.user.entity.UserSanctionHistory;
 import Termproject.Termproject2.domain.user.entity.UserStatus;
 import Termproject.Termproject2.domain.user.repository.UserRepository;
+import Termproject.Termproject2.domain.user.repository.UserSanctionHistoryRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
 import Termproject.Termproject2.global.image.ImageService;
@@ -35,6 +41,8 @@ public class UserServiceImpl implements UserService {
     private final FriendShipService friendShipService;
     private final NotificationService notificationService;
     private final RefreshTokenService refreshTokenService;
+    private final ReportRepository reportRepository;
+    private final UserSanctionHistoryRepository userSanctionHistoryRepository;
 
     //TODO: 닉네임 중복 여부 확인
     @Override
@@ -232,7 +240,25 @@ public class UserServiceImpl implements UserService {
         if (!user.getUserStatus().isInactive()) {
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
-        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt(), user.getUserStatus());
+
+        List<ReportReasonDto> reportReasons = null;
+        String adminReason = null;
+
+        // 유저가 신고 누적 비활성화일 경우
+        if (user.getUserStatus() == UserStatus.REPORT_INACTIVE) {
+            // 신고 사유 + 처리 사유 조회
+            reportReasons = reportRepository.findReportReasonsWithActionByUserId(userId, ReportStatus.COMPLETED);
+            // 관리자 직접 회원 제재인 경우
+        } else if (user.getUserStatus() == UserStatus.DIRECT_INACTIVE) {
+            List<UserSanctionHistory> sanctions = userSanctionHistoryRepository
+                    .findLatestSanction(userId, SanctionType.DIRECT_INACTIVE);
+            adminReason = sanctions.isEmpty() ? null : sanctions.get(0).getReason();
+
+
+        }
+
+        return new InactiveInfoResponse(user.getDeactivatedAt(), user.getDeletionScheduledAt(),
+                user.getUserStatus(), reportReasons, adminReason);
     }
 
     //TODO: 유저 활성화

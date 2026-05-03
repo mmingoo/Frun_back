@@ -4,9 +4,11 @@ import Termproject.Termproject2.domain.notice.entity.Notice;
 import Termproject.Termproject2.domain.notice.dto.NoticeDetailResponse;
 import Termproject.Termproject2.domain.notice.dto.NoticeListResponse;
 import Termproject.Termproject2.domain.notice.dto.NoticeResponseDto;
+import Termproject.Termproject2.domain.notice.repository.NoticeImageRepository;
 import Termproject.Termproject2.domain.notice.repository.NoticeRepository;
 import Termproject.Termproject2.global.common.response.ErrorCode;
 import Termproject.Termproject2.global.exception.BusinessException;
+import Termproject.Termproject2.global.image.ImageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,8 @@ public class NoticeServiceImpl implements NoticeService {
 
     private static final int PAGE_SIZE = 5;
     private final NoticeRepository noticeRepository;
+    private final NoticeImageRepository noticeImageRepository;
+    private final ImageService imageService;
 
     // TODO: 공지사항 목록 조회
     @Override
@@ -45,10 +49,14 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     public NoticeDetailResponse getNoticeDetail(Long noticeId) {
 
-        // 공지사항 조회
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOTICE_NOT_FOUND));
 
-        return new NoticeDetailResponse(notice);
+        List<String> imageUrls = noticeImageRepository.findByNoticeNoticeIdOrderByIdAsc(noticeId)
+                .stream()
+                .map(img -> imageService.getNoticeImageUrl(img.getImageUrl()))
+                .toList();
+
+        return new NoticeDetailResponse(notice, imageUrls);
     }
 }

@@ -29,8 +29,8 @@ public class NicknameController {
     private final UserService userService;
     private final ImageService imageService;
 
-    private static final String NICKNAME_PATTERN = "^[가-힣a-zA-Z0-9]{5,20}$";
-    private static final String NICKNAME_MESSAGE = "닉네임은 5~20자의 한글, 영문 대/소문자, 숫자만 사용 가능하며 공백은 허용되지 않습니다.";
+    private static final String NICKNAME_PATTERN = "^[가-힣a-zA-Z0-9]{5,10}$";
+    private static final String NICKNAME_MESSAGE = "닉네임은 5~10자의 한글, 영문 대/소문자, 숫자만 사용 가능하며 공백은 허용되지 않습니다.";
 
     /**
      * [GET] /api/v1/users/check

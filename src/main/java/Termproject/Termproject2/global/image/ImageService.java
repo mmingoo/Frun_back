@@ -15,4 +15,7 @@ public interface ImageService {
 
     // 파일명 → 러닝 로그 이미지 전체 URL
     String getRunningLogImageUrl(String fileName);
+
+    // 파일명 → 공지사항 이미지 전체 URL
+    String getNoticeImageUrl(String fileName);
 }

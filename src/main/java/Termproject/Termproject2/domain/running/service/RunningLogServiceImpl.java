@@ -148,6 +148,7 @@ public class RunningLogServiceImpl implements RunningLogService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RUNNING_LOG_NOT_FOUND));
 
         validateAuthor(userId, runningLog);
+        validateRunDateTime(request.getRunDate(), request.getRunTime());
 
         boolean wasPublic = runningLog.isPublic();
         boolean willBePublic = request.isPublic();

@@ -27,7 +27,7 @@ public class FriendController {
     @Operation(summary = "친구 목록 조회", description = "닉네임 오름차순 커서 기반 무한 스크롤로 친구 목록을 조회합니다.")
     public ResponseEntity<ApiResponse<?>> getFriendList(
             @Parameter(description = "이전 페이지 마지막 친구 닉네임 (첫 요청 시 생략)") @RequestParam(required = false) String cursorName,
-            @Parameter(description = "한 번에 조회할 수 (기본값 20)") @RequestParam(defaultValue = "5") int size) {
+            @Parameter(description = "한 번에 조회할 수 (기본값 100)") @RequestParam(defaultValue = "100") int size) {
         Long userId = JwtTokenExtractor.getUserId();
         return ResponseEntity.ok(ApiResponse.ok(friendShipService.getFriendList(userId, cursorName, size), "성공적으로 친구 목록을 조회하였습니다."));
     }
@@ -41,7 +41,7 @@ public class FriendController {
     public ResponseEntity<ApiResponse<UserSearchListResponse>> search(
             @Parameter(description = "검색 키워드") @RequestParam String keyword,
             @Parameter(description = "이전 페이지 마지막 유저 닉네임 (첫 요청 시 생략)") @RequestParam(required = false) String cursorName,
-            @Parameter(description = "한 번에 조회할 수 (기본값 100)") @RequestParam(defaultValue = "100") int size) {
+            @Parameter(description = "한 번에 조회할 수 (기본값 30)") @RequestParam(defaultValue = "30") int size) {
 
         Long userId = JwtTokenExtractor.getUserId();
         return ResponseEntity.ok(ApiResponse.ok(

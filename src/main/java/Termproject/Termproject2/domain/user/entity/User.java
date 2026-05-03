@@ -31,13 +31,13 @@ public class User extends BaseTimeEntity {
     @Column(name = "user_id")
     private Long userId; // 유저 ID
 
-    @Column(name = "name", length = 20, nullable = false)
+    @Column(name = "name", length = 10, nullable = false)
     private String name; // 실명
 
     @Column(name = "user_name", length = 100, nullable = false)
     private String userName; // 소셜 로그인 식별자 (socialType + providerId 조합)
 
-    @Column(name = "user_email", length = 50, nullable = false, unique = true)
+    @Column(name = "user_email", length = 30, nullable = false, unique = true)
     private String userEmail; // 이메일
 
     @Column(name = "user_phone", length = 15, nullable = false)
@@ -46,8 +46,8 @@ public class User extends BaseTimeEntity {
     @Column(name = "provider_id", length = 100, nullable = false)
     private String providerId; // 소셜 제공자 ID
 
-    @Column(name = "nick_name", length = 20,unique = true)
-    private String nickName; // 닉네임 (5~20자, 최초 설정 전 null)
+    @Column(name = "nick_name", length = 10, unique = true)
+    private String nickName; // 닉네임 (5~10자, 최초 설정 전 null)
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_status", length = 20, nullable = false)

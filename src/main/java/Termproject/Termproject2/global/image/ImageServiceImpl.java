@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 public class ImageServiceImpl implements ImageService {
 
-    private static final long MAX_FILE_SIZE = 3L * 1024 * 1024;
+    private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png");
 
     @Value("${file.upload.profile.dir}")
@@ -31,10 +31,16 @@ public class ImageServiceImpl implements ImageService {
     @Value("${file.upload.running-log.url-prefix}")
     private String runningLogUrlPrefix;
 
+    @Value("${file.upload.notice.url-prefix}")
+    private String noticeUrlPrefix;
+
     // ── 프로필 이미지 ──────────────────────────────────────
 
     @Override
     public String saveProfileImage(Long userId, MultipartFile file) {
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BusinessException(ErrorCode.IMAGE_TOO_LARGE);
+        }
         return save(userId, file, profileDir);
     }
 
@@ -48,6 +54,9 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public String saveRunningLogImage(Long userId, MultipartFile file) {
+        if (file.getSize() > MAX_FILE_SIZE) {
+            throw new BusinessException(ErrorCode.IMAGE_TOO_LARGE);
+        }
         return save(userId, file, runningLogDir);
     }
 
@@ -55,6 +64,12 @@ public class ImageServiceImpl implements ImageService {
     public String getRunningLogImageUrl(String fileName) {
         if (fileName == null || fileName.isBlank()) return null;
         return runningLogUrlPrefix + "/" + fileName;
+    }
+
+    @Override
+    public String getNoticeImageUrl(String fileName) {
+        if (fileName == null || fileName.isBlank()) return null;
+        return noticeUrlPrefix + "/" + fileName;
     }
 
     // ── 공통 내부 메서드 ────────────────────────────────────
@@ -86,13 +101,8 @@ public class ImageServiceImpl implements ImageService {
         return fileName;
     }
 
-    // 파일 검증 (용량, 확장자)
+    // 파일 검증 (확장자)
     private void validate(MultipartFile file) {
-        // 최대 허용 용량 초과 시 예외
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BusinessException(ErrorCode.IMAGE_TOO_LARGE);
-        }
-
         // 허용되지 않는 확장자면 예외
         String ext = getExtension(file.getOriginalFilename());
         if (!ALLOWED_EXTENSIONS.contains(ext.toLowerCase())) {

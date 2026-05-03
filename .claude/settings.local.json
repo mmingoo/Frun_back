@@ -15,7 +15,9 @@
       "Bash(JAVA_HOME=\"C:/Program Files/Java/jdk-17\" ./gradlew compileJava)",
       "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-17.0.12\" ./gradlew compileJava)",
       "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-17\" ./gradlew compileJava)",
-      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; cd \"C:\\\\Users\\\\TANINE\\\\Desktop\\\\FRun\\\\FRun-back\"; .\\\\gradlew.bat compileJava 2>&1 | Select-Object -Last 60)"
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Java\\\\jdk-17\"; cd \"C:\\\\Users\\\\TANINE\\\\Desktop\\\\FRun\\\\FRun-back\"; .\\\\gradlew.bat compileJava 2>&1 | Select-Object -Last 60)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Eclipse Adoptium/jdk-17.0.15.6-hotspot\" ./gradlew compileJava)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-17\" ./gradlew clean compileJava)"
     ]
   }
 }
